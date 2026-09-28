@@ -21,8 +21,8 @@ const OIL_DATA = {
       flag: "🇨🇳",
       totalImportsMbd: 11.45,
       refiningCapacityMbd: 18.8,
-      strategicFocus: "Energy security, crude-to-chemicals (COTC), and opportunistic discounted purchasing.",
-      buyerStructure: "Tripartite: State Titans (Sinopec, PetroChina, CNOOC), Private Mega-Refiners (ZPC Rongsheng 800k b/d, Hengli 400k b/d), and Independent Teapots (Shandong ~3.5 mb/d).",
+      strategicFocus: "Energy security, crude-to-chemicals (COTC), and discounted barrel optimization.",
+      buyerStructure: "State refiners (Sinopec, PetroChina), private mega-refiners (ZPC, Hengli), and Shandong teapots.",
       crudeSourceSplit: [
         { source: "Middle East", share: 44, volume: 5.04, color: "#F59E0B" },
         { source: "Russia", share: 21, volume: 2.40, color: "#EF4444" },
@@ -37,7 +37,7 @@ const OIL_DATA = {
         { name: "Huizhou / Daya Bay (Guangdong)", lat: 22.756, lng: 114.62, type: "CNOOC / Petrochemical Cluster" },
         { name: "Dalian / Changxing Island (Liaoning)", lat: 38.914, lng: 121.6147, type: "Hengli Petrochemical / Strategic Storage" }
       ],
-      tradingBehavior: "Aggressive arbitrage optimizer. Exploits Russian ESPO via short pipeline/tanker hops from Kozmino (2.5 days) and takes discounted Urals. Balances baseload with Saudi Aramco term contracts linked to monthly Dubai/Oman OSPs."
+      tradingBehavior: "Arbitrage optimizer. Balances Russian ESPO/Urals discounts with term Saudi/Oman contracts."
     },
 
     india: {
@@ -45,8 +45,8 @@ const OIL_DATA = {
       flag: "🇮🇳",
       totalImportsMbd: 4.85,
       refiningCapacityMbd: 5.2,
-      strategicFocus: "Maximum economic netback, diesel export margins, high-complexity conversion of deeply discounted sour crudes.",
-      buyerStructure: "Dominated by Reliance Industries (Jamnagar complex 1.4 mb/d - world's largest), Nayara Energy (Vadinar 400k b/d), and State PSUs (IOCL, BPCL, HPCL).",
+      strategicFocus: "Maximum refining netback, diesel exports, and high-conversion coking of sour crude.",
+      buyerStructure: "Reliance Jamnagar (1.4 Mb/d), Nayara Energy, and State PSUs (IOCL, BPCL, HPCL).",
       crudeSourceSplit: [
         { source: "Russia", share: 39, volume: 1.89, color: "#EF4444" },
         { source: "Middle East", share: 44, volume: 2.13, color: "#F59E0B" },
@@ -60,7 +60,7 @@ const OIL_DATA = {
         { name: "Cochin / Kochi (Kerala)", lat: 9.9312, lng: 76.2673, type: "BPCL Southern Gateway Terminal" },
         { name: "Mumbai / Jawahar Dweep", lat: 18.95, lng: 72.88, type: "BPCL / HPCL Urban Coastal Hub" }
       ],
-      tradingBehavior: "The post-2022 market disruptor. Shifted from <2% Russian crude to ~40% by absorbing Urals at $15–$25/bbl discounts against Dubai, using non-Western tankers and alternative payment rails, forcing Middle Eastern producers to defend market share."
+      tradingBehavior: "High-discount buyer. Absorbs ~40% Russian Urals while maintaining Middle Eastern baseline volumes."
     },
 
     japan: {
@@ -68,8 +68,8 @@ const OIL_DATA = {
       flag: "🇯🇵",
       totalImportsMbd: 2.45,
       refiningCapacityMbd: 3.3,
-      strategicFocus: "Absolute supply reliability, strict compliance with G7 sanctions, high-specification domestic fuels, zero tolerance for tanker disruptions.",
-      buyerStructure: "Consolidated commercial majors: ENEOS Corporation (~50% market share), Idemitsu Kosan, Cosmo Oil, Taiyo Oil.",
+      strategicFocus: "Strict supply security, G7 sanctions compliance, and high-spec clean domestic fuels.",
+      buyerStructure: "Commercial majors led by ENEOS (~50%), Idemitsu Kosan, Cosmo Oil, and Taiyo Oil.",
       crudeSourceSplit: [
         { source: "Middle East (Saudi, UAE, Kuwait, Qatar)", share: 95.2, volume: 2.33, color: "#F59E0B" },
         { source: "US (WTI Midland)", share: 2.8, volume: 0.07, color: "#06B6D4" },
@@ -82,7 +82,7 @@ const OIL_DATA = {
         { name: "Yokkaichi (Ise Bay)", lat: 34.9667, lng: 136.6333, type: "Cosmo Oil / Showa Yokkaichi" },
         { name: "Kiire Terminal (Kagoshima)", lat: 31.3667, lng: 130.55, type: "National Crude Oil Storage Depot (CTS)" }
       ],
-      tradingBehavior: "Hyper-dependent on Persian Gulf term contracts (~95% Middle East). Reliant on Dubai/Oman pricing with Aramco/ADNOC OSPs. Willing to pay quality premiums for light sweet Murban and Arab Extra Light to minimize sulfur emissions and meet clean product standards."
+      tradingBehavior: "Over 95% dependent on Persian Gulf term contracts tied to monthly Dubai/Oman OSPs."
     },
 
     southKorea: {
@@ -90,8 +90,8 @@ const OIL_DATA = {
       flag: "🇰🇷",
       totalImportsMbd: 2.95,
       refiningCapacityMbd: 3.4,
-      strategicFocus: "Commercial margin optimization, global product export arbitrage (diesel, jet fuel, paraxylene), agile crude slate flexibility.",
-      buyerStructure: "Four world-scale refiners: SK Innovation (Ulsan 840k b/d), GS Caltex (Yeosu 800k b/d), S-Oil (Onsan 670k b/d, Aramco subsidiary), HD Hyundai Oilbank (Daesan 520k b/d).",
+      strategicFocus: "Export-driven margin optimization across clean fuels and petrochemical aromatics.",
+      buyerStructure: "Four merchant giants: SK Innovation, GS Caltex, S-Oil (Aramco), and HD Hyundai Oilbank.",
       crudeSourceSplit: [
         { source: "Middle East", share: 67, volume: 1.98, color: "#F59E0B" },
         { source: "US (WTI Midland via VLCC)", share: 18, volume: 0.53, color: "#06B6D4" },
@@ -104,7 +104,7 @@ const OIL_DATA = {
         { name: "Yeosu / Gwangyang Bay", lat: 34.7604, lng: 127.6622, type: "GS Caltex Single-Point Mooring Terminal" },
         { name: "Daesan Port", lat: 37.01, lng: 126.4167, type: "HD Hyundai Oilbank / Hanwha Total Complex" }
       ],
-      tradingBehavior: "The Asian swing buyer. Uses the Korea-US Free Trade Agreement (zero crude import tariff) and government freight subsidies to aggressively import US WTI Midland via reverse-lightered VLCCs whenever the Brent-Dubai EFS tightens, forcing Middle Eastern producers to keep OSPs competitive."
+      tradingBehavior: "Blends Middle East sour term barrels with duty-free US WTI Midland via VLCC."
     }
   },
 
@@ -809,11 +809,11 @@ const OIL_DATA = {
       step: 1,
       title: "The Desert Wellhead",
       subtitle: "Where the Oil Begins",
-      location: "Ghawar Oil Field, Eastern Province, Saudi Arabia",
-      description: "Crude oil is lifted from porous Arab-D limestone reservoirs 2,000 meters below the Arabian desert. Ghawar produces over 3.8 million barrels every day at an extraction cost under $3.50/bbl.",
-      volumeOrFact: "1 Barrel = 42 US Gallons (158.98 Liters)",
-      pricingImpact: "Lifting Cost: $3.20 - $3.80 / bbl (Lowest worldwide)",
-      riskFactor: "Reservoir pressure maintenance via seawater injection",
+      location: "Ghawar Field, Saudi Arabia",
+      description: "Lifted 2,000m underground from Arab-D limestone. Ghawar pumps 3.8+ Mb/d at an extraction cost under $3.50/bbl.",
+      volumeOrFact: "1 Barrel = 42 US Gallons (159 Liters)",
+      pricingImpact: "Lifting Cost: $3.20 - $3.80 / bbl",
+      riskFactor: "Reservoir pressure maintenance via water injection",
       icon: "🏜️"
     },
     {
@@ -821,8 +821,8 @@ const OIL_DATA = {
       title: "The Gathering Pipeline & Plant",
       subtitle: "Stabilization & Degassing",
       location: "Abqaiq Processing Complex, Saudi Arabia",
-      description: "Raw wet sour crude is pumped through gathering pipelines to Abqaiq—the world's largest crude stabilization plant—to strip lethal hydrogen sulfide (H2S) gas and adjust Reid Vapor Pressure.",
-      volumeOrFact: "Flow Velocity: ~5.2 km/hour in 36-48 inch steel pipelines",
+      description: "Wet sour crude flows to Abqaiq to strip toxic hydrogen sulfide (H2S) gas and adjust vapor pressure.",
+      volumeOrFact: "Flow Velocity: ~5.2 km/h in 36-48 inch steel pipelines",
       pricingImpact: "Stabilization & Desalting Tariff: ~$0.45 / bbl",
       riskFactor: "Single-point critical infrastructure vulnerability",
       icon: "🚰"
@@ -832,10 +832,10 @@ const OIL_DATA = {
       title: "The Super-Terminal",
       subtitle: "Offshore Loading onto Tankers",
       location: "Ras Tanura Marine Terminal, Persian Gulf",
-      description: "Stabilized Arab Light arrives at Ras Tanura's sea islands. Heavy loading arms pump crude into a moored supertanker at 50,000 barrels per hour. The cargo inspector certifies quantity and water content.",
+      description: "Stabilized crude loads onto moored supertankers at 50,000 bbl/h with certified volume and density inspection.",
       volumeOrFact: "Terminal Storage: 33 Million Barrels capacity",
-      pricingImpact: "Port Charges, Demurrage & Cargo Inspection: ~$0.15 / bbl",
-      riskFactor: "Port congestion and weather demurrage ($35k - $65k / day)",
+      pricingImpact: "Port Charges, Demurrage & Inspection: ~$0.15 / bbl",
+      riskFactor: "Port congestion and weather demurrage",
       icon: "⚓"
     },
     {
@@ -843,10 +843,10 @@ const OIL_DATA = {
       title: "The Supertanker (VLCC)",
       subtitle: "The Workhorse of Global Seaborne Trade",
       location: "Aboard a Very Large Crude Carrier (VLCC)",
-      description: "Our barrel joins 2,000,000 other barrels inside a 333-meter double-hull tanker drawing 20.5 meters of water. The vessel burns Low-Sulfur Fuel Oil (VLSFO) steaming at 13 knots.",
-      volumeOrFact: "Supertanker Cargo: 2.0 Million Barrels ($150M cargo value)",
+      description: "Carries 2,000,000 barrels in a 333-meter double-hull tanker cruising at 13 knots toward Asia.",
+      volumeOrFact: "Supertanker Cargo: 2.0M Barrels ($150M cargo value)",
       pricingImpact: "Baltic TD3C Freight Rate: $2.15 / bbl (WS 58.5)",
-      riskFactor: "Bunker price volatility & carbon emissions compliance",
+      riskFactor: "Bunker price volatility & emissions compliance",
       icon: "🚢"
     },
     {
@@ -854,54 +854,54 @@ const OIL_DATA = {
       title: "Chokepoint 1: Strait of Hormuz",
       subtitle: "The 21-Mile Sovereign Gateway",
       location: "Strait of Hormuz, Persian Gulf",
-      description: "The tanker enters the two-mile-wide outbound Traffic Separation Scheme (TSS) lane. 20.8 million barrels pass here every day—one-fifth of all global petroleum liquids.",
-      volumeOrFact: "Daily Flow: 20.8 Mb/d (Only 6.8 Mb/d pipeline bypass capacity)",
-      pricingImpact: "Lloyd's War Risk Insurance Premium: +0.20% to +0.50% cargo value",
-      riskFactor: "Naval interdiction, mine warfare, and geopolitical blockade",
+      description: "Vessels navigate the 2-mile outward lane where 20.8 Mb/d—20% of global petroleum liquids—exits the Gulf.",
+      volumeOrFact: "Daily Flow: 20.8 Mb/d (Only 6.8 Mb/d pipeline bypass)",
+      pricingImpact: "War Risk Insurance: +0.20% to +0.50% cargo value",
+      riskFactor: "Naval interdiction, mine threats, and blockades",
       icon: "🛡️"
     },
     {
       step: 6,
       title: "Chokepoint 2: Strait of Malacca",
       subtitle: "The Gateway to East Asia",
-      location: "Strait of Malacca & Singapore Strait (Philips Channel)",
-      description: "After 14 days crossing the Indian Ocean, the vessel navigates the Philips Channel near Singapore—narrowing to only 1.7 nautical miles with a 25-meter maximum draft (Malaccamax limit).",
-      volumeOrFact: "Throughput: 16.2 Mb/d bound for China, Japan & South Korea",
-      pricingImpact: "Malacca Pilotage & Electronic Navigational Tolls: ~$0.08 / bbl",
-      riskFactor: "Severe maritime traffic congestion, grounding risks, and piracy",
+      location: "Strait of Malacca & Singapore Strait",
+      description: "After 14 days crossing the Indian Ocean, ships traverse the Philips Channel (1.7 nm wide) with a 25m draft ceiling.",
+      volumeOrFact: "Throughput: 16.2 Mb/d bound for China, Japan & Korea",
+      pricingImpact: "Malacca Pilotage & Electronic Tolls: ~$0.08 / bbl",
+      riskFactor: "Heavy traffic congestion, grounding risks, and piracy",
       icon: "🧭"
     },
     {
       step: 7,
       title: "The Coastal Mega-Refinery",
       subtitle: "Fractionation & Molecular Cracking",
-      location: "ZPC Mega-Refinery (Zhoushan, China) or Jamnagar (India)",
-      description: "Unloaded into coastal tanks, the crude enters an 80-meter atmospheric distillation tower heated to 370°C. Heavy molecules fall to the vacuum tower and delayed coker; light vapors rise.",
+      location: "ZPC Zhoushan (China) or Jamnagar (India)",
+      description: "Crude is heated to 370°C in atmospheric distillation; heavy bottoms feed vacuum towers and delayed cokers.",
       volumeOrFact: "Refining Intake: 800,000 b/d complex configuration",
-      pricingImpact: "Refining Cash Cost: $3.80 / bbl | Hydrogen Desulfurization: $2.10 / bbl",
-      riskFactor: "Catalyst poisoning from heavy metals (Nickel, Vanadium) and high sulfur",
+      pricingImpact: "Refining Cost: $3.80 / bbl | Desulfurization: $2.10 / bbl",
+      riskFactor: "Catalyst poisoning from sulfur and heavy metals",
       icon: "🏭"
     },
     {
       step: 8,
       title: "The Clean Product Yields",
       subtitle: "Finished Euro-VI / China-VI Fuels",
-      location: "Secondary Hydrocrackers & Finished Fuel Tanks",
-      description: "Our single 42-gallon barrel of Arab Light yields approximately 19 gallons of gasoline, 12 gallons of ultra-low sulfur diesel (<10 ppm S), 4 gallons of Jet A-1, and petrochemical naphtha.",
-      volumeOrFact: "Product Slate: 45% Light Distillates, 35% Middle, 20% Fuel Oil/Coke",
-      pricingImpact: "Refining Gross Margin (GRM): +$6.50 to +$9.20 / bbl spread",
-      riskFactor: "Refining crack spread collapses and environmental carbon compliance",
+      location: "Secondary Hydrocrackers & Fuel Storage",
+      description: "One 42-gallon barrel produces ~19 gal gasoline, ~12 gal ultra-low-sulfur diesel, ~4 gal jet fuel, and chemical naphtha.",
+      volumeOrFact: "Yield: 45% Light Ends, 35% Distillates, 20% Residue/Coke",
+      pricingImpact: "Gross Refining Margin: +$6.50 to +$9.20 / bbl",
+      riskFactor: "Crack spread volatility and carbon compliance",
       icon: "⛽"
     },
     {
       step: 9,
       title: "The Consumer End-Use",
       subtitle: "Powering Asia's Industrial Economy",
-      location: "Asian Highways, Aviation Hubs, and Petrochemical Plants",
-      description: "The gasoline powers passenger vehicles across Shanghai; the diesel powers inter-state trucking in India; the jet fuel refuels flights from Tokyo Haneda; and the naphtha becomes medical polymers.",
-      volumeOrFact: "Energy Service: Delivers 5.8 Million BTUs of primary energy",
-      pricingImpact: "Retail Value: $85 - $110 / bbl equivalent (with national excise taxes)",
-      riskFactor: "EV substitution, energy transition, and macroeconomic recession",
+      location: "Asian Transportation, Aviation & Chemicals",
+      description: "Fuel powers Shanghai commuter vehicles, Indian heavy transport, Tokyo air routes, and medical polymers.",
+      volumeOrFact: "Energy Content: Delivers ~5.8 Million BTUs",
+      pricingImpact: "Retail Finished Value: $85 - $110 / bbl equivalent",
+      riskFactor: "EV substitution and macroeconomic demand shifts",
       icon: "🚗"
     }
   ],
@@ -986,108 +986,108 @@ const OIL_DATA = {
       id: 1,
       number: "01",
       title: "The Dubai & Oman Ecosystem",
-      subtitle: "Fields, Export Terminals, Animated Flows & The 9 Major Middle Eastern Grades",
+      subtitle: "Fields, Export Terminals & The 9 Major Middle Eastern Grades",
       sectionTag: "CHAPTER 01 // DUBAI & OMAN ECOSYSTEM",
-      summary: "Discover where Dubai and Oman crude oil are pumped, which fields and ports supply them, how barrels move from wellhead to Asian tankers, and compare all 9 flagship Middle Eastern crude grades.",
-      whatIsThis: "Dubai and Oman are the pricing heart of the Asian oil market. Even though Dubai's offshore wells (Fateh, Southwest Fateh) now produce around 50,000 barrels a day, Oman's onshore fields (Block 6: Fahud, Yibal, Mukhaizna) pump 1,000,000 barrels a day through the Mina al Fahal terminal near Muscat. Together with Abu Dhabi's Murban, Upper Zakum, and Das Blend, Saudi Arabia's Arab Light/Medium/Heavy, and Iraq's Basrah grades, they form the physical supply engine for Asia.",
-      whyItMatters: "Over 14.5 million barrels of Middle Eastern oil sail to Asia every single day. Because Oman's Mina al Fahal terminal and Abu Dhabi's Fujairah terminal sit outside the narrow Strait of Hormuz, Asian buyers treat them as lifeline supply points that never face Persian Gulf bottlenecks.",
-      tradingImpact: "Every barrel exported from Saudi Arabia, Iraq, Kuwait, and the UAE to Asia is priced using the Dubai/Oman benchmark. Refiners in China, India, Japan, and South Korea choose between the 9 Middle Eastern grades based on API gravity (light vs heavy) and sulfur content (sweet vs sour).",
+      summary: "Overview of Dubai/Oman production, export hubs, and the 9 Middle Eastern grades supplying Asia.",
+      whatIsThis: "Dubai and Oman anchor Asian crude pricing. Dubai (~50k b/d) and Oman (~1 Mb/d) anchor the physical basket alongside Saudi, UAE, and Iraqi grades.",
+      whyItMatters: "Over 14.5 Mb/d flows from the Gulf to Asia. Ports outside Hormuz (Oman's Mina al Fahal, UAE's Fujairah) offer bypass loading routes.",
+      tradingImpact: "Gulf barrels price against Dubai/Oman differentials. Refiners select grades by API gravity and sulfur to balance yields and margins.",
       mapId: "dubai_oman_eco"
     },
     {
       id: 2,
       number: "02",
       title: "Asian Crude Demand & Refineries",
-      subtitle: "China, India, Japan & South Korea: Mega-Refineries, Import Flows & What They Consume",
+      subtitle: "China, India, Japan & South Korea: Mega-Refineries & Import Slates",
       sectionTag: "CHAPTER 02 // ASIAN DEMAND & REFINERIES",
-      summary: "Explore the 4 giant Asian oil buyers importing 22.4 million barrels every day. See their biggest coastal refineries plotted on interactive maps, where they buy their oil, and which grades each refinery consumes.",
-      whatIsThis: "Four Asian countries control the global crude market: China (11.45 Mb/d imports), India (4.85 Mb/d), South Korea (2.95 Mb/d), and Japan (2.45 Mb/d). Along their coastlines sit the largest refineries on Earth—including Reliance Jamnagar in India (1.4 Mb/d), ZPC Zhoushan in China (800k b/d), SK Ulsan in Korea (840k b/d), and ENEOS Chiba in Japan.",
-      whyItMatters: "Each buyer has a completely different shopping strategy. Japan buys 95% Middle Eastern crude for energy security. India buys ~39% discounted Russian Urals and heavy Iraqi Basrah to feed high-complexity cokers. China buys Oman, Russian ESPO pipeline crude, and Saudi Arab Light. South Korea mixes Middle East oil with tax-free US WTI Midland.",
-      tradingImpact: "When China's independent 'teapot' refineries in Shandong increase runs or India's Reliance switches from Saudi Arab Heavy to Russian Urals, global tanker flows and crude diffs shift within hours.",
+      summary: "Profiling Asia's top 4 buyers importing 22.4 Mb/d and their coastal refining assets.",
+      whatIsThis: "China (11.5 Mb/d), India (4.9 Mb/d), South Korea (3.0 Mb/d), and Japan (2.5 Mb/d) dominate world seaborne crude trade.",
+      whyItMatters: "Distinct buyer profiles: Japan prioritizes supply security, India seeks deep discounts, China optimizes scale, and Korea targets product exports.",
+      tradingImpact: "Run-rate changes at Chinese teapots or Indian cokers directly shift regional crude premiums and VLCC tanker rates.",
       mapId: "china_sourcing"
     },
     {
       id: 3,
       number: "03",
       title: "Official Selling Prices (OSP) & Shipping",
-      subtitle: "How Monthly OSP Pricing Works & How VLCC, Suezmax, and Aframax Tankers Carry Oil",
+      subtitle: "Monthly Pricing Formulas & Supertanker Logistics",
       sectionTag: "CHAPTER 03 // OSP & MARITIME FREIGHT",
-      summary: "Understand Official Selling Prices (OSP) in plain English with an interactive price builder, then compare the three supertanker classes—VLCC, Suezmax, and Aframax—with visual vessel diagrams.",
-      whatIsThis: "Middle Eastern oil companies like Saudi Aramco and ADNOC do not haggle over every ship. Instead, around the 5th of each month, they release an Official Selling Price (OSP)—a simple dollar premium or discount added to the monthly average of Dubai/Oman (for example: Dubai/Oman + $1.80/bbl). Once bought, the oil sails on three main tanker sizes: VLCC (2 million barrels), Suezmax (1 million barrels), or Aframax (700,000 barrels).",
-      whyItMatters: "The delivered cost of oil at an Asian refinery is the FOB cargo price (Benchmark + OSP) plus the ocean freight cost. A giant VLCC cuts the shipping cost from Saudi Arabia to China to ~$2.15/bbl, whereas smaller ships cost more per barrel but can fit into shallower ports or through the Suez Canal.",
-      tradingImpact: "If Saudi Aramco sets its monthly OSP too high (+$3.50/bbl), Asian refiners reduce their Saudi orders and book VLCCs loaded with US or West African crude instead.",
+      summary: "How NOCs set monthly formula pricing and how supertankers deliver oil across the ocean.",
+      whatIsThis: "Producers set monthly OSPs as differentials to Dubai/Oman. Crude sails on VLCC (2M bbl), Suezmax (1M bbl), or Aframax (700k bbl) tankers.",
+      whyItMatters: "Delivered cost equals FOB benchmark + OSP + freight. VLCC freight economies scale Gulf-to-Asia transit to ~$2.15/bbl.",
+      tradingImpact: "Higher Middle Eastern OSPs prompt Asian refiners to trim Gulf nominations and charter Atlantic Basin or spot barrels.",
       mapId: "saudi_to_china"
     },
     {
       id: 4,
       number: "04",
       title: "Why Refineries Choose Different Crudes",
-      subtitle: "Interactive Refinery Matchmaker, Product Yields & Animated Tanker Route Simulator",
+      subtitle: "Refinery Configurations, API/Sulfur Economics & Yield Simulator",
       sectionTag: "CHAPTER 04 // REFINERY PREFERENCES",
-      summary: "Why do some refineries pay extra for light sweet Murban while others buy thick, high-sulfur Basrah Heavy? Test any crude grade, API gravity, sulfur level, and freight cost in the live Refinery Simulator.",
-      whatIsThis: "Not all refineries are built the same. Simple refineries can only boil light, low-sulfur ('sweet') crude oil like Murban or WTI Midland. Complex refineries in India, China, and Korea have spent billions on 'Cokers' and 'Hydrotreaters'—giant chemical units that crack thick, high-sulfur ('sour') bottom-of-the-barrel oil like Basrah Heavy or Arab Heavy into clean diesel, jet fuel, and petrochemical feedstock.",
-      whyItMatters: "Heavy sour crude sells at a $3 to $8 per barrel discount compared to light sweet crude. A complex refinery that can digest cheap, dirty crude and sell expensive clean diesel pockets an extra $4 to $7 per barrel in refining profit.",
-      tradingImpact: "Use the interactive simulator below to adjust API gravity, sulfur %, freight cost, crude grade, and destination country—and watch the best refinery match, buyer, product yield, and animated sea route update live!",
+      summary: "How refinery complexity dictates crude selection between light sweet and heavy sour grades.",
+      whatIsThis: "Simple hydroskimmers require light sweet crude. Complex refiners with cokers digest heavy sour crudes to yield high-value diesel and jet fuel.",
+      whyItMatters: "Heavy sour grades trade at $3–$8/bbl discounts. Complex refiners capture this spread to maximize net refining margins.",
+      tradingImpact: "Adjust API gravity, sulfur %, freight cost, and destination below to view matched refineries, product yields, and net margin outcomes.",
       mapId: "india_refineries"
     },
     {
       id: 5,
       number: "05",
       title: "When Atlantic Crude Becomes Competitive",
-      subtitle: "WTI Midland, Brent, West Africa & North Sea vs Russian Urals, ESPO & Sokol",
+      subtitle: "WTI Midland, Brent, West Africa vs Russian Urals & ESPO",
       sectionTag: "CHAPTER 05 // ATLANTIC BASIN & RUSSIA",
-      summary: "See when long-haul oil from Texas, the North Sea, and West Africa beats Middle Eastern oil into Asia, and map how Russian Urals, ESPO, and Sokol flow east.",
-      whatIsThis: "Asia doesn't just buy from the Persian Gulf. Two rival regions compete aggressively for Asian refineries: 1) The Atlantic Basin—pumping US WTI Midland (Texas), North Sea Brent/Forties/Johan Sverdrup (UK/Norway), and West African Bonny Light/Cabinda (Nigeria/Angola); and 2) Russia—exporting Urals from Baltic/Black Sea ports and ESPO & Sokol from Pacific ports (Kozmino and De-Kastri).",
-      whyItMatters: "Atlantic oil has to sail 10,000 to 15,000 miles (30 to 46 days) to reach Asia. It becomes competitive in Asia when European Brent prices drop close to Dubai prices (a narrow Brent-Dubai spread under $1.50/bbl) and VLCC freight is cheap. Meanwhile, Russian ESPO reaches China in just 3 days from Kozmino!",
-      tradingImpact: "Atlantic and Russian barrels act as a permanent ceiling on Middle Eastern pricing power. Whenever Gulf producers raise prices, Asian buyers pivot to WTI Midland, West African sweet grades, or discounted Russian Urals and ESPO.",
+      summary: "Analyzing when Atlantic Basin and Russian crudes outcompete Persian Gulf barrels into Asia.",
+      whatIsThis: "US WTI Midland, North Sea Brent, West African grades, and Russian Urals/ESPO compete directly against Persian Gulf crudes.",
+      whyItMatters: "Atlantic crudes face 30–45 day voyages. A narrow Brent-Dubai EFS (<$1.50) and low tanker freight open the arbitrage window.",
+      tradingImpact: "Atlantic and Russian flows cap Middle Eastern OSP pricing power by giving Asian buyers alternative baseload options.",
       mapId: "corridor_atlantic"
     },
     {
       id: 6,
       number: "06",
       title: "How Dubai/Oman Pricing Works",
-      subtitle: "Inside the 30-Minute 16:30 Singapore Trading Window",
+      subtitle: "The 30-Minute Platts 16:30 Singapore Window",
       sectionTag: "CHAPTER 06 // PRICING MECHANICS",
-      summary: "Step inside the Platts Singapore window between 16:00 and 16:30 to see how 25,000-barrel partial trades set the daily price of Asian oil.",
-      whatIsThis: "Every day from 16:00 to 16:30 Singapore time, oil traders trade 25,000-barrel electronic clips ('partials') of Dubai crude. Once a buyer collects 20 partials (500,000 barrels) from the same seller, it converts into a real physical supertanker cargo of Dubai, Oman, Upper Zakum, Murban, or Al-Shaheen.",
-      whyItMatters: "This 20-partial rule connects paper trading directly to real ships. Nobody can artificially push the price up without having to buy millions of barrels of real crude oil.",
-      tradingImpact: "The closing price at 16:30 sharp sets the official daily benchmark used by governments and refineries across the entire Middle East and Asia.",
+      summary: "How 25,000-barrel partial trades in Singapore establish daily physical crude benchmarks.",
+      whatIsThis: "Between 16:00 and 16:30 SGT, traders exchange 25k bbl partials. Amassing 20 partials converts into a 500k bbl physical cargo.",
+      whyItMatters: "The 20-partial physical delivery convergence anchors paper derivatives to actual tanker deliveries.",
+      tradingImpact: "The 16:30 Singapore assessment establishes the daily benchmark used in Middle Eastern term contracts.",
       mapId: "dubai_oman_eco"
     },
     {
       id: 7,
       number: "07",
       title: "Ocean Chokepoints: Hormuz & Malacca",
-      subtitle: "Why Two Narrow Waterways Control 20 Million Barrels a Day",
+      subtitle: "The Two Critical Straits Controlling 20 Million Barrels Daily",
       sectionTag: "CHAPTER 07 // MARITIME CHOKEPOINTS",
-      summary: "Explore the 21-mile Strait of Hormuz and the 1.7-mile Strait of Malacca, plus the desert bypass pipelines built to avoid them.",
-      whatIsThis: "Tankers sailing from the Persian Gulf to Asia must squeeze through two maritime bottlenecks: the Strait of Hormuz (20.8 Mb/d) exiting the Gulf, and the Strait of Malacca (16.0 Mb/d) entering the South China Sea.",
-      whyItMatters: "Only Saudi Arabia (East-West Pipeline to Yanbu) and the UAE (Habshan-Fujairah Pipeline) have pipelines that bypass Hormuz, leaving over 13 million barrels a day completely dependent on open sea lanes.",
-      tradingImpact: "Any geopolitical flare-up in Hormuz or the Red Sea spikes tanker insurance costs and makes Hormuz-free grades like Oman (loaded at Muscat) and Murban (loaded at Fujairah) jump in price.",
+      summary: "Navigational bottlenecks at the Strait of Hormuz (20.8 Mb/d) and Strait of Malacca (16.0 Mb/d).",
+      whatIsThis: "Persian Gulf crude must pass Hormuz upon exit and Malacca to enter East Asia.",
+      whyItMatters: "Only Saudi Arabia and the UAE have Hormuz bypass pipelines; over 13 Mb/d remains sea-dependent.",
+      tradingImpact: "Regional disruptions surge tanker insurance and boost demand for grades loading outside Hormuz (Oman, Murban).",
       mapId: "hormuz_tactical"
     },
     {
       id: 8,
       number: "08",
       title: "7-Crude Delivered Cost Calculator",
-      subtitle: "Compare Landed Costs & Margins Across All 4 Asian Buyers",
+      subtitle: "Landed Parity & Netback Margins Across 4 Asian Markets",
       sectionTag: "CHAPTER 08 // DELIVERED COST ENGINE",
-      summary: "Compare FOB prices, ocean freight, sulfur cleaning costs, and netback margins for 7 major crudes side-by-side.",
-      whatIsThis: "A side-by-side cost breakdown table and interactive slider engine comparing Arab Light, Arab Medium, Murban, Oman, Basrah Medium, Russian Urals, and US WTI Midland delivered into China, India, Japan, and South Korea.",
-      whyItMatters: "Shows the exact dollar-and-cent math behind delivered parity—proving why a cheap FOB barrel can become expensive after freight, or why a distant barrel can win with zero tariffs.",
-      tradingImpact: "Ranks all 7 crudes from #1 Most Profitable to #7 Least Profitable in real time as you move global price and freight sliders.",
+      summary: "Interactive landed cost calculator comparing FOB, freight, insurance, and desulfurization for 7 crudes.",
+      whatIsThis: "Delivered parity model comparing Arab Light, Arab Medium, Murban, Oman, Basrah Medium, Russian Urals, and WTI Midland into Asia.",
+      whyItMatters: "Shows real landed economics—revealing how freight spikes or quality penalties alter crude competitiveness.",
+      tradingImpact: "Ranks crudes by delivered netback in real time as benchmark spreads, freight rates, and discounts change.",
       mapId: "korea_sourcing"
     },
     {
       id: 9,
       number: "09",
       title: "The Journey of One Barrel",
-      subtitle: "Final Chapter: 9 Illustrated Stages from Desert Wellhead to Your Fuel Tank",
+      subtitle: "9 Key Stages from Desert Wellhead to Fuel Tank",
       sectionTag: "FINAL CHAPTER // BARREL WALKTHROUGH",
-      summary: "Follow a single 42-gallon barrel step-by-step from 2,000 meters underground in Saudi Arabia all the way to an Asian highway.",
-      whatIsThis: "An interactive 9-stage walkthrough tracking one barrel of crude oil: 1. Desert Wellhead, 2. Gas Separation Plant, 3. Coastal Export Terminal, 4. VLCC Supertanker, 5. Strait of Hormuz, 6. Strait of Malacca, 7. Asian Mega-Refinery, 8. Clean Fuel Products, and 9. Consumer Cars & Planes.",
-      whyItMatters: "Seeing how value and cost build up at each physical checkpoint shows why oil trading is a game of pipelines, storage tanks, ship drafts, and distillation chemistry.",
-      tradingImpact: "Every barrel accumulates lifting costs ($3.50), pipeline fees ($0.45), tanker freight ($2.15), and refining/desulfurization costs ($5.90) before turning into $88+ worth of gasoline, diesel, and jet fuel.",
+      summary: "Tracking a 42-gallon crude barrel through production, marine logistics, and refining.",
+      whatIsThis: "Nine physical stages: wellhead, gas separation, export terminal, VLCC transit, chokepoints, refining, and final consumer delivery.",
+      whyItMatters: "Details value and cost accumulation across extraction, shipping, and chemical conversion.",
+      tradingImpact: "Lifting ($3.50), transit ($2.60), and refining ($5.90) transform a $74 crude barrel into $88+ of high-value refined fuels.",
       mapId: "saudi_to_china"
     }
   ],

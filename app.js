@@ -268,15 +268,15 @@ function renderChapterContent(chapterId) {
     html += renderChapter8Visual();  // Final Chapter 09: The Journey of One Barrel
   }
 
-  // Inject Universal Maritime Intelligence Map for Chapters 6, 8, 9
-  if ([6, 8, 9].includes(chapterId)) {
+  // Inject Universal Maritime Intelligence Map for Chapter 9 only
+  if (chapterId === 9) {
     html += `
       <div class="section-block" style="margin-top:24px;">
         <div class="section-header">
           <div>
-            <div class="section-tag">KPLER / VORTEXA MARITIME INTELLIGENCE TERMINAL // CHAPTER ${c.number}</div>
+            <div class="section-tag">KPLER / VORTEXA MARITIME INTELLIGENCE TERMINAL // FINAL CHAPTER</div>
             <h3 class="section-title">Live AIS Tanker Telemetry, Nautical Seamarks &amp; Deep-Water Corridors</h3>
-            <div class="section-subtitle">Switch between Satellite, Ocean Bathymetry, Kpler Dark, and FT Vector imagery or click any moving supertanker to inspect its live AIS cargo manifest</div>
+            <div class="section-subtitle">Switch imagery or select vessels to inspect live AIS position and cargo manifest.</div>
           </div>
         </div>
         <div class="section-body">
@@ -356,17 +356,11 @@ function renderChapterContent(chapterId) {
       initJourneyOfOneBarrel();  // Final Chapter 09: The Journey of One Barrel
     }
 
-    if ([6, 8, 9].includes(chapterId)) {
+    if (chapterId === 9) {
       const uniMapId = `chapterUniversalMaritimeMap_${chapterId}`;
       const uniEl = document.getElementById(uniMapId);
       if (uniEl && typeof L !== "undefined") {
-        const chapterViews = {
-          6: { center: [14.0, 80.0], zoom: 4 },
-          8: { center: [22.0, 85.0], zoom: 3 },
-          9: { center: [20.0, 82.0], zoom: 4 }
-        };
-        const v = chapterViews[chapterId] || { center: [22.0, 85.0], zoom: 3 };
-        L.map(uniMapId, { center: v.center, zoom: v.zoom });
+        L.map(uniMapId, { center: [20.0, 82.0], zoom: 4 });
       }
     }
   }, 60);
@@ -942,34 +936,34 @@ function renderChapter4Visual() {
     <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; margin-bottom:28px;">
       <div class="buyer-card" style="border-top:4px solid #0284c7;">
         <div style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#0284c7;">TYPE 1 // SIMPLE HYDROSKIMMING</div>
-        <h4 style="font-family:var(--font-serif); font-size:20px; font-weight:800; color:#0f172a; margin:4px 0 8px 0;">Light Sweet Crude Buyers</h4>
+        <h4 style="font-family:var(--font-serif); font-size:20px; font-weight:800; color:#0f172a; margin:4px 0 8px 0;">Light Sweet Buyers</h4>
         <p style="font-size:13px; color:#1e293b; line-height:1.5;">
-          Older or simpler refineries only have basic boiling towers. They <strong>must buy expensive Light Sweet crudes</strong> (like Murban, WTI Midland, or Bonny Light with &lt;0.5% sulfur) because they lack the chemical units to break down heavy tar or strip out high sulfur.
+          Simple distillation towers require low-sulfur light sweet crude (Murban, WTI Midland &lt;0.5% S) to meet clean fuel specs without advanced desulfurization.
         </p>
       </div>
       <div class="buyer-card" style="border-top:4px solid #d97706;">
         <div style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#b45309;">TYPE 2 // MEDIUM HYDROCRACKING</div>
         <h4 style="font-family:var(--font-serif); font-size:20px; font-weight:800; color:#0f172a; margin:4px 0 8px 0;">Medium Sour Workhorses</h4>
         <p style="font-size:13px; color:#1e293b; line-height:1.5;">
-          Most coastal refineries in Japan, South Korea, and state-owned China have <strong>Hydrocrackers and Hydrotreaters</strong>. They are engineered specifically to run Middle Eastern baseload grades like <strong>Arab Light, Oman Blend, Upper Zakum, and Russian Urals</strong> (30°–34° API, 1.4%–2.0% sulfur).
+          Refineries with hydrocrackers and hydrotreaters. Engineered to process Middle East baseloads (Arab Light, Oman, Upper Zakum) at 30°–34° API and 1.4%–2.0% S.
         </p>
       </div>
       <div class="buyer-card" style="border-top:4px solid #990000;">
         <div style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#990000;">TYPE 3 // ULTRA-DEEP COKING</div>
         <h4 style="font-family:var(--font-serif); font-size:20px; font-weight:800; color:#0f172a; margin:4px 0 8px 0;">Heavy Sour Bargain Hunters</h4>
         <p style="font-size:13px; color:#1e293b; line-height:1.5;">
-          Mega-refineries like <strong>Reliance Jamnagar (India)</strong> and <strong>ZPC Zhoushan (China)</strong> built giant Delayed Cokers. They deliberately buy the thickest, highest-sulfur crudes on Earth (<strong>Basrah Heavy, Arab Heavy</strong>) at huge discounts and crack them into high-profit diesel and jet fuel.
+          Mega-refineries (Jamnagar, Zhoushan) with delayed cokers crack deeply discounted heavy sour barrels (Basrah Heavy, Arab Heavy) into high-margin diesel.
         </p>
       </div>
     </div>
 
-    <!-- 2. INTERACTIVE REFINERY PREFERENCE SIMULATOR + ANIMATED ROUTE MAP -->
+    <!-- 2. INTERACTIVE REFINERY PREFERENCE SIMULATOR -->
     <div class="section-block">
       <div class="section-header">
         <div>
-          <div class="section-tag">INTERACTIVE REFINERY MATCHMAKER &amp; ROUTE ANIMATOR</div>
+          <div class="section-tag">INTERACTIVE REFINERY MATCHMAKER</div>
           <h3 class="section-title">Refinery Crude Preference &amp; Product Yield Simulator</h3>
-          <div class="section-subtitle">Select a Crude Grade, adjust API Gravity, Sulfur %, Freight Cost, and Destination Country to see the matched refinery, buyer, yield, and animated shipping route</div>
+          <div class="section-subtitle">Adjust crude grade, API gravity, sulfur %, freight rate, and destination to simulate matched refinery, product yield, and net margin.</div>
         </div>
       </div>
       <div class="section-body">
@@ -1037,9 +1031,9 @@ function renderChapter4Visual() {
               </div>
               <input type="range" id="sim4FreightSlider" min="0.90" max="6.00" step="0.05" value="2.15" oninput="runRefineryPreferenceSimulator()" style="width:100%; accent-color:#059669; cursor:pointer;">
               <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:9.5px; color:#475569; font-weight:700; margin-top:3px;">
-                <span>$0.90 (Short-Haul $1.8M)</span>
-                <span>$2.15 (Normal Gulf VLCC)</span>
-                <span>$6.00 (Long-Haul Spike $12M)</span>
+                <span>$0.90 (Short-Haul)</span>
+                <span>$2.15 (Base Gulf VLCC)</span>
+                <span>$6.00 (Spike Rate)</span>
               </div>
             </div>
           </div>
@@ -1058,7 +1052,7 @@ function renderChapter4Visual() {
 
               <!-- Live Plain-English Freight & Arbitrage Impact Banner -->
               <div id="sim4FreightImpactBanner" style="background:#ecfdf5; border:1.5px solid #6ee7b7; border-left:5px solid #059669; padding:10px 12px; border-radius:8px; margin-bottom:12px; font-size:12.5px; color:#065f46; line-height:1.45; font-weight:600;">
-                🟢 <strong>Low Shipping Cost ($2.15/bbl = $4.30M per 2M-bbl Supertanker):</strong> Tanker freight is economical. The refinery earns a strong <strong>+$7.40/bbl</strong> profit after paying for shipping and books a full 2-million-barrel VLCC cargo.
+                🟢 <strong>Economical Freight ($2.15/bbl):</strong> Net margin remains strong after shipping. Full 2M-barrel VLCC cargo charter recommended.
               </div>
 
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
@@ -1068,26 +1062,26 @@ function renderChapter4Visual() {
                   <div id="sim4OutRefinerySub" style="font-size:11.5px; color:#1e293b; margin-top:2px;">High-Complexity Hydrocracking &amp; Coking (800k b/d)</div>
                 </div>
                 <div style="background:#f8fafc; padding:12px; border-radius:8px; border-left:4px solid #d97706;">
-                  <div style="font-family:var(--font-mono); font-size:10px; font-weight:800; color:#334155;">LIKELY BUYER &amp; CHARTER DECISION</div>
+                  <div style="font-family:var(--font-mono); font-size:10px; font-weight:800; color:#334155;">LIKELY BUYER</div>
                   <div id="sim4OutBuyer" style="font-family:var(--font-serif); font-size:17px; font-weight:800; color:#0f172a; margin-top:2px;">Rongsheng Petrochemical / Sinopec</div>
                   <div id="sim4OutBuyerSub" style="font-size:11.5px; color:#1e293b; margin-top:2px;">Books Full 2M-bbl VLCC Supertanker</div>
                 </div>
                 <div style="background:#f8fafc; padding:12px; border-radius:8px; border-left:4px solid #0284c7;">
-                  <div style="font-family:var(--font-mono); font-size:10px; font-weight:800; color:#334155;">DESTINATION PORT &amp; TANKER BILL</div>
+                  <div style="font-family:var(--font-mono); font-size:10px; font-weight:800; color:#334155;">DESTINATION PORT</div>
                   <div id="sim4OutDest" style="font-family:var(--font-serif); font-size:17px; font-weight:800; color:#0f172a; margin-top:2px;">Ningbo / Zhoushan Port, China</div>
-                  <div id="sim4OutDestSub" style="font-size:11.5px; color:#1e293b; margin-top:2px;">18-Day Voyage • $4.30M Total VLCC Freight</div>
+                  <div id="sim4OutDestSub" style="font-size:11.5px; color:#1e293b; margin-top:2px;">18-Day Voyage • $4.30M Total Freight</div>
                 </div>
                 <div id="sim4OutMarginCard" style="background:#ecfdf5; padding:12px; border-radius:8px; border-left:4px solid #059669; transition:all 0.2s ease;">
-                  <div id="sim4OutMarginTitle" style="font-family:var(--font-mono); font-size:10px; font-weight:800; color:#065f46;">NET REFINING MARGIN (AFTER FREIGHT)</div>
+                  <div id="sim4OutMarginTitle" style="font-family:var(--font-mono); font-size:10px; font-weight:800; color:#065f46;">NET MARGIN (AFTER FREIGHT)</div>
                   <div id="sim4OutMargin" style="font-family:var(--font-mono); font-size:20px; font-weight:800; color:#059669; margin-top:2px;">+$7.40 / bbl</div>
-                  <div id="sim4OutMarginSub" style="font-size:11.5px; color:#065f46; margin-top:2px;">+$9.55 Gross Margin minus -$2.15/bbl Freight</div>
+                  <div id="sim4OutMarginSub" style="font-size:11.5px; color:#065f46; margin-top:2px;">+$9.55 Gross minus -$2.15/bbl Freight</div>
                 </div>
               </div>
 
               <!-- Output 4: Visual Product Yield Bar -->
               <div style="background:#f8fafc; padding:14px; border-radius:8px; border:1px solid #cbd5e1;">
                 <div style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#0f172a; margin-bottom:8px;">
-                  ⛽ REFINED PRODUCT YIELD BREAKDOWN (FROM 1 BARREL = 42 GALLONS):
+                  ⛽ REFINED PRODUCT YIELD (PER 42-GALLON BARREL):
                 </div>
                 <div id="sim4YieldBar" class="stacked-bar" style="height:26px; border-radius:6px; overflow:hidden; margin-bottom:10px;"></div>
                 <div id="sim4YieldLegend" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; font-size:12px; font-weight:700;"></div>
@@ -1095,19 +1089,6 @@ function renderChapter4Visual() {
             </div>
           </div>
 
-        </div>
-
-        <!-- ANIMATED SHIPPING ROUTE MAP FOR SELECTED CRUDE -> DESTINATION -->
-        <div style="margin-top:22px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
-            <div style="font-family:var(--font-mono); font-size:12px; font-weight:800; color:#0f172a;" id="sim4MapRouteTitle">
-              🚢 LIVE ANIMATED TANKER ROUTE: RAS TANURA (SAUDI ARABIA) &rarr; NINGBO / ZHOUSHAN (CHINA)
-            </div>
-            <span id="sim4MapRouteSub" style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#059669;">
-              🟢 VLCC Charter Active ($2.15/bbl = $4.30M Voyage Cost)
-            </span>
-          </div>
-          <div id="chapter4SimMap" style="width:100%; height:410px; border-radius:10px; border:1.5px solid #cbd5e1;"></div>
         </div>
       </div>
     </div>
@@ -1825,21 +1806,6 @@ const SIM4_GRADE_PRESETS = {
 };
 
 function initChapter4Simulator() {
-  ch4LastRouteKey = null;
-  ch4ActivePolyline = null;
-  ch4ActiveShip = null;
-  const el = document.getElementById("chapter4SimMap");
-  if (el && typeof L !== "undefined") {
-    if (ch4Map) {
-      ch4Map.remove();
-      ch4Map = null;
-    }
-    ch4Map = L.map("chapter4SimMap", { center: [22.0, 85.0], zoom: 3 });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      attribution: "&copy; OpenStreetMap &copy; CARTO"
-    }).addTo(ch4Map);
-    ch4RouteGroup = L.layerGroup().addTo(ch4Map);
-  }
   runRefineryPreferenceSimulator();
 }
 
@@ -2657,15 +2623,15 @@ function loadCaseStudy(idx) {
   `;
 }
 
-// Chapter 12: Interactive Crude Choice Simulator (7 Crudes x 4 Buyers)
+// Chapter 08: Interactive Crude Choice Simulator (7 Crudes x 4 Buyers)
 function renderChapter12Visual() {
   return `
     <!-- Dynamic Winner Recommendation Banner -->
     <div class="winner-banner" id="calcWinnerBanner">
       <div>
-        <strong>🏆 WINNING RECOMMENDATION:</strong> <span id="winnerCrudeText">Russian Urals ($71.85/bbl landed into CHINA)</span>
+        <strong>🏆 ARBITRAGE WINNER:</strong> <span id="winnerCrudeText">Russian Urals ($71.85/bbl landed into CHINA)</span>
       </div>
-      <span id="winnerReasonText" style="font-size:11px; opacity:0.85;">Massive post-sanctions discount overcomes longer voyage freight from Baltic/Black Sea.</span>
+      <span id="winnerReasonText" style="font-size:11px; opacity:0.85;">Post-sanctions discount overcomes longer voyage freight.</span>
     </div>
 
     <div class="arb-calculator-grid">
@@ -2678,19 +2644,19 @@ function renderChapter12Visual() {
 
         <div class="calc-control-group">
           <label class="calc-label">
-            <span>SELECT ACTIVE CRUDE ASSAY (7 BARRELS)</span>
+            <span>SELECT CRUDE ASSAY TO HIGHLIGHT:</span>
           </label>
           <div class="crude-pills-grid" id="calcCrudePills"></div>
         </div>
 
         <div class="calc-control-group">
           <label class="calc-label" for="calcDestSelect">
-            <span>DESTINATION REFINERY CLUSTER</span>
+            <span>DESTINATION REFINERY:</span>
           </label>
           <select id="calcDestSelect" class="calc-select" onchange="recalculateArbitrage()">
-            <option value="china">China (Ningbo / ZPC &amp; Sinopec Zhenhai)</option>
-            <option value="india">India (Jamnagar / Reliance Industries)</option>
-            <option value="japan">Japan (Chiba / ENEOS Corporation)</option>
+            <option value="china">China (Ningbo / ZPC &amp; Zhenhai)</option>
+            <option value="india">India (Jamnagar / Reliance)</option>
+            <option value="japan">Japan (Chiba / ENEOS)</option>
             <option value="korea">South Korea (Ulsan / SK Innovation)</option>
           </select>
         </div>
@@ -2713,10 +2679,15 @@ function renderChapter12Visual() {
 
         <div class="calc-control-group">
           <label class="calc-label" for="sliderVlccFreight">
-            <span>VLCC TD3C FREIGHT RATE:</span>
-            <span id="valVlccFreight" style="color:var(--color-me-gold); font-weight:700;">WS 58.5 ($2.15/bbl)</span>
+            <span>TANKER FREIGHT RATE ($/BBL):</span>
+            <span id="valVlccFreight" style="color:var(--color-me-gold); font-weight:700;">$2.15/bbl (WS 58.5)</span>
           </label>
-          <input type="range" id="sliderVlccFreight" class="calc-slider" min="30" max="120" step="1.0" value="58.5" oninput="recalculateArbitrage()">
+          <input type="range" id="sliderVlccFreight" class="calc-slider" min="0.80" max="6.50" step="0.05" value="2.15" oninput="recalculateArbitrage()">
+          <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10px; color:#6B7280; margin-top:2px;">
+            <span>$0.80 (Cheap WS 22)</span>
+            <span>$2.15 (Base WS 58)</span>
+            <span>$6.50 (Spike WS 177)</span>
+          </div>
         </div>
 
         <div class="calc-control-group">
@@ -2731,10 +2702,11 @@ function renderChapter12Visual() {
       <!-- Landed Output Panel -->
       <div class="arb-panel">
         <div class="arb-panel-title">
-          <span>DELIVERED LANDED NETBACK COMPARISON (7 CRUDES)</span>
+          <span>DELIVERED LANDED NETBACK (7 CRUDES)</span>
           <span id="arbWinnerBadge" class="ticker-chg ticker-up">ARBITRAGE WINNER</span>
         </div>
-        <p style="font-size:12px; color:#6B7280; margin-bottom:12px;">Total delivered cost to refinery gate inclusive of FOB, maritime freight, insurance, financing, and chemical desulfurization treatment.</p>
+        <p style="font-size:12px; color:#6B7280; margin-bottom:12px;">Delivered refinery gate parity: FOB + tanker freight + insurance + sulfur treatment.</p>
+        <div id="selectedCrudeBreakdownCard"></div>
         <div class="arb-waterfall" id="arbWaterfallContainer"></div>
       </div>
     </div>
@@ -2777,7 +2749,7 @@ function resetCalculatorDefaults() {
   const su = document.getElementById("sliderUralsDiscount");
   if (sb) sb.value = 74.5;
   if (se) se.value = 0.70;
-  if (sf) sf.value = 58.5;
+  if (sf) sf.value = 2.15;
   if (su) su.value = -12.5;
 
   STATE.selectedCrudeCode = "ARAB_LIGHT";
@@ -2793,14 +2765,13 @@ function recalculateArbitrage() {
   const dest = destSelect.value;
   const datedBrent = parseFloat(document.getElementById("sliderDatedBrent").value);
   const efs = parseFloat(document.getElementById("sliderBrentDubaiEfs").value);
-  const vlccWs = parseFloat(document.getElementById("sliderVlccFreight").value);
+  const baseFreight = parseFloat(document.getElementById("sliderVlccFreight").value);
   const uralsDisc = parseFloat(document.getElementById("sliderUralsDiscount").value);
 
+  const approxWs = Math.round((baseFreight / 3.68) * 100);
   document.getElementById("valDatedBrent").textContent = `$${datedBrent.toFixed(2)}`;
   document.getElementById("valBrentDubaiEfs").textContent = `${efs >= 0 ? '+' : ''}$${efs.toFixed(2)}`;
-  
-  const freightMeToAsia = (vlccWs / 100) * 3.68;
-  document.getElementById("valVlccFreight").textContent = `WS ${vlccWs.toFixed(1)} ($${freightMeToAsia.toFixed(2)}/bbl)`;
+  document.getElementById("valVlccFreight").textContent = `$${baseFreight.toFixed(2)}/bbl (WS ${approxWs})`;
   document.getElementById("valUralsDiscount").textContent = `$${uralsDisc.toFixed(2)}`;
 
   const dubaiCash = datedBrent - efs;
@@ -2816,7 +2787,7 @@ function recalculateArbitrage() {
   const contenders = crudeKeys.map(k => {
     const c = assays[k];
     let fob = dubaiCash;
-    let freight = freightMeToAsia * destMultiplier;
+    let freight = baseFreight * destMultiplier;
     let insurance = 0.18;
     let desulf = c.desulfCost;
     let isEligible = true;
@@ -2824,15 +2795,19 @@ function recalculateArbitrage() {
 
     if (k === "URALS") {
       fob = datedBrent + uralsDisc;
-      freight = (dest === "india" ? 5.80 : 7.20);
+      // Urals sails ~10,000-12,000 nm on Suezmax/Aframax with shadow fleet premium
+      const uralsMult = (dest === "india" ? 2.50 : 3.20);
+      freight = baseFreight * uralsMult;
       insurance = 0.85;
       if (dest === "japan" || dest === "korea") {
         isEligible = false;
-        blockReason = "BLOCKED: Strict G7 / Western Sanctions Compliance";
+        blockReason = "BLOCKED: G7 Sanctions Compliance";
       }
     } else if (k === "WTI_MIDLAND") {
       fob = datedBrent - 3.70;
-      freight = 4.80;
+      // WTI Midland sails 15,000 nm from US Gulf Coast via Cape of Good Hope
+      const wtiMult = (dest === "india" ? 2.60 : 2.25);
+      freight = baseFreight * wtiMult;
       insurance = 0.15;
       if (dest === "korea") {
         fob -= 1.20; // KORUS FTA 0% tariff benefit
@@ -2873,13 +2848,13 @@ function recalculateArbitrage() {
   if (winnerText && winnerReason) {
     winnerText.textContent = `${winner.name} ($${winner.total.toFixed(2)}/bbl landed into ${dest.toUpperCase()})`;
     if (winner.code === "URALS") {
-      winnerReason.textContent = "Massive post-sanctions discount overcomes longer voyage freight from Baltic/Black Sea.";
+      winnerReason.textContent = "Deep discount overcomes longer voyage freight from Baltic/Black Sea.";
     } else if (winner.code === "WTI_MIDLAND") {
-      winnerReason.textContent = "Zero tariff under KORUS FTA and negligible sulfur cleaning penalty gives unbeatable light-ends margin.";
+      winnerReason.textContent = "KORUS FTA zero tariff and minimal sulfur penalty give light-ends advantage.";
     } else if (winner.code === "ARAB_LIGHT" || winner.code === "ARAB_MEDIUM") {
-      winnerReason.textContent = "Short voyage shipping advantage and ideal balance for complex delayed coking refineries.";
+      winnerReason.textContent = "Short voyage freight advantage and balanced yields for coking refineries.";
     } else {
-      winnerReason.textContent = "Optimal delivered netback parity for this regional refinery crude slate.";
+      winnerReason.textContent = "Delivered parity advantage based on freight and OSP pricing.";
     }
   }
 
@@ -2888,28 +2863,62 @@ function recalculateArbitrage() {
     badge.textContent = `MOST ECONOMIC: ${winner.name} ($${winner.total.toFixed(2)}/bbl Landed)`;
   }
 
-  const waterfallContainer = document.getElementById("arbWaterfallContainer");
-  if (waterfallContainer) {
-    waterfallContainer.innerHTML = contenders.map(c => `
-      <div style="background:${c.code === winner.code ? '#ecfdf5' : '#ffffff'}; border:1px solid ${c.code === winner.code ? '#10b981' : 'var(--border-subtle)'}; border-radius:6px; padding:12px; margin-bottom:8px; box-shadow:var(--shadow-ft-card);">
-        <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-family:var(--font-mono); font-size:13px;">
-          <div>
-            <span style="font-weight:700; color:${c.color};">${c.name}</span>
-            <span style="font-size:11px; color:#6B7280; margin-left:8px;">${c.api}° API / ${c.sulfur}% S</span>
-            ${c.code === winner.code ? '<span style="background:#10b981; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:3px; margin-left:8px;">★ LOWEST COST</span>' : ''}
+  // Highlight Selected Crude in top breakdown banner
+  const selCard = document.getElementById("selectedCrudeBreakdownCard");
+  const selectedCode = STATE.selectedCrudeCode || "ARAB_LIGHT";
+  const selCrude = contenders.find(c => c.code === selectedCode) || contenders[0];
+
+  if (selCard && selCrude) {
+    selCard.innerHTML = `
+      <div style="background:#f8fafc; border:1.5px solid #0284c7; border-radius:8px; padding:12px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:4px;">
+          <div style="font-family:var(--font-mono); font-size:12px; font-weight:800; color:#0284c7;">
+            🎯 SELECTED CRUDE: ${selCrude.name.toUpperCase()} (${selCrude.api}° API / ${selCrude.sulfur}% S)
           </div>
-          <span style="font-weight:800; color:${c.isEligible ? '#111827' : '#dc2626'};">
-            ${c.isEligible ? `$${c.total.toFixed(2)} / bbl Landed` : c.blockReason}
-          </span>
+          <div style="font-family:var(--font-mono); font-size:14px; font-weight:800; color:#0f172a;">
+            Landed Total: $${selCrude.total.toFixed(2)}/bbl
+          </div>
         </div>
-        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; font-family:var(--font-mono); font-size:11px; color:#6B7280;">
-          <div>FOB Cargo: <strong style="color:#111827;">$${c.fob.toFixed(2)}</strong></div>
-          <div>Tanker Freight: <strong style="color:var(--color-me-gold);">$${c.freight.toFixed(2)}</strong></div>
-          <div>Insurance/Port: <strong style="color:#111827;">$${c.insurance.toFixed(2)}</strong></div>
-          <div>Sulfur Cleaning: <strong style="color:var(--color-russia-red);">-$${c.desulfurization.toFixed(2)}</strong></div>
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; font-family:var(--font-mono); font-size:11px;">
+          <div>FOB Cargo: <strong>$${selCrude.fob.toFixed(2)}</strong></div>
+          <div>Tanker Freight: <strong style="color:var(--color-me-gold); font-size:12px;">$${selCrude.freight.toFixed(2)}/bbl</strong></div>
+          <div>Insurance/Port: <strong>$${selCrude.insurance.toFixed(2)}</strong></div>
+          <div>Desulf Cost: <strong style="color:var(--color-russia-red);">+$${selCrude.desulfurization.toFixed(2)}</strong></div>
         </div>
       </div>
-    `).join("");
+    `;
+  }
+
+  const waterfallContainer = document.getElementById("arbWaterfallContainer");
+  if (waterfallContainer) {
+    waterfallContainer.innerHTML = contenders.map(c => {
+      const isSelected = (c.code === selectedCode);
+      const isWin = (c.code === winner.code);
+      const borderStyle = isWin ? '1.5px solid #10b981' : isSelected ? '1.5px solid #0284c7' : '1px solid var(--border-subtle)';
+      const bgStyle = isWin ? '#ecfdf5' : isSelected ? '#f0f9ff' : '#ffffff';
+
+      return `
+        <div onclick="selectCalcCrude('${c.code}')" style="background:${bgStyle}; border:${borderStyle}; border-radius:6px; padding:12px; margin-bottom:8px; box-shadow:var(--shadow-ft-card); cursor:pointer;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-family:var(--font-mono); font-size:13px;">
+            <div>
+              <span style="font-weight:700; color:${c.color};">${c.name}</span>
+              <span style="font-size:11px; color:#6B7280; margin-left:8px;">${c.api}° API / ${c.sulfur}% S</span>
+              ${isWin ? '<span style="background:#10b981; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:3px; margin-left:8px;">★ LOWEST COST</span>' : ''}
+              ${isSelected && !isWin ? '<span style="background:#0284c7; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:3px; margin-left:8px;">SELECTED</span>' : ''}
+            </div>
+            <span style="font-weight:800; color:${c.isEligible ? '#111827' : '#dc2626'};">
+              ${c.isEligible ? `$${c.total.toFixed(2)} / bbl Landed` : c.blockReason}
+            </span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; font-family:var(--font-mono); font-size:11px; color:#6B7280;">
+            <div>FOB Cargo: <strong style="color:#111827;">$${c.fob.toFixed(2)}</strong></div>
+            <div>Tanker Freight: <strong style="color:var(--color-me-gold); font-size:12px;">$${c.freight.toFixed(2)}/bbl</strong></div>
+            <div>Insurance/Port: <strong style="color:#111827;">$${c.insurance.toFixed(2)}</strong></div>
+            <div>Desulf Cost: <strong style="color:var(--color-russia-red);">+$${c.desulfurization.toFixed(2)}</strong></div>
+          </div>
+        </div>
+      `;
+    }).join("");
   }
 }
 
