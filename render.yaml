@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: asian-crude-battleground-api
+    env: node
+    plan: starter
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGO_URI
+        sync: false # Set via Render Dashboard connecting to MongoDB Atlas
+      - key: CORS_ORIGIN
+        value: '*'
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
