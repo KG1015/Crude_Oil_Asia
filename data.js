@@ -1129,47 +1129,47 @@ const OIL_DATA = {
       {
         step: 1,
         title: "1. Oil Field",
-        subtitle: "Underground Limestone Reservoirs",
+        subtitle: "Underground Reservoirs",
         icon: "🏜️",
-        location: "Fahud & Yibal (Oman) / Fateh (Dubai) / Ghawar (Saudi) / Bab (Abu Dhabi)",
+        location: "Fahud, Yibal, Ghawar & Bab",
         metric: "2,000m – 3,500m Deep",
-        plainDesc: "Wells drilled deep into porous limestone rock pump hot, pressurized crude oil mixed with natural gas and salt water up to surface wellheads."
+        plainDesc: "Wells pump crude, gas, and water from deep porous rock to surface wellheads."
       },
       {
         step: 2,
         title: "2. Gathering System",
-        subtitle: "Field Pipelines & Gas-Oil Separation (GOSP)",
+        subtitle: "GOSP Separation Plants",
         icon: "🔧",
-        location: "Abqaiq (Saudi) / Habshan (UAE) / Nahada Central Hub (Oman)",
-        metric: "Removes H2S Gas & Salt Water",
-        plainDesc: "Network of steel gathering pipes feeds raw oil into separation plants that strip out toxic hydrogen sulfide gas, sand, and water so the oil is safe to ship."
+        location: "Abqaiq, Habshan & Nahada",
+        metric: "Strips H2S Gas & Water",
+        plainDesc: "Pipelines feed separation plants that remove toxic H2S gas and salt water for safe export."
       },
       {
         step: 3,
         title: "3. Export Terminal",
-        subtitle: "Coastal Tank Farms & Offshore Buoys",
+        subtitle: "Tank Farms & Offshore Buoys",
         icon: "⚓",
-        location: "Mina al Fahal (Muscat) / Fujairah (UAE) / Ras Tanura (Saudi) / Al Basrah (Iraq)",
-        metric: "50,000 – 85,000 bbl/hr Loading",
-        plainDesc: "Giant coastal storage tanks hold millions of barrels. Booster pumps push the oil through underwater pipelines to floating buoys 3 miles offshore where supertankers moor."
+        location: "Mina al Fahal, Fujairah & Ras Tanura",
+        metric: "50,000 – 85,000 bbl/hr",
+        plainDesc: "Coastal tank farms pump crude through subsea lines to load tankers at offshore SPM buoys."
       },
       {
         step: 4,
         title: "4. Supertanker (VLCC)",
-        subtitle: "2-Million-Barrel Ocean Voyage",
+        subtitle: "Ocean Transit",
         icon: "🚢",
-        location: "Arabian Sea → Indian Ocean → Strait of Malacca → South China Sea",
-        metric: "2,000,000 Barrels | 13.5 Knots",
-        plainDesc: "A 333-meter VLCC supertanker loads for 36 hours and sails 5,500 to 6,500 nautical miles across the Indian Ocean and through the Strait of Malacca toward Asia."
+        location: "Arabian Sea → Malacca Strait",
+        metric: "2M Barrels | 13.5 Knots",
+        plainDesc: "VLCC carries 2M barrels across the Indian Ocean to Asia (18–21 days)."
       },
       {
         step: 5,
-        title: "5. Asian Buyers",
-        subtitle: "Deepwater Receiving Ports & Mega-Refineries",
+        title: "5. Asian Refineries",
+        subtitle: "Mega-Refining Hubs",
         icon: "🏭",
-        location: "Ningbo & Qingdao (China) / Jamnagar (India) / Ulsan (Korea) / Chiba (Japan)",
-        metric: "14.5 Million Barrels / Day",
-        plainDesc: "After 5 to 21 days at sea, the tanker pumps its crude into coastal refinery tanks in China, India, Japan, and South Korea to be refined into diesel, jet fuel, and gasoline."
+        location: "Ningbo, Jamnagar, Ulsan & Chiba",
+        metric: "14.5 Mb/d Total Demand",
+        plainDesc: "Coastal refineries discharge cargo to crack into gasoline, jet fuel, and diesel."
       }
     ],
     nineMiddleEastGrades: [

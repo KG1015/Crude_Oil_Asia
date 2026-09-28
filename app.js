@@ -1051,8 +1051,8 @@ function renderChapter4Visual() {
               </div>
 
               <!-- Live Plain-English Freight & Arbitrage Impact Banner -->
-              <div id="sim4FreightImpactBanner" style="background:#ecfdf5; border:1.5px solid #6ee7b7; border-left:5px solid #059669; padding:10px 12px; border-radius:8px; margin-bottom:12px; font-size:12.5px; color:#065f46; line-height:1.45; font-weight:600;">
-                🟢 <strong>Economical Freight ($2.15/bbl):</strong> Net margin remains strong after shipping. Full 2M-barrel VLCC cargo charter recommended.
+              <div id="sim4FreightImpactBanner" style="background:#ecfdf5; border:1.5px solid #6ee7b7; border-left:5px solid #059669; padding:8px 12px; border-radius:8px; margin-bottom:12px; font-size:12px; color:#065f46; line-height:1.4; font-weight:600;">
+                🟢 <strong>LOW FREIGHT ($2.15/bbl · $4.30M/VLCC):</strong> Healthy net margin (+7.65/bbl). Books full 2M-bbl VLCC.
               </div>
 
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
@@ -1415,7 +1415,7 @@ function selectEcoFlowStage(idx) {
   });
   const box = document.getElementById("ecoFlowSpotlightText");
   if (box) {
-    box.innerHTML = `<strong>Stage ${st.step} — ${st.title} (${st.subtitle}):</strong> ${st.plainDesc} <br><span style="color:#990000; font-family:var(--font-mono); font-size:12px;">📍 Key Hubs: ${st.location} | ⚡ Metric: ${st.metric}</span>`;
+    box.innerHTML = `<strong>${st.title} (${st.subtitle}):</strong> ${st.plainDesc} <span style="color:#990000; font-family:var(--font-mono); font-size:11px; margin-left:8px;">📍 ${st.location} · ⚡ ${st.metric}</span>`;
   }
 }
 
@@ -1905,29 +1905,29 @@ function runRefineryPreferenceSimulator() {
       badgeEl.style.background = "#dcfce7";
       badgeEl.style.color = "#166534";
       badgeEl.style.borderColor = "#86efac";
-      badgeEl.textContent = `🟢 FREIGHT STATUS: LOW SHIPPING COST ($${vlccTotalMillions}M / VLCC)`;
+      badgeEl.textContent = `🟢 FREIGHT LOW: $${vlccTotalMillions}M / VLCC`;
     }
     if (bannerEl) {
       bannerEl.style.background = "#ecfdf5";
       bannerEl.style.borderColor = "#6ee7b7";
       bannerEl.style.borderLeftColor = "#059669";
       bannerEl.style.color = "#065f46";
-      bannerEl.innerHTML = `🟢 <strong>Cheap Tanker Shipping ($${freight.toFixed(2)}/bbl = $${vlccTotalMillions}M per 2M-bbl Supertanker):</strong> Shipping cost is low! After deducting <strong>-$${freight.toFixed(2)}/bbl</strong> for freight from the <strong>+$${grossMargin.toFixed(2)}/bbl</strong> gross refining value, <strong>${matched.buyer}</strong> locks in a strong <strong>+${estMargin.toFixed(2)}/bbl</strong> net profit and books a full 2-million-barrel VLCC supertanker.`;
+      bannerEl.innerHTML = `🟢 <strong>LOW FREIGHT ($${freight.toFixed(2)}/bbl · $${vlccTotalMillions}M/VLCC):</strong> Healthy net margin (+${estMargin.toFixed(2)}/bbl). ${matched.buyer} books full 2M-bbl VLCC.`;
     }
-    if (buyerSubEl) buyerSubEl.textContent = `✅ Books Full 2M-bbl VLCC Supertanker ($${vlccTotalMillions}M Charter)`;
+    if (buyerSubEl) buyerSubEl.textContent = `✅ Books Full 2M-bbl VLCC ($${vlccTotalMillions}M Charter)`;
   } else if (isModerateFreight) {
     if (badgeEl) {
       badgeEl.style.background = "#fef3c7";
       badgeEl.style.color = "#92400e";
       badgeEl.style.borderColor = "#fde68a";
-      badgeEl.textContent = `🟡 FREIGHT STATUS: MODERATE HURDLE ($${vlccTotalMillions}M / VLCC)`;
+      badgeEl.textContent = `🟡 FREIGHT MODERATE: $${vlccTotalMillions}M / VLCC`;
     }
     if (bannerEl) {
       bannerEl.style.background = "#fffbeb";
       bannerEl.style.borderColor = "#fde68a";
       bannerEl.style.borderLeftColor = "#d97706";
       bannerEl.style.color = "#92400e";
-      bannerEl.innerHTML = `🟡 <strong>Rising Tanker Freight ($${freight.toFixed(2)}/bbl = $${vlccTotalMillions}M per Supertanker):</strong> Higher shipping rates reduce refinery net profit to <strong>+${estMargin.toFixed(2)}/bbl</strong>. <strong>${matched.buyer}</strong> will only book this cargo if they co-load on a VLCC or negotiate a <strong>-$${(freight - 2.15).toFixed(2)}/bbl FOB price discount</strong> from the seller.`;
+      bannerEl.innerHTML = `🟡 <strong>MODERATE FREIGHT ($${freight.toFixed(2)}/bbl · $${vlccTotalMillions}M/VLCC):</strong> Margin compresses to +${estMargin.toFixed(2)}/bbl. Requires co-load or -$${(freight - 2.15).toFixed(2)}/bbl discount.`;
     }
     if (buyerSubEl) buyerSubEl.textContent = `⚠️ Demands Co-Loaded VLCC or -$${(freight - 2.15).toFixed(2)}/bbl Seller Discount`;
   } else {
@@ -1935,16 +1935,16 @@ function runRefineryPreferenceSimulator() {
       badgeEl.style.background = "#fee2e2";
       badgeEl.style.color = "#991b1b";
       badgeEl.style.borderColor = "#fecaca";
-      badgeEl.textContent = `🔴 FREIGHT STATUS: SHIPPING TOO EXPENSIVE ($${vlccTotalMillions}M / VLCC!)`;
+      badgeEl.textContent = `🔴 FREIGHT HIGH: $${vlccTotalMillions}M / VLCC`;
     }
     if (bannerEl) {
       bannerEl.style.background = "#fef2f2";
       bannerEl.style.borderColor = "#fecaca";
       bannerEl.style.borderLeftColor = "#dc2626";
       bannerEl.style.color = "#991b1b";
-      bannerEl.innerHTML = `🔴 <strong>Tanker Freight Too Expensive ($${freight.toFixed(2)}/bbl = $${vlccTotalMillions}M per Supertanker!):</strong> Paying $${vlccTotalMillions} Million to charter a tanker crushes refinery net margin down to <strong>${estMargin >= 0 ? '+' : ''}$${estMargin.toFixed(2)}/bbl</strong>! <strong>${matched.buyer} CANCELS this long-haul voyage</strong> and switches to closer <strong>Short-Haul Oman / Persian Gulf ($1.95/bbl)</strong> or <strong>4-Day Russian ESPO ($1.15/bbl)</strong>.`;
+      bannerEl.innerHTML = `🔴 <strong>HIGH FREIGHT ($${freight.toFixed(2)}/bbl · $${vlccTotalMillions}M/VLCC):</strong> Squeezes margin to ${estMargin >= 0 ? '+' : ''}$${estMargin.toFixed(2)}/bbl. Buyer cancels voyage; shifts to short-haul Gulf or ESPO.`;
     }
-    if (buyerSubEl) buyerSubEl.textContent = `🛑 Cancels Long-Haul Charter → Switches to Short-Haul Oman / ESPO`;
+    if (buyerSubEl) buyerSubEl.textContent = `🛑 Cancels Long-Haul Charter → Switches to Short-Haul`;
   }
 
   // Update the 4 Output Cards
@@ -2549,48 +2549,48 @@ function renderChapter11Visual() {
 
 const CASE_STUDIES = [
   {
-    title: "1. Iran Sanctions & The Shadow Fleet Transshipment Hub",
-    summary: "US secondary sanctions on Iranian oil exports gave birth to a sprawling shadow tanker network. Iranian crude is loaded onto dark-fleet VLCCs, sails to the waters off Tanjung Pelepas (Malaysia) or the Riau Archipelago, conducts Ship-to-Ship (STS) transfers, and enters Chinese teapot refiners in Shandong rebranded as 'Malaysian blend'.",
+    title: "1. Iran Sanctions & Shadow Fleet Hub",
+    summary: "Dark-fleet VLCCs conduct STS transfers off Malaysia, delivering Iranian barrels to Chinese teapot refiners rebranded as 'Malaysian blend'.",
     intel: [
-      "Volume: ~1.2 to 1.5 Mb/d entering China through indirect STS channels.",
-      "Discount: Typically $8 to $12/bbl below Dated Brent.",
-      "Impact on Middle East: Competes directly against Basrah Heavy and Arab Heavy, forcing Iraq SOMO to lower OSPs."
+      "Volume: ~1.2–1.5 Mb/d entering China via STS.",
+      "Discount: -$8 to -$12/bbl vs Dated Brent.",
+      "Market Impact: Competes directly against Basrah & Arab Heavy, pressuring Gulf OSPs."
     ]
   },
   {
-    title: "2. The Ukraine War & Russian Redirection to India and China",
-    summary: "Prior to February 2022, India imported less than 2% of its crude from Russia. Following EU maritime import bans and the G7 $60/bbl price cap, Russia redirected over 3.5 mb/d of Urals and ESPO to India and China at unprecedented discounts ($15 to $35/bbl below Brent).",
+    title: "2. Ukraine War & Russian Redirection to Asia",
+    summary: "Post-sanctions, Russia redirected 3.5+ Mb/d of Urals and ESPO to India and China at steep discounts.",
     intel: [
-      "Displaced Volume: Over 1.8 Mb/d of Middle Eastern crude was backed out of Indian refineries in 2022–2024.",
-      "Reliance Jamnagar: Achieved record gross refining margins exceeding $20/bbl by processing discounted Urals and exporting diesel to Europe.",
-      "De-dollarization: Over 60% of these transactions settled in UAE Dirhams, Chinese Yuan, and Russian Rubles."
+      "Displaced Volume: 1.8+ Mb/d of Middle East crude displaced from Indian refineries.",
+      "Refining Margins: Reliance Jamnagar earned record margins processing discounted Urals.",
+      "Payment Shift: >60% settled in non-USD currencies (AED, CNY, RUB)."
     ]
   },
   {
-    title: "3. Red Sea / Bab el-Mandeb Houthi Missile Strikes & Cape of Good Hope Diversions",
-    summary: "Drone and anti-ship missile attacks on commercial shipping forced major tanker operators to halt transits through the Bab el-Mandeb strait and Suez Canal, routing vessels around the Cape of Good Hope.",
+    title: "3. Red Sea / Bab el-Mandeb Strikes & Cape Rerouting",
+    summary: "Houthi missile attacks forced tankers around the Cape of Good Hope, bypassing the Suez Canal.",
     intel: [
-      "Transit Penalty: Added 10 to 14 days voyage duration and 3,500 nautical miles.",
-      "Cost Buildup: Added $900,000 to $1,400,000 in bunker fuel costs and pushed VLCC war-risk insurance rates past 0.5% of cargo value.",
-      "Market Repercussion: WAF and Russian barrels bound for Asia became significantly more expensive, temporarily strengthening Persian Gulf sour crude competitiveness."
+      "Voyage Penalty: +10–14 days and +3,500 nm transit.",
+      "Cost Impact: +$1.0M–$1.4M in bunker fuel & spiked war-risk insurance.",
+      "Market Impact: Raised landed costs for Atlantic/Russian crude, favoring Gulf barrels."
     ]
   },
   {
-    title: "4. OPEC+ Voluntary Cuts & The Squeeze on Medium/Heavy Sour Crude",
-    summary: "Saudi Arabia and OPEC+ alliance partners implemented voluntary production cuts exceeding 2.2 Mb/d, with cuts heavily weighted toward Medium and Heavy sour grades.",
+    title: "4. OPEC+ Voluntary Cuts on Heavy Sour Crude",
+    summary: "OPEC+ cuts targeted medium/heavy sour grades, sharply narrowing the sweet-sour differential.",
     intel: [
-      "Spread Compression: The price spread between Light Sweet crude and Heavy Sour crude narrowed to historic lows.",
-      "Teapot Vulnerability: Chinese independent refiners with limited coking capacity struggled as high-sulfur feedstock prices climbed.",
-      "Arbitrage Opening: Narrow sour differentials opened the floodgates for US WTI Midland exports into South Korea and China."
+      "Spread Compression: Light-heavy differential collapsed to historic lows.",
+      "Teapot Impact: Independent refiners faced tight margins on high-sulfur feedstock.",
+      "Arb Window: Opened space for US WTI Midland exports into South Korea and China."
     ]
   },
   {
-    title: "5. Strait of Hormuz Seizures & The Asian Strategic Petroleum Defense",
-    summary: "Periodic military tensions, drone interdictions, and tanker seizures in the Strait of Hormuz demonstrated the vulnerability of Asia's primary energy lifeline.",
+    title: "5. Strait of Hormuz Risks & Strategic Petroleum Stocks",
+    summary: "Asia relies on Hormuz for 82% of its crude imports, requiring massive strategic petroleum reserves.",
     intel: [
-      "Exposure: Over 82% of all crude exiting Hormuz heads directly to Asian ports.",
-      "Buffer: Japan and South Korea maintain government and private strategic crude stockpiles exceeding 140 days and 100 days of net imports.",
-      "Bypass Constraints: Combined Saudi East-West Petroline and UAE Habshan-Fujairah pipeline bypass capacity is 6.8 Mb/d—leaving 14.0 Mb/d completely trapped if Hormuz is closed."
+      "Asian Exposure: 82% of Hormuz crude flows to Asian buyers.",
+      "Strategic Buffer: Japan & Korea hold 100–140 days import cover.",
+      "Pipeline Limit: Bypasses take only 6.8 Mb/d, leaving ~14 Mb/d trapped if blocked."
     ]
   }
 ];
