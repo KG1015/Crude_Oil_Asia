@@ -1198,8 +1198,8 @@ function renderChapter5Visual() {
               </div>
               <input type="range" id="atlOspSlider" min="0.00" max="4.50" step="0.20" value="2.40" oninput="updateAtlanticCompSim()" style="width:100%; accent-color:#990000; cursor:pointer;">
             </div>
-            <div id="atlVerdictBox" style="background:#ffffff; padding:12px; border-radius:8px; border:1.5px solid #059669; font-size:13px; font-weight:700; color:#065f46;">
-              🟢 WINDOW OPEN! US WTI Midland &amp; West African Bonny Light land $1.15/bbl CHEAPER in South Korea and China than Saudi Arab Light!
+            <div id="atlVerdictBox" style="background:#ecfdf5; padding:10px 14px; border-radius:8px; border:1.5px solid #059669; font-size:12px; font-weight:700; color:#065f46;">
+              🟢 <strong>ARBITRAGE OPEN (+$1.00/bbl):</strong> Narrow spread ($0.80) &amp; high OSP (+$2.40) pull US WTI and Atlantic crude into Asia.
             </div>
           </div>
         </div>
@@ -1685,12 +1685,11 @@ function updateOspVisualizer() {
     reactionBox.style.borderColor = "#fca5a5";
     reactionBox.style.color = "#991b1b";
     reactionBox.innerHTML = `
-      <div style="font-weight:800; font-size:14px; color:#991b1b; margin-bottom:4px;">
-        🔴 TOO EXPENSIVE (${signStr}${absDiffStr} per barrel markup!)
+      <div style="font-weight:800; font-size:13px; color:#991b1b; margin-bottom:2px;">
+        🔴 TOO EXPENSIVE (${signStr}${absDiffStr}/bbl markup · +$${diffMillion}M/VLCC)
       </div>
-      <div style="font-size:13px; color:#1e293b;">
-        <strong>What this means:</strong> The seller raised the monthly price too high—adding <strong>+$${diffMillion} Million extra</strong> to the bill of a single 2-million-barrel supertanker!<br>
-        <strong>What buyers do:</strong> Asian refineries <strong>buy less oil from the Middle East</strong> this month and order cheaper ships of oil from <strong>America (Texas), West Africa, or Russia</strong> instead.
+      <div style="font-size:12px; color:#1e293b;">
+        Asian refiners cut Middle East allocations and substitute cheaper US, West African, or Russian barrels.
       </div>
     `;
   } else if (diff <= 0.50) {
@@ -1698,12 +1697,11 @@ function updateOspVisualizer() {
     reactionBox.style.borderColor = "#6ee7b7";
     reactionBox.style.color = "#065f46";
     reactionBox.innerHTML = `
-      <div style="font-weight:800; font-size:14px; color:#065f46; margin-bottom:4px;">
-        🟢 GREAT DEAL / ON SALE (${signStr}${absDiffStr} per barrel!)
+      <div style="font-weight:800; font-size:13px; color:#065f46; margin-bottom:2px;">
+        🟢 DISCOUNT PRICED (${signStr}${absDiffStr}/bbl · ${diff < 0 ? `saves $${diffMillion}M/VLCC` : 'near zero premium'})
       </div>
-      <div style="font-size:13px; color:#1e293b;">
-        <strong>What this means:</strong> Middle East oil is on sale—${diff < 0 ? `saving buyers <strong>$${diffMillion} Million per supertanker</strong> below the base market price!` : `priced with almost zero extra fee!`}<br>
-        <strong>What buyers do:</strong> Refineries in <strong>China, India, Japan, and South Korea rush to buy extra ships</strong> of Saudi and UAE oil because it beats prices from America and Russia.
+      <div style="font-size:12px; color:#1e293b;">
+        Asian refiners maximize Gulf liftings, shutting out Atlantic arb volumes.
       </div>
     `;
   } else {
@@ -1711,12 +1709,11 @@ function updateOspVisualizer() {
     reactionBox.style.borderColor = "#fde68a";
     reactionBox.style.color = "#92400e";
     reactionBox.innerHTML = `
-      <div style="font-weight:800; font-size:14px; color:#92400e; margin-bottom:4px;">
-        🟡 FAIR NORMAL PRICE (${signStr}${absDiffStr} per barrel markup)
+      <div style="font-weight:800; font-size:13px; color:#92400e; margin-bottom:2px;">
+        🟡 MARKET PARITY (${signStr}${absDiffStr}/bbl markup)
       </div>
-      <div style="font-size:13px; color:#1e293b;">
-        <strong>What this means:</strong> The monthly markup is fair and matches normal global oil prices.<br>
-        <strong>What buyers do:</strong> Refineries in China, India, Japan, and South Korea <strong>happily buy 100% of their regular monthly shipments</strong> from the Middle East without switching to other countries.
+      <div style="font-size:12px; color:#1e293b;">
+        Price matches market fundamentals. Refiners take 100% contracted volumes.
       </div>
     `;
   }
@@ -2093,12 +2090,12 @@ function updateAtlanticCompSim() {
     box.style.background = "#ecfdf5";
     box.style.borderColor = "#059669";
     box.style.color = "#065f46";
-    box.innerHTML = `🟢 <strong>ATLANTIC ARBITRAGE OPEN (+$${netAdvantage.toFixed(2)}/bbl advantage)!</strong> Because Brent-Dubai is narrow ($${spread.toFixed(2)}) and Gulf OSP is high (+$${meOsp.toFixed(2)}), US WTI Midland, North Sea Forties, and Nigerian Bonny Light sail in huge volumes to South Korea, China, and India!`;
+    box.innerHTML = `🟢 <strong>ARBITRAGE OPEN (+$${netAdvantage.toFixed(2)}/bbl):</strong> Narrow spread ($${spread.toFixed(2)}) & high OSP (+$${meOsp.toFixed(2)}) pull US WTI and Atlantic crude into Asia.`;
   } else {
     box.style.background = "#fef2f2";
     box.style.borderColor = "#dc2626";
     box.style.color = "#991b1b";
-    box.innerHTML = `🔴 <strong>ATLANTIC ARBITRAGE CLOSED ($${netAdvantage.toFixed(2)}/bbl disadvantage):</strong> Brent is too expensive compared to Dubai. Long-haul US and North Sea barrels stay in Europe/Americas, while Asia sticks with Middle Eastern and Russian crudes.`;
+    box.innerHTML = `🔴 <strong>ARBITRAGE CLOSED (-$${Math.abs(netAdvantage).toFixed(2)}/bbl):</strong> Wide spread ($${spread.toFixed(2)}) shuts arb; Asia sticks with Gulf and Russian barrels.`;
   }
 }
 
