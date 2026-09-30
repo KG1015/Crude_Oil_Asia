@@ -3428,7 +3428,7 @@ function renderChapter10Visual() {
 
           <!-- Right: Interactive Pipeline Map + Selected Route Inspector -->
           <div>
-            <div id="chapter10FutureMap" style="width:100%; height:320px; border-radius:10px; border:1.5px solid #cbd5e1; margin-bottom:12px;"></div>
+            <div id="chapter10FutureMap" style="width:100%; height:420px; border-radius:10px; border:1.5px solid #cbd5e1; margin-bottom:12px; position:relative; overflow:hidden; cursor:grab;"></div>
             <div id="futureRouteDetailBox" style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; padding:14px;">
               <!-- Injected on card click -->
             </div>
@@ -3699,6 +3699,9 @@ function initChapter10Simulator() {
   selectFutureRoute(STATE.activeFutureRouteId);
 }
 
+let ch10ShockTileLayers = null;
+let ch10ShockCurrentBasemap = "voyager";
+
 function initChapter10ShockMap() {
   const el = document.getElementById("chapter10ShockMap");
   if (!el || typeof L === "undefined") return;
@@ -3707,11 +3710,75 @@ function initChapter10ShockMap() {
     ch10ShockMap.remove();
     ch10ShockMap = null;
   }
+  el.innerHTML = "";
+  delete el.dataset.maritimeUpgraded;
 
-  ch10ShockMap = L.map("chapter10ShockMap", { center: [20.0, 75.0], zoom: 3 });
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    attribution: "&copy; OpenStreetMap &copy; CARTO"
-  }).addTo(ch10ShockMap);
+  ch10ShockMap = L.map("chapter10ShockMap", {
+    center: [20.0, 75.0],
+    zoom: 3,
+    dragging: true,
+    scrollWheelZoom: true,
+    touchZoom: true,
+    doubleClickZoom: true,
+    boxZoom: true,
+    keyboard: true,
+    tap: false,
+    noMaritime: true
+  });
+
+  ch10ShockMap.dragging.enable();
+
+  ch10ShockTileLayers = {
+    voyager: L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      attribution: "&copy; OpenStreetMap &copy; CARTO",
+      maxZoom: 18
+    }),
+    satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+      attribution: "&copy; Esri, Maxar",
+      maxZoom: 18
+    })
+  };
+
+  ch10ShockCurrentBasemap = "voyager";
+  ch10ShockTileLayers.voyager.addTo(ch10ShockMap);
+
+  const toggleEl = document.createElement("div");
+  toggleEl.className = "ch10-map-basemap-toggle";
+  toggleEl.innerHTML = `
+    <button type="button" class="ch10-map-btn active" id="btnCh10SMapVoyager">🗺️ Map</button>
+    <button type="button" class="ch10-map-btn" id="btnCh10SMapSatellite">🛰️ Satellite</button>
+  `;
+  L.DomEvent.disableClickPropagation(toggleEl);
+  L.DomEvent.disableScrollPropagation(toggleEl);
+  el.appendChild(toggleEl);
+
+  toggleEl.querySelector("#btnCh10SMapVoyager").addEventListener("click", () => {
+    if (ch10ShockCurrentBasemap === "voyager") return;
+    ch10ShockMap.removeLayer(ch10ShockTileLayers.satellite);
+    ch10ShockTileLayers.voyager.addTo(ch10ShockMap);
+    ch10ShockTileLayers.voyager.bringToBack();
+    ch10ShockCurrentBasemap = "voyager";
+    toggleEl.querySelector("#btnCh10SMapVoyager").classList.add("active");
+    toggleEl.querySelector("#btnCh10SMapSatellite").classList.remove("active");
+  });
+
+  toggleEl.querySelector("#btnCh10SMapSatellite").addEventListener("click", () => {
+    if (ch10ShockCurrentBasemap === "satellite") return;
+    ch10ShockMap.removeLayer(ch10ShockTileLayers.voyager);
+    ch10ShockTileLayers.satellite.addTo(ch10ShockMap);
+    ch10ShockTileLayers.satellite.bringToBack();
+    ch10ShockCurrentBasemap = "satellite";
+    toggleEl.querySelector("#btnCh10SMapSatellite").classList.add("active");
+    toggleEl.querySelector("#btnCh10SMapVoyager").classList.remove("active");
+  });
+
+  const dragHint = document.createElement("div");
+  dragHint.className = "ch10-map-drag-hint";
+  dragHint.innerHTML = "🖐️ Click &amp; drag to pan • Scroll to zoom";
+  el.appendChild(dragHint);
+
+  ch10ShockMap.on("dragstart", () => { el.style.cursor = "grabbing"; });
+  ch10ShockMap.on("dragend", () => { el.style.cursor = "grab"; });
 
   ch10ShockLayers = L.layerGroup().addTo(ch10ShockMap);
   updateShockMap();
@@ -3735,7 +3802,7 @@ function updateShockMap() {
   // If "Before", show standard routes as healthy green lines
   if (!isAfter) {
     (sc.mapSevered || []).forEach(r => {
-      L.polyline(r.coords, { color: "#059669", weight: 3.5, opacity: 0.85 }).addTo(ch10ShockLayers)
+      L.polyline(r.coords, { color: "#059669", weight: 3.5, opacity: 0.85, interactive: false }).addTo(ch10ShockLayers)
         .bindTooltip(`Normal Flow: ${r.name}`, { permanent: false });
     });
     // Add default tanker
@@ -3747,24 +3814,24 @@ function updateShockMap() {
 
   // If "After Shock", show severed routes as RED DASHED
   (sc.mapSevered || []).forEach(r => {
-    L.polyline(r.coords, { color: "#dc2626", weight: 3.5, dashArray: "6, 6", opacity: 0.8 }).addTo(ch10ShockLayers)
+    L.polyline(r.coords, { color: "#dc2626", weight: 3.5, dashArray: "6, 6", opacity: 0.8, interactive: false }).addTo(ch10ShockLayers)
       .bindTooltip(`❌ SEVERED: ${r.name}`, { permanent: true });
     
     // X marker at origin
-    L.circleMarker(r.coords[0], { radius: 7, fillColor: "#dc2626", color: "#ffffff", weight: 2, fillOpacity: 1 })
+    L.circleMarker(r.coords[0], { radius: 7, fillColor: "#dc2626", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
       .addTo(ch10ShockLayers).bindTooltip(`Supply Cut: ${r.coords[0]}`, { permanent: false });
   });
 
   // Show replacement routes as vibrant lines
   (sc.mapReplacement || []).forEach(r => {
-    L.polyline(r.coords, { color: r.color || "#0284c7", weight: 4.5, className: "leaflet-ant-flow" }).addTo(ch10ShockLayers)
+    L.polyline(r.coords, { color: r.color || "#0284c7", weight: 4.5, className: "leaflet-ant-flow", interactive: false }).addTo(ch10ShockLayers)
       .bindTooltip(`🟢 EMERGENCY ROUTE: ${r.name}`, { permanent: false });
 
     // Green origin and blue destination
-    L.circleMarker(r.coords[0], { radius: 8, fillColor: "#059669", color: "#ffffff", weight: 2, fillOpacity: 1 })
+    L.circleMarker(r.coords[0], { radius: 8, fillColor: "#059669", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
       .addTo(ch10ShockLayers).bindTooltip(`Replacement Hub: ${r.coords[0]}`, { permanent: false });
 
-    L.circleMarker(r.coords[r.coords.length - 1], { radius: 8, fillColor: "#0284c7", color: "#ffffff", weight: 2, fillOpacity: 1 })
+    L.circleMarker(r.coords[r.coords.length - 1], { radius: 8, fillColor: "#0284c7", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
       .addTo(ch10ShockLayers).bindTooltip(`Receiving Port`, { permanent: false });
   });
 
@@ -3804,6 +3871,9 @@ function animateTankerOnRoute(waypoints, colorHex) {
 // ----------------------------------------------------------------------------
 // INTERACTIVE FUTURE ROUTES MAP & CARDS CONTROLLER
 // ----------------------------------------------------------------------------
+let ch10FutureTileLayers = null;
+let ch10FutureCurrentBasemap = "voyager";
+
 function initChapter10FutureMap() {
   const el = document.getElementById("chapter10FutureMap");
   if (!el || typeof L === "undefined") return;
@@ -3812,11 +3882,76 @@ function initChapter10FutureMap() {
     ch10FutureMap.remove();
     ch10FutureMap = null;
   }
+  el.innerHTML = "";
+  delete el.dataset.maritimeUpgraded;
 
-  ch10FutureMap = L.map("chapter10FutureMap", { center: [24.0, 54.0], zoom: 4 });
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    attribution: "&copy; OpenStreetMap &copy; CARTO"
-  }).addTo(ch10FutureMap);
+  ch10FutureMap = L.map("chapter10FutureMap", {
+    center: [24.0, 54.0],
+    zoom: 4,
+    dragging: true,
+    scrollWheelZoom: true,
+    touchZoom: true,
+    doubleClickZoom: true,
+    boxZoom: true,
+    keyboard: true,
+    tap: false,
+    noMaritime: true
+  });
+
+  ch10FutureMap.dragging.enable();
+
+  ch10FutureTileLayers = {
+    voyager: L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      attribution: "&copy; OpenStreetMap &copy; CARTO",
+      maxZoom: 18
+    }),
+    satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+      attribution: "&copy; Esri, Maxar",
+      maxZoom: 18
+    })
+  };
+
+  ch10FutureCurrentBasemap = "voyager";
+  ch10FutureTileLayers.voyager.addTo(ch10FutureMap);
+
+  // Basemap switch controls (compact, top-right, non-blocking)
+  const toggleEl = document.createElement("div");
+  toggleEl.className = "ch10-map-basemap-toggle";
+  toggleEl.innerHTML = `
+    <button type="button" class="ch10-map-btn active" id="btnCh10FMapVoyager">🗺️ Map</button>
+    <button type="button" class="ch10-map-btn" id="btnCh10FMapSatellite">🛰️ Satellite</button>
+  `;
+  L.DomEvent.disableClickPropagation(toggleEl);
+  L.DomEvent.disableScrollPropagation(toggleEl);
+  el.appendChild(toggleEl);
+
+  toggleEl.querySelector("#btnCh10FMapVoyager").addEventListener("click", () => {
+    if (ch10FutureCurrentBasemap === "voyager") return;
+    ch10FutureMap.removeLayer(ch10FutureTileLayers.satellite);
+    ch10FutureTileLayers.voyager.addTo(ch10FutureMap);
+    ch10FutureTileLayers.voyager.bringToBack();
+    ch10FutureCurrentBasemap = "voyager";
+    toggleEl.querySelector("#btnCh10FMapVoyager").classList.add("active");
+    toggleEl.querySelector("#btnCh10FMapSatellite").classList.remove("active");
+  });
+
+  toggleEl.querySelector("#btnCh10FMapSatellite").addEventListener("click", () => {
+    if (ch10FutureCurrentBasemap === "satellite") return;
+    ch10FutureMap.removeLayer(ch10FutureTileLayers.voyager);
+    ch10FutureTileLayers.satellite.addTo(ch10FutureMap);
+    ch10FutureTileLayers.satellite.bringToBack();
+    ch10FutureCurrentBasemap = "satellite";
+    toggleEl.querySelector("#btnCh10FMapSatellite").classList.add("active");
+    toggleEl.querySelector("#btnCh10FMapVoyager").classList.remove("active");
+  });
+
+  const dragHint = document.createElement("div");
+  dragHint.className = "ch10-map-drag-hint";
+  dragHint.innerHTML = "🖐️ Click &amp; drag to pan • Scroll to zoom";
+  el.appendChild(dragHint);
+
+  ch10FutureMap.on("dragstart", () => { el.style.cursor = "grabbing"; });
+  ch10FutureMap.on("dragend", () => { el.style.cursor = "grab"; });
 
   ch10FutureLayers = L.layerGroup().addTo(ch10FutureMap);
 }
@@ -3906,16 +4041,18 @@ function selectFutureRoute(routeId) {
     const line = L.polyline(route.waypoints, {
       color: route.color || "#0284c7",
       weight: 5,
-      className: "pulse-pipeline"
+      className: "pulse-pipeline",
+      interactive: false,
+      isPipeline: true
     }).addTo(ch10FutureLayers);
 
     // Markers for start and end
-    L.circleMarker(route.waypoints[0], { radius: 7, fillColor: route.color || "#0284c7", color: "#ffffff", weight: 2, fillOpacity: 1 })
-      .addTo(ch10FutureLayers).bindTooltip(`Start: ${route.geography.split("→")[0] || ""}`, { permanent: false });
+    L.circleMarker(route.waypoints[0], { radius: 7, fillColor: route.color || "#0284c7", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
+      .addTo(ch10FutureLayers).bindTooltip(`Start: ${route.geography.split("→")[0] || ""}`, { permanent: false, direction: "top" });
 
-    L.circleMarker(route.waypoints[route.waypoints.length - 1], { radius: 7, fillColor: "#0f172a", color: "#ffffff", weight: 2, fillOpacity: 1 })
-      .addTo(ch10FutureLayers).bindTooltip(`Terminus`, { permanent: false });
+    L.circleMarker(route.waypoints[route.waypoints.length - 1], { radius: 7, fillColor: "#0f172a", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
+      .addTo(ch10FutureLayers).bindTooltip(`Terminus`, { permanent: false, direction: "top" });
 
-    ch10FutureMap.fitBounds(line.getBounds(), { padding: [35, 35], maxZoom: 7 });
+    ch10FutureMap.fitBounds(line.getBounds(), { padding: [45, 45], maxZoom: 6 });
   }
 }

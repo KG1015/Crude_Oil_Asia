@@ -481,25 +481,31 @@
       </div>
     `;
 
-    L.DomEvent.disableClickPropagation(hudBar);
-    L.DomEvent.disableScrollPropagation(hudBar);
     containerEl.appendChild(hudBar);
-
-    const bottomHud = document.createElement("div");
-    bottomHud.className = "maritime-intel-hud-bottom";
-    bottomHud.innerHTML = `
-      <div class="maritime-telemetry-coords" id="${mapId}_coords">
-        🧭 LAT 25°12.0'N  LON 056°21.6'E &bull; <span style="color:#38bdf8;">PERSIAN GULF / STRAIT OF HORMUZ</span>
-      </div>
-      <div class="maritime-corridor-legend">
-        <span><i style="background:#f59e0b;"></i> Middle East Sour</span>
-        <span><i style="background:#ef4444;"></i> Russian Crude</span>
-        <span><i style="background:#38bdf8;"></i> Atlantic Sweet</span>
-        <span><i style="background:#10b981;"></i> Hormuz-Free / Pipeline</span>
-      </div>
-    `;
-    L.DomEvent.disableClickPropagation(bottomHud);
     containerEl.appendChild(bottomHud);
+
+    // Only disable click/scroll propagation on actual controls, so clicking/dragging elsewhere pans map
+    hudBar.querySelectorAll(".maritime-hud-controls, .maritime-btn-group, button").forEach(el => {
+      L.DomEvent.disableClickPropagation(el);
+      L.DomEvent.disableScrollPropagation(el);
+    });
+    bottomHud.querySelectorAll("button, a").forEach(el => {
+      L.DomEvent.disableClickPropagation(el);
+      L.DomEvent.disableScrollPropagation(el);
+    });
+
+    if (map.dragging) {
+      map.dragging.enable();
+    }
+    containerEl.style.cursor = "grab";
+    map.on("dragstart", () => {
+      containerEl.classList.add("grabbing");
+      containerEl.style.cursor = "grabbing";
+    });
+    map.on("dragend", () => {
+      containerEl.classList.remove("grabbing");
+      containerEl.style.cursor = "grab";
+    });
 
     hudBar.querySelectorAll("[data-theme]").forEach(btn => {
       btn.addEventListener("click", (e) => {
@@ -709,12 +715,27 @@
     const origMapFactory = L.map;
     L.map = function (idOrEl, options) {
       const containerEl = typeof idOrEl === "string" ? document.getElementById(idOrEl) : idOrEl;
-      const mapInstance = origMapFactory.call(this, idOrEl, Object.assign({
+      const opts = Object.assign({
         worldCopyJump: true,
-        zoomSnap: 0.5
-      }, options || {}));
+        zoomSnap: 0.5,
+        dragging: true,
+        scrollWheelZoom: true,
+        touchZoom: true,
+        doubleClickZoom: true,
+        boxZoom: true,
+        tap: false
+      }, options || {});
 
-      if (containerEl) {
+      const mapInstance = origMapFactory.call(this, idOrEl, opts);
+
+      const skipMaritime = (options && (options.noMaritime === true || options.maritime === false)) ||
+        (containerEl && (
+          containerEl.dataset.noMaritime === "true" ||
+          containerEl.id === "chapter10FutureMap" ||
+          containerEl.id === "chapter10ShockMap"
+        ));
+
+      if (containerEl && !skipMaritime) {
         enhanceLeafletMapInstance(mapInstance, containerEl);
       }
       return mapInstance;
@@ -723,7 +744,8 @@
     const origPolylineFactory = L.polyline;
     L.polyline = function (latlngs, options) {
       const opts = Object.assign({}, options || {});
-      const seaWaypoints = (opts.dashArray === "6, 6") ? latlngs : matchSmartSeaWaypoints(latlngs);
+      const isPipeline = opts.isPipeline || opts.rawWaypoints || opts.className === "pulse-pipeline";
+      const seaWaypoints = (opts.dashArray === "6, 6" || isPipeline) ? latlngs : matchSmartSeaWaypoints(latlngs);
       const primaryLine = origPolylineFactory.call(this, seaWaypoints, Object.assign({}, opts, {
         weight: (opts.weight || 4) + 0.5,
         opacity: 0.95
@@ -731,7 +753,7 @@
 
       const origAddTo = primaryLine.addTo;
       primaryLine.addTo = function (target) {
-        if (target && !opts._isHaloLayer && opts.dashArray !== "6, 6") {
+        if (target && !opts._isHaloLayer && opts.dashArray !== "6, 6" && !isPipeline) {
           try {
             const haloLine = origPolylineFactory.call(L, seaWaypoints, {
               color: opts.color || "#38bdf8",
