@@ -474,3 +474,17 @@ export const CITATIONS: CitationItem[] = [
     verificationNote: 'Official nautical coordinates and lane widths for Hormuz, Singapore, and Malacca Straits.'
   }
 ];
+
+export const PLAIN_ENGLISH_CHAPTERS = [
+  { id: 1, number: '01', title: 'The Dubai & Oman Ecosystem', subtitle: 'Fields, Export Terminals & The 9 Major Middle Eastern Grades' },
+  { id: 2, number: '02', title: 'Asian Crude Demand & Refineries', subtitle: 'China, India, Japan & South Korea: Mega-Refineries & Import Slates' },
+  { id: 3, number: '03', title: 'Official Selling Prices (OSP) & Shipping', subtitle: 'Monthly Pricing Formulas & Supertanker Logistics' },
+  { id: 4, number: '04', title: 'Why Refineries Choose Different Crudes', subtitle: 'Refinery Configurations, API/Sulfur Economics & Yield Simulator' },
+  { id: 5, number: '05', title: 'When Atlantic Crude Becomes Competitive', subtitle: 'WTI Midland, Brent, West Africa vs Russian Urals & ESPO' },
+  { id: 6, number: '06', title: 'How Dubai/Oman Pricing Works', subtitle: 'The 30-Minute Platts 16:30 Singapore Window' },
+  { id: 7, number: '07', title: 'Ocean Chokepoints: Hormuz & Malacca', subtitle: 'The Two Critical Straits Controlling 20 Million Barrels Daily' },
+  { id: 8, number: '08', title: '7-Crude Delivered Cost Calculator', subtitle: 'Landed Parity & Netback Margins Across 4 Asian Markets' },
+  { id: 9, number: '09', title: 'The Journey of One Barrel', subtitle: '9 Key Stages from Desert Wellhead to Fuel Tank' },
+  { id: 10, number: '10', title: 'What Happens If A Major Supplier Disappears?', subtitle: 'Interactive Supply Shock Simulator & Future Pipeline Corridors' }
+];
+

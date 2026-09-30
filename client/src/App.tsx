@@ -18,6 +18,7 @@ export const App: React.FC = () => {
           <Route path="/" element={<LandingPage />} />
           <Route path="/journey" element={<JourneyOfOneBarrel />} />
           <Route path="/simulator" element={<CrudeChoiceSimulator />} />
+          <Route path="/wargame" element={<ChapterPage />} />
           <Route path="/chapter/:id" element={<ChapterPage />} />
         </Routes>
       </main>

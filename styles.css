@@ -1793,4 +1793,135 @@ h1, h2, h3, h4, h5, h6, th {
   color: #f8fafc !important;
 }
 
+/* ==========================================================================
+   CHAPTER 10: CRISIS WAR GAME & FUTURE BYPASS CORRIDORS
+   ========================================================================== */
+.wargame-tab-btn {
+  padding: 10px 16px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.wargame-tab-btn:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+  background: #f0f9ff;
+}
+.wargame-tab-btn.active {
+  background: #0f172a;
+  color: #ffffff !important;
+  border-color: #0f172a;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+}
+.wargame-tab-btn.active span {
+  color: #ffffff !important;
+}
+
+.wargame-pill-filter {
+  padding: 6px 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.wargame-pill-filter:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+.wargame-pill-filter.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+.wargame-gauge-card {
+  background: #ffffff;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.wargame-flow-step {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 12px 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.wargame-flow-step:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+}
+
+.wargame-route-card {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.wargame-route-card:hover {
+  border-color: #0284c7;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.12);
+  transform: translateY(-2px);
+}
+.wargame-route-card.active {
+  border-color: #0284c7;
+  background: #f0f9ff;
+  border-width: 2px;
+  box-shadow: 0 8px 20px rgba(2, 132, 199, 0.18);
+}
+
+.wargame-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.wargame-matrix-table th {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 12px 14px;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.wargame-matrix-table td {
+  padding: 14px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: top;
+  color: #1e293b;
+}
+.wargame-matrix-table tr:hover td {
+  background: #f8fafc;
+}
+
+@keyframes pipelinePulse {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -30; }
+}
+
+.pulse-pipeline {
+  stroke-dasharray: 8, 6;
+  animation: pipelinePulse 1.2s linear infinite;
+}
+
+
 

@@ -42,7 +42,7 @@ export const Navbar: React.FC = () => {
                   : 'text-ink hover:bg-paper'
               }`}
             >
-              <span>Chapters (1–12)</span>
+              <span>Chapters (1–10)</span>
               <span className="text-[10px]">▾</span>
             </button>
 
@@ -90,6 +90,17 @@ export const Navbar: React.FC = () => {
             }`}
           >
             <span>⚖️</span> Crude Simulator
+          </Link>
+
+          <Link
+            to="/chapter/10"
+            className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1 ${
+              location.pathname === '/chapter/10'
+                ? 'bg-paper-subtle text-ft-claret font-bold border border-paper-border'
+                : 'text-ink hover:bg-paper'
+            }`}
+          >
+            <span>🚨</span> Crisis War Game
           </Link>
         </nav>
       </div>
