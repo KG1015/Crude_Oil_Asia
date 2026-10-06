@@ -1101,6 +1101,18 @@ const OIL_DATA = {
       whyItMatters: "Asia imports 22.4 million barrels every single day with near-zero domestic backup. A single outage forces billions of dollars in emergency crude rerouting.",
       tradingImpact: "Shows immediate price shocks on Brent, WTI, and Dubai OSPs, identifying who wins the cash windfalls and which refiners face feedstock starvation.",
       mapId: "corridor_me"
+    },
+    {
+      id: 11,
+      number: "11",
+      title: "Future Oil Routes: How Asia Could Bypass Tomorrow's Bottlenecks",
+      subtitle: "Can Steel Pipelines, Arctic Shortcuts & Atlantic Supertankers Defeat Naval Blockades?",
+      sectionTag: "CHAPTER 11 // FUTURE BYPASS CORRIDORS",
+      summary: "A beginner-friendly strategic guide analyzing 9 global pipeline and seaborne bypass routes, likelihood of success, strategist rankings, and Asia's 2040 energy security.",
+      whatIsThis: "Strategic pipeline bypasses (ADCOP, East-West, Basra-Aqaba), Arctic routes (NSR), and Atlantic supertanker highways designed to avoid maritime choke points.",
+      whyItMatters: "Over 80% of Asia's crude currently crosses Hormuz or Malacca. Steel pipelines and Atlantic routes offer structural escape valves during wartime.",
+      tradingImpact: "Bypasses reallocate market share toward secure loading hubs (Fujairah, Yanbu, US Gulf) and cap Middle East price premiums.",
+      mapId: "corridor_me"
     }
   ],
 
@@ -2100,7 +2112,262 @@ const OIL_DATA = {
       waypoints: [[59.9, 30.3], [46.3, 48.0], [36.0, 51.5], [27.2, 56.3], [18.9, 72.8]],
       color: "#ec4899"
     }
-  ]
+  ],
+
+  // 17. CHAPTER 11: FUTURE OIL ROUTES & BOTTLENECK BYPASSES
+  chapter11Data: {
+    routes: [
+      {
+        id: "adcop_fujairah",
+        name: "ADCOP + Fujairah Expansion",
+        routeTag: "UAE BYPASS",
+        category: "operational",
+        status: "Operational + Expansion Planned",
+        statusBadge: "🟢 Operational + Expansion Planned",
+        whatIsIt: "A 360 km crude pipeline moving Abu Dhabi Murban oil from onshore Habshan fields directly across the Hajar Mountains to the Port of Fujairah on the Gulf of Oman.",
+        whyImportant: "It bypasses the Strait of Hormuz.\nEven if Hormuz is disrupted, UAE can still export oil directly into the Indian Ocean without entering the Persian Gulf.",
+        whoBenefits: ["Japan", "South Korea", "China", "India", "ADNOC"],
+        potentialImpact: "HIGH",
+        impactBadge: "🔥 High",
+        likelihood: "High",
+        animationIdea: "Show Hormuz turning red (blocked), UAE crude rerouting overland east to Fujairah, and tankers continuing safely toward Asia.",
+        mapIdea: "Overland corridor from Habshan (Abu Dhabi) crossing east to Fujairah terminal outside Hormuz into open Indian Ocean waters.",
+        strategicTakeaway: "“UAE becomes the safest Gulf supplier if Hormuz is disrupted.”",
+        waypoints: [[23.7, 53.7], [24.2, 55.0], [25.18, 56.36], [24.5, 58.5], [15.0, 68.0]],
+        color: "#059669"
+      },
+      {
+        id: "saudi_east_west",
+        name: "Saudi East-West Pipeline (Petroline)",
+        routeTag: "SAUDI RED SEA BYPASS",
+        category: "operational",
+        status: "Operational + Port Expansion Planned",
+        statusBadge: "🟢 Operational + Expansion Planned",
+        whatIsIt: "A massive 1,200 km twin pipeline cutting across the entire Arabian desert from Abqaiq and Ghawar fields in the east to the Port of Yanbu on the Red Sea in the west.",
+        whyImportant: "Saudi oil can reach Yanbu on the Red Sea without using Hormuz.\nWithout this pipeline, Saudi exports would be much more vulnerable to Persian Gulf closures.",
+        whoBenefits: ["Saudi Aramco", "China", "India", "Mediterranean refiners", "Red Sea tanker operators"],
+        potentialImpact: "HIGH",
+        impactBadge: "🔥 High",
+        likelihood: "High",
+        animationIdea: "Show Persian Gulf route disappearing, oil moving west across the desert to Yanbu, and tankers loading at the Red Sea.",
+        mapIdea: "Horizontal overland pipeline crossing Saudi Arabia from Ghawar/Abqaiq to Yanbu on the Red Sea coast.",
+        strategicTakeaway: "“Saudi Arabia's biggest insurance policy against Hormuz risk.”",
+        waypoints: [[26.0, 49.8], [24.5, 45.0], [24.1, 38.0], [20.0, 39.5], [12.6, 43.3]],
+        color: "#059669"
+      },
+      {
+        id: "atlantic_basin",
+        name: "Atlantic Basin Route (USA, Brazil, Guyana, West Africa)",
+        routeTag: "NON-OPEC ARBITRAGE HIGHWAY",
+        category: "operational",
+        status: "Operational & Rapidly Expanding",
+        statusBadge: "🟢 Operational & Expanding",
+        whatIsIt: "Long-haul seaborne supertanker highways bringing light sweet US WTI Midland, Brazilian Pre-Salt (Tupi/Búzios), Guyanese Liza, and West African crude into Asia via the Cape of Good Hope.",
+        whyImportant: "Asia becomes less dependent on the Middle East.\nProvides crucial diversification and breaks OPEC's pricing power.",
+        whoBenefits: ["South Korea", "China", "India", "Taiwan", "US Shale Exporters", "Petrobras"],
+        potentialImpact: "HIGH",
+        impactBadge: "🔥 High",
+        likelihood: "High",
+        animationIdea: "Show oil flowing from multiple Atlantic producers (US Gulf, Brazil, Guyana, Angola) rounding Africa into Asia.",
+        mapIdea: "Trans-oceanic maritime corridors starting in Texas, Brazil, and West Africa, rounding the Cape of Good Hope, and terminating in Asian mega-ports.",
+        strategicTakeaway: "“The more Atlantic barrels Asia buys, the less dominant Middle East suppliers become.”",
+        waypoints: [[27.81, -97.39], [-24.0, -46.3], [-34.5, 18.5], [5.8, 80.5], [1.25, 103.85], [35.5, 129.38]],
+        color: "#0284c7"
+      },
+      {
+        id: "espo_kozmino",
+        name: "ESPO + Kozmino (Russia to China / Pacific)",
+        routeTag: "SIBERIAN SHORT-HAUL",
+        category: "operational",
+        status: "Operational (1.6 Mb/d)",
+        statusBadge: "🟢 Operational",
+        whatIsIt: "The 4,188 km Eastern Siberia–Pacific Ocean pipeline with a direct spur into Daqing, China, and an export terminus at Kozmino Port on Russia's Pacific coast.",
+        whyImportant: "Fastest route from Russia to China.\nMuch cheaper freight than Middle East or Atlantic routes and avoids Hormuz, Malacca, and Suez entirely.",
+        whoBenefits: ["China (CNPC, Sinopec, Shandong teapots)", "Rosneft", "Transneft"],
+        potentialImpact: "HIGH",
+        impactBadge: "🔥 High",
+        likelihood: "High",
+        animationIdea: "Show tanker leaving Kozmino and reaching China in a few days (under 72 hours).",
+        mapIdea: "Siberian overland pipeline terminating at Kozmino, with an Aframax shuttle route crossing the Sea of Japan directly into Shandong refiners.",
+        strategicTakeaway: "“China's most valuable short-haul crude supply route.”",
+        waypoints: [[56.0, 115.0], [53.5, 124.0], [42.73, 133.02], [36.06, 120.38]],
+        color: "#059669"
+      },
+      {
+        id: "basra_aqaba",
+        name: "Basra-Aqaba Pipeline (Iraq-Jordan)",
+        routeTag: "IRAQ RED SEA OUTLET",
+        category: "planned",
+        status: "Planned / Phased Development (~1.0 Mb/d)",
+        statusBadge: "🟡 Planned / Phased",
+        whatIsIt: "A planned 1,700 km pipeline linking southern Iraq's Basra oil fields across Jordan to the Port of Aqaba on the Red Sea.",
+        whyImportant: "Allows Iraq to export without relying fully on the Persian Gulf.\nGives landlocked southern crude a direct exit to the Red Sea.",
+        whoBenefits: ["Iraq (SOMO)", "Jordan", "Egypt", "Mediterranean and Asian refiners"],
+        potentialImpact: "MEDIUM",
+        impactBadge: "⚡ Medium",
+        likelihood: "Medium",
+        animationIdea: "Future route glowing on the map, connecting Basra oil fields across Jordan to Aqaba port.",
+        mapIdea: "Desert overland pipeline connecting southern Iraq across Jordan to the Gulf of Aqaba on the Red Sea.",
+        strategicTakeaway: "“Iraq's best long-term Hormuz bypass.”",
+        waypoints: [[30.5, 47.8], [31.5, 42.0], [29.5, 35.0], [27.0, 35.5]],
+        color: "#3b82f6"
+      },
+      {
+        id: "northern_sea_route",
+        name: "Northern Sea Route (Arctic NSR)",
+        routeTag: "ARCTIC SHORTCUT",
+        category: "operational",
+        status: "Operational (Seasonal Summer/Fall) & Expanding",
+        statusBadge: "🟢 Operational (Seasonal)",
+        whatIsIt: "An Arctic maritime shortcut along Russia's northern coast using ice-class tankers and nuclear icebreakers from Murmansk through the Bering Strait to East Asia.",
+        whyImportant: "Shortens Russia-to-Asia shipping by 15–20 days compared to Suez.\nAvoids Suez and traditional choke points completely.",
+        whoBenefits: ["Russia (Novatek, Rosneft)", "China", "Ice-class tanker operators"],
+        potentialImpact: "MEDIUM",
+        impactBadge: "⚡ Medium",
+        likelihood: "Medium",
+        animationIdea: "Show Arctic ice opening in summer (July–October window) and tankers sailing through the open polar channel.",
+        mapIdea: "High-latitude polar route hugging Russia's Arctic rim through the Bering Strait directly into Chinese ports.",
+        strategicTakeaway: "“Not a replacement for Hormuz, but a growing strategic shortcut.”",
+        waypoints: [[69.0, 33.0], [75.0, 60.0], [77.0, 105.0], [70.0, 175.0], [66.0, -169.0], [40.0, 130.0]],
+        color: "#06b6d4"
+      },
+      {
+        id: "saudi_oman",
+        name: "Saudi-Oman Direct Link (Shaybah to Duqm)",
+        routeTag: "INDIAN OCEAN MEGA-LINK",
+        category: "planned",
+        status: "Planned (Under Bilateral Study ~1.5–2.0 Mb/d)",
+        statusBadge: "🟡 Planned (Bilateral Study)",
+        whatIsIt: "A proposed overland pipeline connecting Saudi Arabia's Eastern Province/Shaybah fields directly to the Port of Duqm on Oman's Arabian Sea coast.",
+        whyImportant: "Bypasses BOTH the Strait of Hormuz AND the Red Sea / Bab el-Mandeb conflict zone, placing oil directly on open Indian Ocean waters.",
+        whoBenefits: ["Saudi Aramco", "Oman (Duqm Refinery & Storage Hub)", "All Asian crude buyers"],
+        potentialImpact: "HIGH",
+        impactBadge: "🔥 High",
+        likelihood: "Medium",
+        animationIdea: "Show Saudi crude flowing southeast through the Empty Quarter across Oman to Duqm, completely out of range of Gulf and Red Sea missiles.",
+        mapIdea: "Diagonal corridor crossing the Empty Quarter to Duqm on the Arabian Sea, with direct ocean paths toward India and East Asia.",
+        strategicTakeaway: "“The ultimate open-ocean bypass: avoids both Hormuz and the Red Sea.”",
+        waypoints: [[22.5, 54.0], [21.0, 56.5], [19.7, 57.7], [18.0, 63.0]],
+        color: "#8b5cf6"
+      },
+      {
+        id: "instc",
+        name: "INSTC (International North-South Transport Corridor)",
+        routeTag: "EURASIAN MULTIMODAL",
+        category: "operational",
+        status: "Operational (Multimodal Rail/Ship) / Expanding",
+        statusBadge: "🟢 Operational (Multimodal)",
+        whatIsIt: "A 7,200 km multi-modal trade network connecting St. Petersburg in Russia through the Caspian Sea, through Iran to the Port of Bandar Abbas, and onward to India's west coast.",
+        whyImportant: "A sanction-proof, non-Western overland/maritime conduit connecting Russia directly to India, cutting transit time from 40 days to 25 days.",
+        whoBenefits: ["India", "Russia", "Iran"],
+        potentialImpact: "MEDIUM",
+        impactBadge: "⚡ Medium",
+        likelihood: "Low",
+        animationIdea: "Show multimodal cargo moving from Russia down across the Caspian Sea, through Iran via rail, and sailing across the Arabian Sea into Mumbai.",
+        mapIdea: "Vertical North-South corridor linking Russia, Iran, and Mumbai across the Caspian and Arabian Seas.",
+        strategicTakeaway: "“A sanctions-proof transit corridor linking Russia directly to India.”",
+        waypoints: [[59.9, 30.3], [46.3, 48.0], [36.0, 51.5], [27.2, 56.3], [18.9, 72.8]],
+        color: "#ec4899"
+      },
+      {
+        id: "russia_india_rail",
+        name: "Russia-India Rail / Trans-Caspian Corridor",
+        routeTag: "TRANS-CONTINENTAL RAIL",
+        category: "concept",
+        status: "Concept / Early Feasibility",
+        statusBadge: "🔵 Concept / Feasibility",
+        whatIsIt: "Conceptual trans-continental railway and pipeline links traversing Central Asia (Kazakhstan, Turkmenistan) and Iran down to South Asian ocean terminals.",
+        whyImportant: "Eliminates maritime chokepoints entirely for overland energy deliveries between the Eurasian landmass and India.",
+        whoBenefits: ["India", "Russia", "Central Asian Republics"],
+        potentialImpact: "LOW",
+        impactBadge: "📊 Low",
+        likelihood: "Low",
+        animationIdea: "Show overland railway cars and pipeline links traversing Central Asia south toward the Indian Ocean.",
+        mapIdea: "Dotted overland corridor from Central Asia southward into South Asia.",
+        strategicTakeaway: "“Geopolitically difficult and expensive, but a vision of total overland energy trade.”",
+        waypoints: [[55.75, 37.61], [51.16, 71.44], [37.96, 58.38], [27.2, 56.3], [18.9, 72.8]],
+        color: "#64748b"
+      }
+    ],
+
+    rankingTable: [
+      { route: "ADCOP", likelihood: "High", impact: "High", badgeL: "🟢 High", badgeI: "🔥 High", note: "Highest credibility Asia hedge; UAE domestic control; proved invaluable during 2026 tensions." },
+      { route: "East-West", likelihood: "High", impact: "High", badgeL: "🟢 High", badgeI: "🔥 High", note: "Massive 5.0 Mb/d pipe capacity; Yanbu port debottlenecking is high ROI." },
+      { route: "Atlantic Basin", likelihood: "High", impact: "High", badgeL: "🟢 High", badgeI: "🔥 High", note: "Not a single pipeline project, but the largest seaborne volume hedge for Asian refiners." },
+      { route: "ESPO", likelihood: "High", impact: "High", badgeL: "🟢 High", badgeI: "🔥 High", note: "Operational baseload pipeline & short 3-day Pacific shuttle into Chinese teapots." },
+      { route: "Basra-Aqaba", likelihood: "Medium", impact: "Medium", badgeL: "🟡 Medium", badgeI: "⚡ Medium", note: "Best political alignment of Iraqi bypass projects; still multi-year and Red Sea reliant." },
+      { route: "Northern Sea Route", likelihood: "Medium", impact: "Medium", badgeL: "🟡 Medium", badgeI: "⚡ Medium", note: "Seasonal summer window (July–Oct); valuable high-speed Arctic shortcut for China." },
+      { route: "Saudi-Oman", likelihood: "Medium", impact: "High", badgeL: "🟡 Medium", badgeI: "🔥 High", note: "Strategic holy grail: reaches open Indian Ocean avoiding Hormuz AND Red Sea." },
+      { route: "INSTC", likelihood: "Low", impact: "Medium", badgeL: "🔴 Low", badgeI: "⚡ Medium", note: "Multimodal logistics bottlenecks, customs delays, and Iranian infrastructure limits." },
+      { route: "Russia-India Rail", likelihood: "Low", impact: "Low", badgeL: "🔴 Low", badgeI: "📊 Low", note: "High capital cost per barrel compared to VLCCs; complex transit geopolitics." }
+    ],
+
+    strategistView: {
+      question: "Which routes are most likely to become important in the next 10–20 years?",
+      rankings: [
+        {
+          rank: 1,
+          route: "ADCOP + UAE parallel Fujairah line",
+          verdict: "Highest credibility Asia-facing Hormuz hedge.",
+          detail: "Domestic politics, clear commercial logic, already proven in crisis utilisation. If the second line lands by late decade, UAE becomes the structural 'safe AG' loader for Asia light and medium grades."
+        },
+        {
+          rank: 2,
+          route: "Saudi East-West / Yanbu debottleneck",
+          verdict: "Not glamorous pipe steel; port capacity is the constraint.",
+          detail: "Any sustained Hormuz risk premium makes Yanbu expansion NPV-positive. Asia importance is indirect but large as it frees up global balance."
+        },
+        {
+          rank: 3,
+          route: "Atlantic seaborne highways (USGC / Brazil / Guyana / WAF → Asia via Cape)",
+          verdict: "The volume route that will matter most in barrel terms.",
+          detail: "Not a single 'project,' but a massive structural shift. Guyana and Brazil growth plus US export capacity structurally raise Asia's non-Middle East optionality."
+        },
+        {
+          rank: 4,
+          route: "ESPO system (pipeline + Kozmino)",
+          verdict: "Remains China's strategic baseload.",
+          detail: "Operates 24/7 regardless of Western sanctions theatre, providing safe non-chokepoint overland feed directly into China."
+        },
+        {
+          rank: 5,
+          route: "Basra–Haditha–Aqaba phased",
+          verdict: "Best of the Iraqi bypass family on political alignment.",
+          detail: "Provides critical redundancy for Baghdad; still only medium Asia importance due to Red Sea transit and multi-year execution hurdles."
+        }
+      ]
+    },
+
+    audienceQuestion: {
+      prompt: "If Asia wanted to reduce dependence on Hormuz by 2040, which route would matter the most?",
+      options: [
+        {
+          key: "adcop_fujairah",
+          label: "🇦🇪 ADCOP + Fujairah Expansion (UAE Indian Ocean Gateway)",
+          share: "41% of Strategists",
+          verdict: "The Pragmatic Frontrunner: UAE has the highest project execution credibility, zero transit countries, and Fujairah is already Asia's premier offshore bunkering and storage hub."
+        },
+        {
+          key: "atlantic_basin",
+          label: "🌊 Atlantic Basin Seaborne Arbitrage (US / Brazil / Guyana via Cape)",
+          share: "35% of Strategists",
+          verdict: "The Market Giant: Scale beats steel. Over 5.0 Mb/d of sweet crude rounding Africa provides more physical volume than every Middle East bypass pipeline combined."
+        },
+        {
+          key: "saudi_oman",
+          label: "🇸🇦🇴🇲 Saudi-Oman Direct Link to Duqm (Empty Quarter Pipeline)",
+          share: "16% of Strategists",
+          verdict: "The Ultimate Strategic Vision: Solves both Hormuz AND Bab el-Mandeb in a single stroke, placing Saudi crude directly onto open Indian Ocean waters."
+        },
+        {
+          key: "espo_arctic",
+          label: "❄️ Siberian ESPO Pipeline + Arctic Northern Sea Route (NSR)",
+          share: "8% of Strategists",
+          verdict: "The Sino-Russian Fortress: Renders northern China completely immune to Western naval blockades, though geographically irrelevant for Tokyo, Seoul, or New Delhi."
+        }
+      ]
+    }
+  }
 };
 
 if (typeof window !== "undefined") {

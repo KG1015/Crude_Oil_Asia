@@ -27,7 +27,11 @@ const STATE = {
   globeRenderer: null,
   globeMesh: null,
   globeRotating: true,
-  globeAnimationId: null
+  globeAnimationId: null,
+  // Chapter 11 Future Routes State
+  activeChapter11RouteId: "adcop_fujairah",
+  ch11Filter: "all",
+  ch11UserVote: null
 };
 window.STATE = STATE;
 
@@ -52,8 +56,8 @@ function handleRoute() {
   if (hash.startsWith("#/chapter/")) {
     let chapterId = parseInt(hash.replace("#/chapter/", ""), 10);
     if (chapterId === 12) chapterId = 8;
-    if (chapterId > 10) chapterId = 10;
-    if (!isNaN(chapterId) && chapterId >= 1 && chapterId <= 10) {
+    if (chapterId > 11) chapterId = 11;
+    if (!isNaN(chapterId) && chapterId >= 1 && chapterId <= 11) {
       showChapterView(chapterId);
       return;
     }
@@ -65,6 +69,9 @@ function handleRoute() {
     return;
   } else if (hash === "#/wargame" || hash === "#/shock" || hash === "#/crisis") {
     showChapterView(10); // Chapter 10: Supply Shock War Game
+    return;
+  } else if (hash === "#/future" || hash === "#/futureroutes" || hash === "#/routes") {
+    showChapterView(11); // Chapter 11: Future Oil Routes
     return;
   }
 
@@ -112,14 +119,17 @@ function updateNavActiveState(activeKey) {
   const navJourney = document.getElementById("navLinkJourney");
   const navSim = document.getElementById("navLinkSimulator");
   const navWarGame = document.getElementById("navLinkWarGame");
+  const navFuture = document.getElementById("navLinkFutureRoutes");
   const navChapters = document.getElementById("navBtnChapters");
 
-  [navHome, navJourney, navSim, navWarGame, navChapters].forEach(el => {
+  [navHome, navJourney, navSim, navWarGame, navFuture, navChapters].forEach(el => {
     if (el) el.classList.remove("active");
   });
 
   if (activeKey === "home" && navHome) {
     navHome.classList.add("active");
+  } else if (activeKey === "chapter-11" && navFuture) {
+    navFuture.classList.add("active");
   } else if (activeKey === "chapter-10" && navWarGame) {
     navWarGame.classList.add("active");
   } else if (activeKey === "chapter-9" && navJourney) {
@@ -274,6 +284,8 @@ function renderChapterContent(chapterId) {
     html += renderChapter8Visual();  // Chapter 09: The Journey of One Barrel
   } else if (chapterId === 10) {
     html += renderChapter10Visual(); // Chapter 10: What Happens If A Major Supplier Disappears?
+  } else if (chapterId === 11) {
+    html += renderChapter11Visual(); // Chapter 11: Future Oil Routes & Bottleneck Bypasses
   }
 
   // Inject Universal Maritime Intelligence Map for Chapter 9 only
@@ -364,6 +376,8 @@ function renderChapterContent(chapterId) {
       initJourneyOfOneBarrel();  // Chapter 09: The Journey of One Barrel
     } else if (chapterId === 10) {
       initChapter10Simulator();  // Chapter 10: What Happens If A Major Supplier Disappears?
+    } else if (chapterId === 11) {
+      initChapter11Visual();     // Chapter 11: Future Oil Routes & Bottleneck Bypasses
     }
 
     if (chapterId === 9) {
@@ -4139,3 +4153,628 @@ function selectFutureRoute(routeId) {
     ch10FutureMap.fitBounds(line.getBounds(), { padding: [45, 45], maxZoom: 6 });
   }
 }
+
+/* ==========================================================================
+   CHAPTER 11: FUTURE OIL ROUTES & BOTTLENECK BYPASSES
+   ========================================================================== */
+let ch11Map = null;
+let ch11Layers = null;
+let ch11AnimTimer = null;
+
+function renderChapter11Visual() {
+  const d = OIL_DATA.chapter11Data;
+  if (!d) return `<div class="p-8 text-center text-red-600 font-mono">Chapter 11 data not loaded.</div>`;
+
+  const activeRouteId = STATE.activeChapter11RouteId || "adcop_fujairah";
+  const activeRoute = d.routes.find(r => r.id === activeRouteId) || d.routes[0];
+
+  return `
+    <div style="background:var(--bg-surface); border:1.5px solid var(--border-subtle); border-radius:var(--radius-lg); padding:28px; margin-bottom:36px;">
+      
+      <!-- CHAPTER HEADER BANNER -->
+      <div class="ch11-section-header">
+        <div>
+          <div style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.08em; display:flex; align-items:center; gap:6px;">
+            <span>🌐</span> GEOPOLITICAL BYPASS RADAR // INTERACTIVE ROUTE INTELLIGENCE
+          </div>
+          <h2 style="font-family:var(--font-serif); font-size:28px; font-weight:800; color:#0f172a; margin-top:4px; margin-bottom:6px;">
+            Future Oil Routes: How Asia Could Bypass Tomorrow's Bottlenecks
+          </h2>
+          <p style="font-size:14px; color:#475569; max-width:850px; line-height:1.5;">
+            ${d.overview}
+          </p>
+        </div>
+
+        <!-- Filter Pill Tabs -->
+        <div class="ch11-filter-bar">
+          <button class="ch11-filter-btn ${STATE.ch11Filter === 'all' || !STATE.ch11Filter ? 'active' : ''}" onclick="filterChapter11Routes('all', event)">
+            All 9 Routes
+          </button>
+          <button class="ch11-filter-btn ${STATE.ch11Filter === 'operational' ? 'active' : ''}" onclick="filterChapter11Routes('operational', event)">
+            Operational (4)
+          </button>
+          <button class="ch11-filter-btn ${STATE.ch11Filter === 'planned' ? 'active' : ''}" onclick="filterChapter11Routes('planned', event)">
+            Planned (3)
+          </button>
+          <button class="ch11-filter-btn ${STATE.ch11Filter === 'concept' ? 'active' : ''}" onclick="filterChapter11Routes('concept', event)">
+            Concept (2)
+          </button>
+        </div>
+      </div>
+
+      <!-- ROUTE QUICK SELECTOR TABS -->
+      <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:12px; margin-bottom:24px; border-bottom:1px solid #e2e8f0;">
+        ${d.routes.map(r => `
+          <button id="ch11_btn_${r.id}" 
+                  class="action-btn ${r.id === activeRoute.id ? 'active' : ''}" 
+                  style="padding:7px 14px; font-size:12px; white-space:nowrap; border-radius:6px;"
+                  onclick="selectChapter11Route('${r.id}')">
+            ${r.status.startsWith('Operational') ? '🟢' : r.status.startsWith('Planned') ? '🟡' : '🔵'} ${r.name.split('(')[0].trim()}
+          </button>
+        `).join('')}
+      </div>
+
+      <!-- MAIN SPLIT WORKSPACE: ROUTE CARD (EXACT FORMAT) + INTERACTIVE MAP -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:24px; margin-bottom:36px;">
+        
+        <!-- LEFT: SELECTED ROUTE CARD IN THE EXACT REQUESTED FORMAT -->
+        <div id="ch11SelectedRouteContainer" class="ch11-route-card active" style="min-height:540px;">
+          ${renderChapter11RouteCardHtml(activeRoute)}
+        </div>
+
+        <!-- RIGHT: LIVE INTERACTIVE BYPASS MAP & ANIMATION SIMULATOR -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          
+          <!-- Leaflet Map Container -->
+          <div style="position:relative; height:470px; border-radius:10px; overflow:hidden; border:1.5px solid #0f172a; box-shadow:0 8px 24px rgba(15,23,42,0.12);">
+            <div id="chapter11BypassMap" style="width:100%; height:100%;"></div>
+
+            <!-- Map Top Overlay -->
+            <div style="position:absolute; top:12px; left:12px; z-index:1000; background:rgba(15,23,42,0.88); backdrop-filter:blur(6px); color:#ffffff; padding:6px 12px; border-radius:6px; font-family:var(--font-mono); font-size:11px; border:1px solid rgba(255,255,255,0.15);">
+              <span style="color:#38bdf8; font-weight:800;">ACTIVE CORRIDOR:</span> <span id="ch11MapRouteTitle">${activeRoute.name}</span>
+            </div>
+
+            <!-- Chokepoint Status Badge -->
+            <div id="ch11MapChokepointBadge" style="position:absolute; bottom:12px; left:12px; z-index:1000; background:rgba(220,38,38,0.92); color:#ffffff; padding:6px 12px; border-radius:6px; font-family:var(--font-mono); font-size:11px; font-weight:800; border:1px solid #f87171; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+              ⚠️ HORMUZ BYPASS: CRUDE EVADES CHOKEPOINT
+            </div>
+          </div>
+
+          <!-- Live Bypass Animation Control Box -->
+          <div class="ch11-sim-box">
+            <div>
+              <div style="font-family:var(--font-mono); font-size:10px; font-weight:800; color:#93c5fd; text-transform:uppercase; letter-spacing:0.05em;">
+                LIVE BYPASS SIMULATOR
+              </div>
+              <div id="ch11SimTicker" style="font-size:12.5px; color:#e2e8f0; margin-top:2px;">
+                Ready: Click to simulate diversion around maritime bottlenecks.
+              </div>
+            </div>
+            <button class="ch11-sim-btn" onclick="runChapter11Simulation(STATE.activeChapter11RouteId || 'adcop_fujairah')">
+              <span>▶</span> Run Simulation
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- 9 ALL ROUTES OVERVIEW GRID (FILTERABLE) -->
+      <div style="margin-bottom:48px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #e2e8f0; padding-bottom:10px; margin-bottom:20px;">
+          <div>
+            <span class="chapter-meta-tag" style="margin-bottom:2px;">COMPLETE INVENTORY</span>
+            <h3 style="font-family:var(--font-serif); font-size:22px; font-weight:800; color:#0f172a;">
+              All 9 Strategic Corridors at a Glance
+            </h3>
+          </div>
+          <span style="font-family:var(--font-mono); font-size:11px; color:#64748b; font-weight:700;">
+            Click any card to inspect &amp; map
+          </span>
+        </div>
+
+        <div id="ch11AllRoutesGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:18px;">
+          ${d.routes.map(r => `
+            <div class="ch11-route-card ${r.id === activeRoute.id ? 'active' : ''}" 
+                 id="ch11_grid_card_${r.id}"
+                 style="cursor:pointer;"
+                 onclick="selectChapter11Route('${r.id}')">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                <span style="font-family:var(--font-mono); font-size:10px; font-weight:800; color:${r.color}; background:#f1f5f9; padding:2px 8px; border-radius:4px;">
+                  ${r.routeTag}
+                </span>
+                <span class="ch11-impact-badge ${r.potentialImpact === 'HIGH' ? 'ch11-impact-high' : r.potentialImpact === 'MEDIUM' ? 'ch11-impact-med' : 'ch11-impact-low'}">
+                  ${r.impactBadge}
+                </span>
+              </div>
+              <h4 style="font-family:var(--font-serif); font-size:18px; font-weight:800; color:#0f172a; margin-bottom:4px;">
+                ${r.name}
+              </h4>
+              <div style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:10px;">
+                ${r.statusBadge}
+              </div>
+              <p style="font-size:13px; color:#334155; line-height:1.45; margin-bottom:12px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;">
+                ${r.whatIsIt}
+              </p>
+              <div class="ch11-takeaway" style="font-size:12.5px; padding:8px 10px;">
+                ${r.strategicTakeaway}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- ===================================================================
+           FINAL SLIDE: RANKING TABLE + STRATEGIST VIEW + AUDIENCE POLL
+           =================================================================== -->
+      <div style="background:#f8fafc; border:2px solid #cbd5e1; border-radius:12px; padding:28px; margin-top:24px;">
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-bottom:2px solid #e2e8f0; padding-bottom:14px; margin-bottom:24px;">
+          <div>
+            <div style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#dc2626; text-transform:uppercase; letter-spacing:0.08em; display:flex; align-items:center; gap:6px;">
+              <span>📊</span> FINAL SLIDE // EXECUTIVE SYNTHESIS
+            </div>
+            <h2 style="font-family:var(--font-serif); font-size:26px; font-weight:800; color:#0f172a; margin-top:4px;">
+              Strategic Feasibility &amp; Potential Impact Matrix
+            </h2>
+          </div>
+          <div style="font-family:var(--font-mono); font-size:11.5px; font-weight:700; color:#475569; background:#ffffff; border:1px solid #cbd5e1; padding:6px 14px; border-radius:6px;">
+            9 Routes Ranked &bull; 2026–2040 Horizon
+          </div>
+        </div>
+
+        <!-- 1. RANKING TABLE (EXACT COLUMNS REQUESTED) -->
+        <div style="overflow-x:auto; margin-bottom:32px; border:1.5px solid #0f172a; border-radius:8px;">
+          <table class="ch11-rank-table">
+            <thead>
+              <tr>
+                <th style="width:25%;">Route &darr;</th>
+                <th style="width:20%;">Likelihood Of Success &darr;</th>
+                <th style="width:20%;">Potential Impact &darr;</th>
+                <th style="width:35%;">Commercial Reality &amp; Analyst Take</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${d.rankingTable.map(row => `
+                <tr>
+                  <td>
+                    <strong style="color:#0f172a; font-size:14px;">${row.route}</strong>
+                  </td>
+                  <td>
+                    <span style="font-family:var(--font-mono); font-size:12px; font-weight:800;">
+                      ${row.badgeL}
+                    </span>
+                  </td>
+                  <td>
+                    <span style="font-family:var(--font-mono); font-size:12px; font-weight:800;">
+                      ${row.badgeI}
+                    </span>
+                  </td>
+                  <td style="font-size:12.5px; color:#475569; line-height:1.4;">
+                    ${row.note}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 2. STRATEGIST PERSPECTIVE (10-20 YEAR OUTLOOK) -->
+        <div style="margin-bottom:36px;">
+          <div style="margin-bottom:16px;">
+            <div style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.06em;">
+              SENIOR STRATEGIST VIEWPOINT
+            </div>
+            <h3 style="font-family:var(--font-serif); font-size:22px; font-weight:800; color:#0f172a; margin-top:2px;">
+              ${d.strategistView.question}
+            </h3>
+            <p style="font-size:13.5px; color:#475569; margin-top:4px;">
+              "I rank near-to-medium-term importance across commercial credibility, execution ease, and actual barrel volume:"
+            </p>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            ${d.strategistView.rankings.map(s => `
+              <div class="ch11-strat-card">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
+                  <span style="font-family:var(--font-mono); font-size:13px; font-weight:900; background:#0f172a; color:#ffffff; width:26px; height:26px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;">
+                    ${s.rank}
+                  </span>
+                  <strong style="font-size:15px; color:#0f172a;">${s.route}</strong>
+                  <span style="font-size:12.5px; font-weight:700; color:#d97706; margin-left:auto;">
+                    ${s.verdict}
+                  </span>
+                </div>
+                <div style="font-size:13px; color:#334155; line-height:1.45; padding-left:38px;">
+                  ${s.detail}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- 3. AUDIENCE DISCUSSION INTERACTIVE QUESTION -->
+        <div id="ch11AudienceSection" style="background:#ffffff; border:2px dashed #2563eb; border-radius:10px; padding:24px;">
+          <div style="text-align:center; max-width:720px; margin:0 auto 20px auto;">
+            <span style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.08em; background:#eff6ff; padding:3px 10px; border-radius:4px;">
+              💬 AUDIENCE DISCUSSION FORUM
+            </span>
+            <h3 style="font-family:var(--font-serif); font-size:24px; font-weight:800; color:#0f172a; margin-top:8px; line-height:1.3;">
+              "${d.audienceQuestion.prompt}"
+            </h3>
+            <p style="font-size:13px; color:#64748b; margin-top:4px;">
+              Vote below to cast your choice and reveal the market strategists' consensus breakdown.
+            </p>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:16px;">
+            ${d.audienceQuestion.options.map(opt => `
+              <div id="ch11_opt_${opt.key}" 
+                   class="ch11-poll-card ${STATE.ch11UserVote === opt.key ? 'selected' : ''}" 
+                   onclick="voteChapter11('${opt.key}')">
+                <div style="font-weight:700; font-size:14px; color:#0f172a; margin-bottom:6px;">
+                  ${opt.label}
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:11.5px; font-weight:700; color:#2563eb;">
+                  <span>Strategist Consensus:</span>
+                  <span>${opt.share}</span>
+                </div>
+                <div class="ch11-progress-bar">
+                  <div class="ch11-progress-fill" style="width:${parseInt(opt.share, 10)}%;"></div>
+                </div>
+                <div style="font-size:12px; color:#475569; line-height:1.35; margin-top:8px;">
+                  ${opt.verdict}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <div id="ch11VoteFeedback" style="text-align:center; font-family:var(--font-mono); font-size:12px; font-weight:700; color:#047857;">
+            ${STATE.ch11UserVote ? `✓ Your vote is recorded for: ${STATE.ch11UserVote.replace('_', ' ').toUpperCase()}` : 'Click any option above to participate in the strategic debate.'}
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  `;
+}
+
+function renderChapter11RouteCardHtml(route) {
+  if (!route) return '';
+
+  const benefitsList = Array.isArray(route.whoBenefits) 
+    ? route.whoBenefits.map(b => `<li>${b}</li>`).join('') 
+    : `<li>${route.whoBenefits}</li>`;
+
+  return `
+    <div style="border-bottom:2px solid #0f172a; padding-bottom:12px; margin-bottom:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+        <span style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:${route.color}; text-transform:uppercase;">
+          CORRIDOR PROFILE
+        </span>
+        <span class="ch11-impact-badge ${route.potentialImpact === 'HIGH' ? 'ch11-impact-high' : route.potentialImpact === 'MEDIUM' ? 'ch11-impact-med' : 'ch11-impact-low'}">
+          ${route.impactBadge}
+        </span>
+      </div>
+      <h3 style="font-family:var(--font-serif); font-size:24px; font-weight:800; color:#0f172a; margin:0;">
+        ${route.name}
+      </h3>
+    </div>
+
+    <!-- Current Status -->
+    <div class="ch11-field-group">
+      <div class="ch11-field-label">Current Status:</div>
+      <div class="ch11-field-body" style="font-weight:700; color:#0f172a;">
+        ${route.status}
+      </div>
+    </div>
+
+    <!-- What Is It? -->
+    <div class="ch11-field-group">
+      <div class="ch11-field-label">What Is It?</div>
+      <div class="ch11-field-body">
+        ${route.whatIsIt.replace(/\\n/g, '<br>')}
+      </div>
+    </div>
+
+    <!-- Why Is It Important? -->
+    <div class="ch11-field-group">
+      <div class="ch11-field-label">Why Is It Important?</div>
+      <div class="ch11-field-body" style="color:#0f172a;">
+        ${route.whyImportant.replace(/\\n/g, '<br>')}
+      </div>
+    </div>
+
+    <!-- Who Benefits? -->
+    <div class="ch11-field-group">
+      <div class="ch11-field-label">Who Benefits?</div>
+      <ul style="margin:4px 0 0 18px; padding:0; font-size:13.5px; color:#1e293b; line-height:1.5;">
+        ${benefitsList}
+      </ul>
+    </div>
+
+    <!-- Potential Impact On Asia -->
+    <div class="ch11-field-group">
+      <div class="ch11-field-label">Potential Impact On Asia:</div>
+      <div class="ch11-field-body">
+        <strong style="color:${route.potentialImpact === 'HIGH' ? '#dc2626' : route.potentialImpact === 'MEDIUM' ? '#d97706' : '#475569'}; font-size:15px; font-family:var(--font-mono);">
+          ${route.potentialImpact}
+        </strong>
+      </div>
+    </div>
+
+    <!-- Animation Idea -->
+    <div class="ch11-field-group">
+      <div class="ch11-field-label">Animation Idea:</div>
+      <div class="ch11-field-body" style="font-style:italic; color:#334155; background:#f1f5f9; padding:8px 12px; border-radius:6px;">
+        ${route.animationIdea}
+      </div>
+    </div>
+
+    <!-- Map Idea -->
+    <div class="ch11-field-group">
+      <div class="ch11-field-label">Map Idea:</div>
+      <div class="ch11-field-body" style="color:#475569;">
+        ${route.mapIdea}
+      </div>
+    </div>
+
+    <!-- Strategic Takeaway -->
+    <div class="ch11-field-group" style="margin-top:auto;">
+      <div class="ch11-field-label">Strategic Takeaway:</div>
+      <div class="ch11-takeaway">
+        ${route.strategicTakeaway}
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:12px; border-top:1px solid #e2e8f0;">
+      <button class="action-btn" style="padding:6px 12px; font-size:11px;" onclick="cycleChapter11Route(-1)">
+        &larr; Prev Route
+      </button>
+      <button class="action-btn" style="padding:6px 12px; font-size:11px;" onclick="cycleChapter11Route(1)">
+        Next Route &rarr;
+      </button>
+    </div>
+  `;
+}
+
+function initChapter11Visual() {
+  const mapEl = document.getElementById("chapter11BypassMap");
+  if (!mapEl || typeof L === "undefined") return;
+
+  if (ch11Map) {
+    try { ch11Map.remove(); } catch (e) {}
+    ch11Map = null;
+  }
+
+  ch11Map = L.map("chapter11BypassMap", {
+    center: [24.0, 56.0],
+    zoom: 5,
+    minZoom: 2,
+    maxZoom: 10,
+    zoomControl: true,
+    attributionControl: false
+  });
+
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+    subdomains: "abcd",
+    maxZoom: 19
+  }).addTo(ch11Map);
+
+  ch11Layers = L.layerGroup().addTo(ch11Map);
+
+  const activeId = STATE.activeChapter11RouteId || "adcop_fujairah";
+  selectChapter11Route(activeId);
+}
+
+function selectChapter11Route(routeId) {
+  STATE.activeChapter11RouteId = routeId;
+  const d = OIL_DATA.chapter11Data;
+  if (!d) return;
+
+  const route = d.routes.find(r => r.id === routeId);
+  if (!route) return;
+
+  // Update left card
+  const cardContainer = document.getElementById("ch11SelectedRouteContainer");
+  if (cardContainer) {
+    cardContainer.innerHTML = renderChapter11RouteCardHtml(route);
+  }
+
+  // Update top selector buttons & grid cards
+  d.routes.forEach(r => {
+    const btn = document.getElementById(`ch11_btn_${r.id}`);
+    if (btn) {
+      if (r.id === routeId) btn.classList.add("active");
+      else btn.classList.remove("active");
+    }
+    const gridCard = document.getElementById(`ch11_grid_card_${r.id}`);
+    if (gridCard) {
+      if (r.id === routeId) gridCard.classList.add("active");
+      else gridCard.classList.remove("active");
+    }
+  });
+
+  // Update Map Title & Chokepoint badge
+  const mapTitle = document.getElementById("ch11MapRouteTitle");
+  if (mapTitle) mapTitle.textContent = route.name;
+
+  const chkBadge = document.getElementById("ch11MapChokepointBadge");
+  if (chkBadge) {
+    if (route.id === "adcop_fujairah" || route.id === "saudi_east_west" || route.id === "saudi_oman" || route.id === "basra_aqaba") {
+      chkBadge.style.display = "block";
+      chkBadge.style.background = "rgba(220,38,38,0.92)";
+      chkBadge.innerHTML = "⚠️ HORMUZ BYPASS: CRUDE EVADES CHOKEPOINT";
+    } else if (route.id === "northern_sea_route") {
+      chkBadge.style.display = "block";
+      chkBadge.style.background = "rgba(6,182,212,0.92)";
+      chkBadge.innerHTML = "❄️ ARCTIC HIGHWAY: AVOIDS SUEZ & MALACCA";
+    } else if (route.id === "atlantic_basin") {
+      chkBadge.style.display = "block";
+      chkBadge.style.background = "rgba(2,132,199,0.92)";
+      chkBadge.innerHTML = "🌊 SEABORNE DIVERSIFICATION: NON-OPEC BASIN";
+    } else if (route.id === "espo_kozmino") {
+      chkBadge.style.display = "block";
+      chkBadge.style.background = "rgba(5,150,105,0.92)";
+      chkBadge.innerHTML = "🛡️ PACIFIC FORTRESS: ZERO MARITIME CHOKEPOINTS";
+    } else {
+      chkBadge.style.display = "block";
+      chkBadge.style.background = "rgba(71,85,105,0.92)";
+      chkBadge.innerHTML = "🛤️ MULTIMODAL OVERLAND TRANSIT";
+    }
+  }
+
+  // Draw on Leaflet Map
+  if (ch11Map && ch11Layers) {
+    ch11Layers.clearLayers();
+
+    // If it's a Hormuz bypass, draw Hormuz chokepoint marker
+    if (route.id === "adcop_fujairah" || route.id === "saudi_east_west" || route.id === "saudi_oman" || route.id === "basra_aqaba") {
+      L.circleMarker([26.56, 56.25], {
+        radius: 12,
+        color: "#dc2626",
+        fillColor: "#ef4444",
+        fillOpacity: 0.8,
+        weight: 3
+      }).addTo(ch11Layers).bindTooltip("<strong>Strait of Hormuz (Chokepoint)</strong><br><span style='color:#dc2626; font-weight:700;'>20.8 Mb/d Vulnerability Zone</span>", { permanent: false, direction: "top" });
+    }
+
+    // Draw Route Polyline
+    const line = L.polyline(route.waypoints, {
+      color: route.color || "#2563eb",
+      weight: 5,
+      opacity: 0.9,
+      dashArray: route.category === "concept" ? "6, 8" : null
+    }).addTo(ch11Layers);
+
+    // Draw origin and destination markers
+    L.circleMarker(route.waypoints[0], {
+      radius: 8,
+      fillColor: "#10b981",
+      color: "#ffffff",
+      weight: 2,
+      fillOpacity: 1
+    }).addTo(ch11Layers).bindTooltip(`<strong>Origin:</strong> ${route.name.split('(')[0]}<br><span style='font-size:11px;'>Crude Feed Head</span>`, { permanent: false, direction: "top" });
+
+    L.circleMarker(route.waypoints[route.waypoints.length - 1], {
+      radius: 8,
+      fillColor: "#0f172a",
+      color: "#ffffff",
+      weight: 2,
+      fillOpacity: 1
+    }).addTo(ch11Layers).bindTooltip(`<strong>Terminus / Asia Gate:</strong> ${route.name.split('(')[0]}<br><span style='font-size:11px;'>Deep-water Offloading Port</span>`, { permanent: false, direction: "top" });
+
+    ch11Map.fitBounds(line.getBounds(), { padding: [50, 50], maxZoom: 6 });
+  }
+
+  // Update simulator ticker
+  const ticker = document.getElementById("ch11SimTicker");
+  if (ticker) {
+    ticker.textContent = `Loaded ${route.name}: Click 'Run Simulation' to test dynamic flow.`;
+  }
+}
+
+function runChapter11Simulation(routeId) {
+  const d = OIL_DATA.chapter11Data;
+  if (!d) return;
+  const route = d.routes.find(r => r.id === routeId) || d.routes[0];
+  const ticker = document.getElementById("ch11SimTicker");
+
+  if (ch11AnimTimer) clearInterval(ch11AnimTimer);
+
+  if (ticker) {
+    ticker.innerHTML = `<span style="color:#fbbf24;">⚡ Simulating:</span> ${route.animationIdea}`;
+  }
+
+  let step = 0;
+  ch11AnimTimer = setInterval(() => {
+    step++;
+    if (step === 1) {
+      if (ticker) ticker.innerHTML = `<span style="color:#ef4444;">🚨 STEP 1:</span> Chokepoint danger activated &rarr; traditional maritime route blocked.`;
+    } else if (step === 2) {
+      if (ticker) ticker.innerHTML = `<span style="color:#10b981;">🔄 STEP 2:</span> Crude diverted via <strong>${route.name}</strong> overland bypass!`;
+    } else if (step === 3) {
+      if (ticker) ticker.innerHTML = `<span style="color:#38bdf8;">🚢 STEP 3:</span> Supertankers load securely and proceed eastward to Asian refiners.`;
+    } else if (step >= 4) {
+      clearInterval(ch11AnimTimer);
+      ch11AnimTimer = null;
+      if (ticker) ticker.innerHTML = `<span style="color:#4ade80;">✓ SIMULATION COMPLETE:</span> ${route.strategicTakeaway}`;
+    }
+  }, 1400);
+}
+
+function cycleChapter11Route(direction) {
+  const d = OIL_DATA.chapter11Data;
+  if (!d) return;
+  const currentId = STATE.activeChapter11RouteId || "adcop_fujairah";
+  const idx = d.routes.findIndex(r => r.id === currentId);
+  let nextIdx = (idx + direction + d.routes.length) % d.routes.length;
+  selectChapter11Route(d.routes[nextIdx].id);
+}
+
+function filterChapter11Routes(category, evt) {
+  STATE.ch11Filter = category;
+  const d = OIL_DATA.chapter11Data;
+  if (!d) return;
+
+  document.querySelectorAll(".ch11-filter-btn").forEach(btn => btn.classList.remove("active"));
+  if (evt && evt.target) evt.target.classList.add("active");
+
+  const cards = document.querySelectorAll("#ch11AllRoutesGrid .ch11-route-card");
+  cards.forEach(card => {
+    const id = card.id.replace("ch11_grid_card_", "");
+    const r = d.routes.find(route => route.id === id);
+    if (!r) return;
+
+    if (category === "all") {
+      card.style.display = "flex";
+    } else if (category === "operational" && r.category === "operational") {
+      card.style.display = "flex";
+    } else if (category === "planned" && r.category === "planned") {
+      card.style.display = "flex";
+    } else if (category === "concept" && r.category === "concept") {
+      card.style.display = "flex";
+    } else {
+      card.style.display = "none";
+    }
+  });
+}
+
+function voteChapter11(optionKey) {
+  STATE.ch11UserVote = optionKey;
+  const d = OIL_DATA.chapter11Data;
+  if (!d) return;
+
+  const opt = d.audienceQuestion.options.find(o => o.key === optionKey);
+  if (!opt) return;
+
+  d.audienceQuestion.options.forEach(o => {
+    const el = document.getElementById(`ch11_opt_${o.key}`);
+    if (el) {
+      if (o.key === optionKey) el.classList.add("selected");
+      else el.classList.remove("selected");
+    }
+  });
+
+  const fb = document.getElementById("ch11VoteFeedback");
+  if (fb) {
+    fb.innerHTML = `
+      <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:12px; margin-top:8px;">
+        <span style="color:#1e40af; font-size:13px; font-weight:800;">✓ VOTE REGISTERED: ${opt.label}</span>
+        <div style="font-size:12px; color:#334155; font-family:var(--font-sans); margin-top:4px;">
+          ${opt.verdict}
+        </div>
+      </div>
+    `;
+  }
+}
+
+window.renderChapter11Visual = renderChapter11Visual;
+window.initChapter11Visual = initChapter11Visual;
+window.selectChapter11Route = selectChapter11Route;
+window.runChapter11Simulation = runChapter11Simulation;
+window.cycleChapter11Route = cycleChapter11Route;
+window.filterChapter11Routes = filterChapter11Routes;
+window.voteChapter11 = voteChapter11;
