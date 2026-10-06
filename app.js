@@ -1368,7 +1368,11 @@ function renderChapter7Visual() {
       <div style="background:#f8fafc; padding:10px; border-radius:6px; font-family:var(--font-mono); font-size:11.5px; border:1px solid #cbd5e1;">
         <strong style="color:#0284c7;">BYPASS PIPELINES:</strong>
         ${cp.bypassPipelines.length > 0 ? cp.bypassPipelines.map(p => `
-          <div style="margin-top:3px; color:#1e293b;">&bull; ${p.name} (Capacity: ${p.capacityMbd || 'N/A'} Mb/d)</div>
+          <div style="margin-top:4px; color:#1e293b;">
+            &bull; <strong>${p.name}</strong>
+            ${p.originCountry ? `<span style="font-size:11px; color:#0369a1; background:#e0f2fe; padding:1px 6px; border-radius:3px; font-weight:600; margin-left:4px;">${p.originCountry} ➔ ${p.destCountry}</span>` : ''}
+            ${p.capacityMbd ? `<span style="color:#64748b; font-size:11px; margin-left:4px;">(Capacity: ${p.capacityMbd} Mb/d)</span>` : ''}
+          </div>
         `).join("") : '<div style="color:#334155;">&bull; Zero pipeline bypass exists (100% ocean transit)</div>'}
         <div style="margin-top:6px; color:#990000; font-weight:800;">
           TRAPPED SEA VOLUME IF BLOCKED: ${cp.netUnbypassableVolumeMbd} Mb/d
@@ -3464,31 +3468,51 @@ function renderChapter10Visual() {
             </thead>
             <tbody>
               <tr>
-                <td><strong>🇷🇺 Russia Disappears</strong><br><span style="font-size:11.5px; color:#64748b;">Urals &amp; ESPO (~4.1 Mb/d)</span></td>
+                <td>
+                  <strong>🇷🇺 Russia Disappears</strong><br>
+                  <span style="font-size:11.5px; color:#64748b;">Urals &amp; ESPO (~4.1 Mb/d)</span><br>
+                  <span style="display:inline-block; margin-top:3px; font-size:10px; font-family:var(--font-mono); font-weight:700; color:#b91c1c; background:#fee2e2; padding:1px 5px; border-radius:3px;">Brent: +$5–$15 (+6% to +19%) | WTI: +$4–$10 (+80% to +160% spread)</span>
+                </td>
                 <td><span style="font-weight:700; color:#059669;">🇸🇦 Saudi Arabia</span><br><span style="font-size:11.5px; color:#475569;">Arab Light/Medium volumes + OSP surge</span></td>
                 <td><span style="color:#0284c7; font-weight:600;">🇺🇸 USA + 🇧🇷 Brazil</span><br><span style="font-size:11.5px; color:#475569;">WTI Midland &amp; Pre-Salt</span></td>
                 <td><span style="font-size:12px;"><strong>Manageable Shock:</strong> India loses cheap feed; Saudi Aramco and Texas shale take the market share.</span></td>
               </tr>
               <tr>
-                <td><strong>🇦🇪 UAE Disappears</strong><br><span style="font-size:11.5px; color:#64748b;">Murban &amp; Upper Zakum (~2.3 Mb/d)</span></td>
+                <td>
+                  <strong>🇦🇪 UAE Disappears</strong><br>
+                  <span style="font-size:11.5px; color:#64748b;">Murban &amp; Upper Zakum (~2.3 Mb/d)</span><br>
+                  <span style="display:inline-block; margin-top:3px; font-size:10px; font-family:var(--font-mono); font-weight:700; color:#b91c1c; background:#fee2e2; padding:1px 5px; border-radius:3px;">Brent: +$3–$10 (+4% to +13%) | WTI: +$6–$12 (+120% to +200% spread)</span>
+                </td>
                 <td><span style="font-weight:700; color:#0284c7;">🇺🇸 USA (WTI Midland)</span><br><span style="font-size:11.5px; color:#475569;">Becomes Asia's primary light sweet marker</span></td>
                 <td><span style="color:#d97706; font-weight:600;">🇸🇦 Saudi AXL + 🇴🇲 Oman</span><br><span style="font-size:11.5px; color:#475569;">DME Oman physical anchor</span></td>
                 <td><span style="font-size:12px;"><strong>Benchmark Collapse:</strong> Japan faces energy crisis; IFAD Murban futures suspend; WTI steps in.</span></td>
               </tr>
               <tr>
-                <td><strong>🇸🇦 Saudi Arabia Disappears</strong><br><span style="font-size:11.5px; color:#64748b;">Stress Case (~4.5 Mb/d + Spare Cushion)</span></td>
+                <td>
+                  <strong>🇸🇦 Saudi Arabia Disappears</strong><br>
+                  <span style="font-size:11.5px; color:#64748b;">Stress Case (~4.5 Mb/d + Spare Cushion)</span><br>
+                  <span style="display:inline-block; margin-top:3px; font-size:10px; font-family:var(--font-mono); font-weight:700; color:#991b1b; background:#fee2e2; padding:1px 5px; border-radius:3px;">Brent: +$15–$40+ (+20% to +55%+) | WTI: +$15–$35 (+250% to +500% spread)</span>
+                </td>
                 <td><span style="font-weight:800; color:#dc2626;">❌ NOBODY ON EARTH</span><br><span style="font-size:11.5px; color:#475569;">Global spare capacity is 100% wiped out</span></td>
                 <td><span style="color:#475569; font-weight:600;">🛑 Demand Destruction</span><br><span style="font-size:11.5px; color:#475569;">Emergency SPR releases across G7/China</span></td>
                 <td><span style="font-size:12px;"><strong>System Failure:</strong> Market economics fail. Forced refinery shutdowns, fuel rationing, and severe global recession.</span></td>
               </tr>
               <tr>
-                <td><strong>🌊 Strait of Hormuz Closes</strong><br><span style="font-size:11.5px; color:#64748b;">Naval Blockade (20.8 Mb/d chokepoint)</span></td>
+                <td>
+                  <strong>🌊 Strait of Hormuz Closes</strong><br>
+                  <span style="font-size:11.5px; color:#64748b;">Naval Blockade (20.8 Mb/d chokepoint)</span><br>
+                  <span style="display:inline-block; margin-top:3px; font-size:10px; font-family:var(--font-mono); font-weight:700; color:#991b1b; background:#fee2e2; padding:1px 5px; border-radius:3px;">Brent: +$30–$60 (+38% to +77%) | WTI: +$25–$50 (+300% to +600% spread)</span>
+                </td>
                 <td><span style="font-weight:700; color:#059669;">🇦🇪 Fujairah Port (ADCOP)</span><br><span style="font-size:11.5px; color:#475569;">1.8 Mb/d pipeline bypass outside Hormuz</span></td>
                 <td><span style="color:#0284c7; font-weight:600;">🇸🇦 Yanbu (Red Sea) + 🇺🇸 USGC</span><br><span style="font-size:11.5px; color:#475569;">Atlantic Basin becomes lifeline</span></td>
                 <td><span style="font-size:12px;"><strong>Geographic Warfare:</strong> Only oil loaded outside Hormuz can sail. Fujairah and Yanbu become pure gold dust.</span></td>
               </tr>
               <tr>
-                <td><strong>📉 Atlantic Crude Turns Cheap</strong><br><span style="font-size:11.5px; color:#64748b;">Brent-Dubai EFS collapses &lt; $0.80/bbl</span></td>
+                <td>
+                  <strong>📉 Atlantic Crude Turns Cheap</strong><br>
+                  <span style="font-size:11.5px; color:#64748b;">Brent-Dubai EFS collapses &lt; $0.80/bbl</span><br>
+                  <span style="display:inline-block; margin-top:3px; font-size:10px; font-family:var(--font-mono); font-weight:700; color:#065f46; background:#d1fae5; padding:1px 5px; border-radius:3px;">Brent: -$2–$5 (-2.5% to -6.5%) | EFS Arb: &lt;$0.80 (-70% to -85%)</span>
+                </td>
                 <td><span style="font-weight:700; color:#0284c7;">🇺🇸 USA (WTI Midland)</span><br><span style="font-size:11.5px; color:#475569;">VLCC arbitrage floodgates open</span></td>
                 <td><span style="color:#10b981; font-weight:600;">🇧🇷 Brazil (Tupi / Búzios)</span><br><span style="font-size:11.5px; color:#475569;">West African sweet grades</span></td>
                 <td><span style="font-size:12px;"><strong>Commercial Win for Asia:</strong> Asian refiners cut Middle East term intake, forcing Aramco to slash monthly OSPs.</span></td>
@@ -3594,42 +3618,51 @@ function renderShockScenarioContent() {
       
       <!-- Gauge 1: Brent -->
       <div class="wargame-gauge-card" style="border-left:4px solid #dc2626;">
-        <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:11px; font-weight:800; color:#64748b;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; font-family:var(--font-mono); font-size:11px; font-weight:800; color:#64748b;">
           <span>📈 BRENT CRUDE REACTION</span>
-          <span style="color:#dc2626;">${sc.brentShift}</span>
+          <div style="text-align:right;">
+            <div style="color:#dc2626; font-size:12px; font-weight:800;">${sc.brentShift}</div>
+            ${sc.brentPct ? `<span style="display:inline-block; font-size:10px; font-weight:800; color:#b91c1c; background:#fee2e2; border:1px solid #fca5a5; padding:1px 6px; border-radius:4px; margin-top:3px;">${sc.brentPct}</span>` : ''}
+          </div>
         </div>
         <div style="margin-top:8px; height:8px; background:#f1f5f9; border-radius:999px; overflow:hidden;">
           <div style="height:100%; width:${sc.brentGaugePct}%; background:#dc2626; border-radius:999px; transition:width 0.4s ease;"></div>
         </div>
-        <div style="font-size:11.5px; color:#334155; margin-top:6px;">
+        <div style="font-size:11.5px; color:#334155; margin-top:6px; line-height:1.45;">
           ${sc.brentImpact}
         </div>
       </div>
 
       <!-- Gauge 2: WTI -->
       <div class="wargame-gauge-card" style="border-left:4px solid #0284c7;">
-        <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:11px; font-weight:800; color:#64748b;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; font-family:var(--font-mono); font-size:11px; font-weight:800; color:#64748b;">
           <span>📉 WTI MIDLAND SPREAD</span>
-          <span style="color:#0284c7;">${sc.wtiShift}</span>
+          <div style="text-align:right;">
+            <div style="color:#0284c7; font-size:12px; font-weight:800;">${sc.wtiShift}</div>
+            ${sc.wtiPct ? `<span style="display:inline-block; font-size:10px; font-weight:800; color:#0369a1; background:#e0f2fe; border:1px solid #bae6fd; padding:1px 6px; border-radius:4px; margin-top:3px;">${sc.wtiPct}</span>` : ''}
+          </div>
         </div>
         <div style="margin-top:8px; height:8px; background:#f1f5f9; border-radius:999px; overflow:hidden;">
           <div style="height:100%; width:${sc.wtiGaugePct}%; background:#0284c7; border-radius:999px; transition:width 0.4s ease;"></div>
         </div>
-        <div style="font-size:11.5px; color:#334155; margin-top:6px;">
+        <div style="font-size:11.5px; color:#334155; margin-top:6px; line-height:1.45;">
           ${sc.wtiImpact}
         </div>
       </div>
 
       <!-- Gauge 3: Dubai / OSP -->
       <div class="wargame-gauge-card" style="border-left:4px solid #d97706;">
-        <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:11px; font-weight:800; color:#64748b;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; font-family:var(--font-mono); font-size:11px; font-weight:800; color:#64748b;">
           <span>⚖️ DUBAI BENCHMARK / OSP</span>
-          <span style="color:#d97706;">${sc.dubaiShift}</span>
+          <div style="text-align:right;">
+            <div style="color:#d97706; font-size:12px; font-weight:800;">${sc.dubaiShift}</div>
+            ${sc.dubaiPct ? `<span style="display:inline-block; font-size:10px; font-weight:800; color:#92400e; background:#fef3c7; border:1px solid #fde68a; padding:1px 6px; border-radius:4px; margin-top:3px;">${sc.dubaiPct}</span>` : ''}
+          </div>
         </div>
         <div style="margin-top:8px; height:8px; background:#f1f5f9; border-radius:999px; overflow:hidden;">
           <div style="height:100%; width:${sc.dubaiGaugePct}%; background:#d97706; border-radius:999px; transition:width 0.4s ease;"></div>
         </div>
-        <div style="font-size:11.5px; color:#334155; margin-top:6px;">
+        <div style="font-size:11.5px; color:#334155; margin-top:6px; line-height:1.45;">
           ${sc.dubaiImpact}
         </div>
       </div>
@@ -3967,6 +4000,15 @@ function filterFutureRoutes(category, btnEl) {
   if (btnEl) btnEl.classList.add("active");
 
   renderFutureRoutesGrid();
+
+  const routes = OIL_DATA.futureRoutesData;
+  const filtered = category === "all" ? routes : routes.filter(r => r.category === category);
+  if (filtered && filtered.length > 0) {
+    const isCurrentInFiltered = filtered.some(r => r.id === STATE.activeFutureRouteId);
+    if (!isCurrentInFiltered) {
+      selectFutureRoute(filtered[0].id);
+    }
+  }
 }
 
 function renderFutureRoutesGrid() {
@@ -3991,7 +4033,26 @@ function renderFutureRoutesGrid() {
       <div style="font-family:var(--font-serif); font-size:15px; font-weight:800; color:#0f172a; margin-top:2px;">
         ${r.name}
       </div>
-      <div style="font-size:12px; color:#475569; margin-top:2px;">
+
+      <!-- Countries Origin & Destination Row -->
+      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:7px 0 6px 0; padding:6px 10px; background:#eff6ff; border:1px solid #bfdbfe; border-left:3.5px solid #2563eb; border-radius:6px; font-size:12px;">
+        <span style="display:inline-flex; align-items:center; gap:4px;">
+          <span style="font-size:9.5px; font-weight:800; color:#1e40af; background:#dbeafe; padding:1px 5px; border-radius:3px; font-family:var(--font-mono); text-transform:uppercase;">ORIGIN</span>
+          <strong style="color:#0f172a;">${r.originCountry || 'N/A'}</strong>
+        </span>
+        <span style="color:#2563eb; font-weight:900; font-size:12px;">➔</span>
+        <span style="display:inline-flex; align-items:center; gap:4px;">
+          <span style="font-size:9.5px; font-weight:800; color:#047857; background:#d1fae5; padding:1px 5px; border-radius:3px; font-family:var(--font-mono); text-transform:uppercase;">DESTINATION</span>
+          <strong style="color:#0f172a;">${r.destinationCountry || 'N/A'}</strong>
+        </span>
+        ${r.transitCountries ? `
+          <span style="font-size:11px; color:#64748b; margin-left:auto; font-style:italic;">
+            (Via ${r.transitCountries})
+          </span>
+        ` : ''}
+      </div>
+
+      <div style="font-size:12px; color:#475569; margin-top:3px;">
         ${r.geography}
       </div>
       <div style="font-size:11.5px; color:#0284c7; font-weight:700; margin-top:4px;">
@@ -4017,13 +4078,35 @@ function selectFutureRoute(routeId) {
   const detailBox = document.getElementById("futureRouteDetailBox");
   if (detailBox) {
     detailBox.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
         <span style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:${route.color || '#0284c7'};">
           PIPELINE RADAR: ${route.name.toUpperCase()}
         </span>
         <span style="font-family:var(--font-mono); font-size:10.5px; font-weight:700; background:#e2e8f0; padding:2px 8px; border-radius:4px;">
           ${route.status}
         </span>
+      </div>
+
+      <!-- Countries Breakdown Panel -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; padding:10px 12px; margin-bottom:10px;">
+        <div>
+          <div style="font-family:var(--font-mono); font-size:9.5px; font-weight:800; color:#1e40af; text-transform:uppercase; letter-spacing:0.04em;">Originating Country</div>
+          <div style="font-size:13.5px; font-weight:700; color:#0f172a; margin-top:2px;">${route.originCountry || 'N/A'}</div>
+        </div>
+        <div>
+          <div style="font-family:var(--font-mono); font-size:9.5px; font-weight:800; color:#047857; text-transform:uppercase; letter-spacing:0.04em;">Destination Country</div>
+          <div style="font-size:13.5px; font-weight:700; color:#0f172a; margin-top:2px;">${route.destinationCountry || 'N/A'}</div>
+        </div>
+        ${route.transitCountries ? `
+        <div>
+          <div style="font-family:var(--font-mono); font-size:9.5px; font-weight:800; color:#b45309; text-transform:uppercase; letter-spacing:0.04em;">Transit / Corridor</div>
+          <div style="font-size:12px; font-weight:600; color:#334155; margin-top:2px;">${route.transitCountries}</div>
+        </div>
+        ` : ''}
+      </div>
+
+      <div style="font-size:12.5px; color:#1e293b; margin-bottom:6px;">
+        <strong>Route Geography:</strong> ${route.geography}
       </div>
       <div style="font-size:12.5px; color:#1e293b; margin-bottom:6px;">
         <strong>Who Benefits:</strong> ${route.whoBenefits}
@@ -4048,10 +4131,10 @@ function selectFutureRoute(routeId) {
 
     // Markers for start and end
     L.circleMarker(route.waypoints[0], { radius: 7, fillColor: route.color || "#0284c7", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
-      .addTo(ch10FutureLayers).bindTooltip(`Start: ${route.geography.split("→")[0] || ""}`, { permanent: false, direction: "top" });
+      .addTo(ch10FutureLayers).bindTooltip(`<strong>Origin: ${route.originCountry}</strong><br><span style="font-size:11px;">${route.geography.split("→")[0] || ""}</span>`, { permanent: false, direction: "top" });
 
     L.circleMarker(route.waypoints[route.waypoints.length - 1], { radius: 7, fillColor: "#0f172a", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
-      .addTo(ch10FutureLayers).bindTooltip(`Terminus`, { permanent: false, direction: "top" });
+      .addTo(ch10FutureLayers).bindTooltip(`<strong>Destination: ${route.destinationCountry}</strong><br><span style="font-size:11px;">${route.geography.split("→")[1] || "Terminus"}</span>`, { permanent: false, direction: "top" });
 
     ch10FutureMap.fitBounds(line.getBounds(), { padding: [45, 45], maxZoom: 6 });
   }
