@@ -1755,13 +1755,43 @@ const OIL_DATA = {
       loser: "Indian Private Refiners (lose cheap feed), Chinese Teapots (run cuts)",
       verdict: "Manageable shock. Saudi spare capacity is the backstop; India and China pay higher bills while US and Saudi cash the checks.",
       mapSevered: [
-        { name: "Kozmino → China Aframax Shuttle", coords: [[42.73, 133.02], [36.06, 120.38]] },
-        { name: "Baltic Primorsk → India Suezmax", coords: [[60.36, 28.62], [36.0, -6.0], [31.2, 32.3], [12.6, 43.3], [22.43, 69.83]] }
+        { 
+          name: "Kozmino → China Aframax Shuttle", 
+          coords: [[42.73, 133.02], [40.5, 132.0], [37.5, 131.0], [34.5, 129.0], [33.0, 126.5], [34.2, 123.5], [36.06, 120.38]] 
+        },
+        { 
+          name: "Baltic Primorsk → India Suezmax", 
+          coords: [
+            [60.36, 28.62], [59.8, 25.0], [59.0, 20.5], [56.0, 17.0], [55.3, 12.8], [57.5, 10.5], [56.0, 3.5], 
+            [50.5, -1.0], [45.0, -8.0], [38.5, -9.8], [36.8, -9.0], [35.95, -5.6], [36.8, 4.0], [37.5, 11.5], 
+            [36.0, 15.0], [34.0, 24.0], [31.5, 32.3], [27.5, 34.5], [22.0, 38.0], [12.6, 43.3], [12.0, 48.0], 
+            [15.5, 58.0], [20.0, 65.0], [22.43, 69.83]
+          ] 
+        }
       ],
       mapReplacement: [
-        { name: "Ras Tanura → Gujarat VLCC (+1.2M)", coords: [[26.64, 50.16], [24.5, 58.5], [22.43, 69.83]], color: "#059669" },
-        { name: "US Gulf (Corpus Christi) → China VLCC (+0.6M)", coords: [[27.81, -97.39], [-34.5, 18.5], [1.25, 103.85], [29.87, 121.54]], color: "#0284c7" },
-        { name: "Santos (Brazil) → India VLCC (+0.4M)", coords: [[-24.0, -46.3], [-34.5, 18.5], [22.43, 69.83]], color: "#10b981" }
+        { 
+          name: "Ras Tanura → Gujarat VLCC (+1.2M)", 
+          coords: [[26.64, 50.16], [26.2, 53.0], [26.56, 56.45], [24.5, 58.5], [23.0, 64.0], [22.43, 69.83]], 
+          color: "#059669" 
+        },
+        { 
+          name: "US Gulf (Corpus Christi) → China VLCC (+0.6M)", 
+          coords: [
+            [27.81, -97.39], [25.0, -88.0], [23.8, -82.0], [20.0, -68.0], [5.0, -45.0], [-2.0, -32.0], 
+            [-20.0, -15.0], [-34.8, 18.5], [-35.0, 26.0], [-26.0, 55.0], [-10.0, 75.0], [5.8, 80.5], 
+            [5.9, 95.0], [1.25, 103.85], [6.0, 108.5], [15.0, 114.5], [22.0, 119.0], [29.87, 121.54]
+          ], 
+          color: "#0284c7" 
+        },
+        { 
+          name: "Santos (Brazil) → India VLCC (+0.4M)", 
+          coords: [
+            [-24.0, -46.3], [-30.0, -25.0], [-34.8, 18.5], [-30.0, 45.0], [-10.0, 65.0], 
+            [10.0, 68.0], [20.0, 68.5], [22.43, 69.83]
+          ], 
+          color: "#10b981" 
+        }
       ]
     },
     uae: {
@@ -1794,11 +1824,31 @@ const OIL_DATA = {
       loser: "Japanese Refiners (95% Middle East dependent), ADNOC, IFAD paper hedgers",
       verdict: "Benchmark crisis. Tokyo faces supply panic; US WTI Midland steps in as Asia's everyday light sweet crude.",
       mapSevered: [
-        { name: "Fujairah / Das Island → Tokyo Bay VLCC", coords: [[25.18, 56.36], [5.8, 80.5], [1.25, 103.85], [35.6, 140.1]] }
+        { 
+          name: "Fujairah / Das Island → Tokyo Bay VLCC", 
+          coords: [
+            [25.18, 56.36], [24.0, 59.0], [16.0, 66.0], [5.8, 80.5], [5.9, 95.0], [4.2, 99.0], 
+            [1.25, 103.85], [10.0, 112.0], [20.5, 120.5], [28.0, 131.0], [33.5, 137.0], [35.6, 140.1]
+          ] 
+        }
       ],
       mapReplacement: [
-        { name: "US Gulf → Tokyo Bay VLCC (+0.5M)", coords: [[27.81, -97.39], [15.0, -140.0], [35.6, 140.1]], color: "#0284c7" },
-        { name: "Ras Tanura → Tokyo Bay (Arab Extra Light +0.8M)", coords: [[26.64, 50.16], [5.8, 80.5], [1.25, 103.85], [35.6, 140.1]], color: "#d97706" }
+        { 
+          name: "US Gulf → Tokyo Bay VLCC (+0.5M)", 
+          coords: [
+            [27.81, -97.39], [24.0, -84.0], [15.0, -60.0], [-34.8, 18.5], [5.8, 80.5], 
+            [1.25, 103.85], [20.5, 120.5], [30.0, 134.0], [35.6, 140.1]
+          ], 
+          color: "#0284c7" 
+        },
+        { 
+          name: "Ras Tanura → Tokyo Bay (Arab Extra Light +0.8M)", 
+          coords: [
+            [26.64, 50.16], [26.2, 53.0], [26.56, 56.45], [24.5, 58.5], [16.0, 66.0], 
+            [5.8, 80.5], [5.9, 95.0], [1.25, 103.85], [10.0, 112.0], [20.5, 120.5], [30.0, 134.0], [35.6, 140.1]
+          ], 
+          color: "#d97706" 
+        }
       ]
     },
     saudi: {
@@ -1831,12 +1881,35 @@ const OIL_DATA = {
       loser: "Entire Asian economy: industrial power rationing, factory cuts, fuel crisis",
       verdict: "System failure. Saudi Arabia is the central bank of energy; losing it triggers a global economic recession.",
       mapSevered: [
-        { name: "Ras Tanura → Ningbo / Zhoushan", coords: [[26.64, 50.16], [5.8, 80.5], [1.25, 103.85], [29.87, 121.54]] },
-        { name: "Ras Tanura → Gujarat (Jamnagar)", coords: [[26.64, 50.16], [22.43, 69.83]] }
+        { 
+          name: "Ras Tanura → Ningbo / Zhoushan", 
+          coords: [
+            [26.64, 50.16], [26.2, 53.0], [26.56, 56.45], [24.5, 58.5], [15.0, 66.0], 
+            [5.8, 80.5], [5.9, 95.0], [1.25, 103.85], [6.0, 108.5], [15.0, 114.5], [22.0, 119.0], [29.87, 121.54]
+          ] 
+        },
+        { 
+          name: "Ras Tanura → Gujarat (Jamnagar)", 
+          coords: [[26.64, 50.16], [26.2, 53.0], [26.56, 56.45], [24.5, 58.5], [23.0, 64.0], [22.43, 69.83]] 
+        }
       ],
       mapReplacement: [
-        { name: "US Corpus Christi → Asia Pacific Max (+1.0M)", coords: [[27.81, -97.39], [-34.5, 18.5], [1.25, 103.85], [29.87, 121.54]], color: "#0284c7" },
-        { name: "Brazil Santos → Asia Max (+0.8M)", coords: [[-24.0, -46.3], [-34.5, 18.5], [29.87, 121.54]], color: "#10b981" }
+        { 
+          name: "US Corpus Christi → Asia Pacific Max (+1.0M)", 
+          coords: [
+            [27.81, -97.39], [25.0, -88.0], [20.0, -68.0], [-34.8, 18.5], [-20.0, 60.0], 
+            [5.8, 80.5], [1.25, 103.85], [15.0, 114.5], [29.87, 121.54]
+          ], 
+          color: "#0284c7" 
+        },
+        { 
+          name: "Brazil Santos → Asia Max (+0.8M)", 
+          coords: [
+            [-24.0, -46.3], [-30.0, -25.0], [-34.8, 18.5], [-20.0, 60.0], 
+            [5.8, 80.5], [1.25, 103.85], [15.0, 114.5], [29.87, 121.54]
+          ], 
+          color: "#10b981" 
+        }
       ]
     },
     hormuz: {
@@ -1869,11 +1942,28 @@ const OIL_DATA = {
       loser: "Kuwait, Qatar, Iraq, Bahrain (100% landlocked behind the blockade)",
       verdict: "Geographic warfare. Only oil loaded outside Hormuz can sail. Fujairah and Yanbu become gold dust.",
       mapSevered: [
-        { name: "Hormuz Strait Chokepoint Transit (Severed)", coords: [[26.0, 55.0], [26.56, 56.45], [25.0, 58.0]] }
+        { 
+          name: "Hormuz Strait Chokepoint Transit (Severed)", 
+          coords: [[26.2, 53.5], [26.56, 56.45], [25.0, 58.0]] 
+        }
       ],
       mapReplacement: [
-        { name: "Yanbu (Red Sea) → Asia VLCCs (5.0M)", coords: [[24.1, 38.0], [12.6, 43.3], [5.8, 80.5], [1.25, 103.85], [29.87, 121.54]], color: "#059669" },
-        { name: "Fujairah (Outside Hormuz) → Asia VLCCs (1.8M)", coords: [[25.18, 56.36], [5.8, 80.5], [1.25, 103.85], [35.6, 140.1]], color: "#d97706" }
+        { 
+          name: "Yanbu (Red Sea) → Asia VLCCs (5.0M)", 
+          coords: [
+            [24.1, 38.0], [20.0, 39.5], [12.6, 43.3], [12.0, 48.0], [10.0, 60.0], 
+            [5.8, 80.5], [1.25, 103.85], [15.0, 114.5], [29.87, 121.54]
+          ], 
+          color: "#059669" 
+        },
+        { 
+          name: "Fujairah (Outside Hormuz) → Asia VLCCs (1.8M)", 
+          coords: [
+            [25.18, 56.36], [24.0, 59.0], [15.0, 66.0], [5.8, 80.5], [1.25, 103.85], 
+            [20.5, 120.5], [35.6, 140.1]
+          ], 
+          color: "#d97706" 
+        }
       ]
     },
     atlantic_cheap: {
@@ -1907,8 +1997,22 @@ const OIL_DATA = {
       verdict: "Commercial victory for Asia. Cheap Atlantic oil breaks the Middle East monopoly and caps OPEC pricing power.",
       mapSevered: [],
       mapReplacement: [
-        { name: "US Corpus Christi → South Korea (WTI Midland +1.5M)", coords: [[27.81, -97.39], [-34.5, 18.5], [1.25, 103.85], [35.5, 129.38]], color: "#0284c7" },
-        { name: "Brazil Santos → China (Pre-Salt Búzios +0.8M)", coords: [[-24.0, -46.3], [-34.5, 18.5], [1.25, 103.85], [29.87, 121.54]], color: "#10b981" }
+        { 
+          name: "US Corpus Christi → South Korea (WTI Midland +1.5M)", 
+          coords: [
+            [27.81, -97.39], [25.0, -88.0], [20.0, -68.0], [-34.8, 18.5], [-20.0, 60.0], 
+            [5.8, 80.5], [1.25, 103.85], [15.0, 115.0], [24.0, 120.0], [32.0, 126.0], [35.5, 129.38]
+          ], 
+          color: "#0284c7" 
+        },
+        { 
+          name: "Brazil Santos → China (Pre-Salt Búzios +0.8M)", 
+          coords: [
+            [-24.0, -46.3], [-30.0, -25.0], [-34.8, 18.5], [-20.0, 60.0], 
+            [5.8, 80.5], [1.25, 103.85], [15.0, 114.5], [29.87, 121.54]
+          ], 
+          color: "#10b981" 
+        }
       ]
     }
   },

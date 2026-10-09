@@ -2263,3 +2263,61 @@ h1, h2, h3, h4, h5, h6, th {
   background: linear-gradient(90deg, #3b82f6, #1d4ed8);
   transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ==========================================================================
+   ULTRA-SMOOTH ROTATING MARITIME VESSEL & SATELLITE STYLING
+   ========================================================================== */
+.vessel-div-icon-container {
+  background: transparent !important;
+  border: none !important;
+}
+
+.smooth-tanker-pin {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  will-change: transform;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.tanker-svg-wrap {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.7));
+}
+
+.tanker-wake-glow {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  bottom: 0px;
+  opacity: 0.55;
+  filter: blur(5px);
+  pointer-events: none;
+  animation: tankerWakePulse 1.8s infinite ease-out;
+}
+
+@keyframes tankerWakePulse {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  50% { transform: scale(1.4); opacity: 0.2; }
+  100% { transform: scale(0.8); opacity: 0.6; }
+}
+
+.maritime-smooth-line {
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+}
+
+.leaflet-tile-pane {
+  background: #040d1a !important;
+}

@@ -35,12 +35,262 @@ const STATE = {
 };
 window.STATE = STATE;
 
-// INITIALIZATION ON DOM LOAD
-document.addEventListener("DOMContentLoaded", () => {
-  initNavbarDropdown();
-  initRouter();
-  initThreeJsGlobe();
-});
+/* ==========================================================================
+   GLOBAL MARITIME GIS & HIGH-RESOLUTION SATELLITE ENGINE
+   ========================================================================== */
+
+/**
+ * Creates a rich Hybrid Satellite LayerGroup with:
+ * 1. High-resolution Esri World Imagery (satellite photography)
+ * 2. Esri World Boundaries and Places (clear country borders, names & cities)
+ * 3. Esri World Ocean Reference (oceans, seas, gulfs & straits typography)
+ * 4. CartoDB Voyager Labels (crisp regional and port typography)
+ */
+function createSatelliteHybridLayerGroup() {
+  const imagery = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+    attribution: "&copy; Esri, Maxar, Earthstar Geographics",
+    maxZoom: 19
+  });
+  const boundaries = L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
+    attribution: "",
+    maxZoom: 19,
+    opacity: 0.95
+  });
+  const oceanRef = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}", {
+    attribution: "",
+    maxZoom: 19,
+    opacity: 0.95
+  });
+  const cartoLabels = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png", {
+    subdomains: "abcd",
+    attribution: "",
+    maxZoom: 19,
+    opacity: 0.95
+  });
+  const group = L.layerGroup([imagery, boundaries, oceanRef, cartoLabels]);
+  group._isSatelliteHybrid = true;
+  return group;
+}
+window.createSatelliteHybridLayerGroup = createSatelliteHybridLayerGroup;
+
+/**
+ * Catmull-Rom Maritime Spline Generator
+ * Converts coarse waypoints into ultra-smooth, flowing navigation curves
+ * eliminating sharp angles and abrupt point-to-point corners.
+ */
+function generateSmoothMaritimeSpline(coords, pointsPerSegment = 18) {
+  if (!coords || !Array.isArray(coords) || coords.length < 2) return coords || [];
+
+  const pts = coords.map(p => Array.isArray(p) ? [Number(p[0]), Number(p[1])] : [Number(p.lat), Number(p.lng)]);
+  const n = pts.length;
+
+  if (n === 2) {
+    const p0 = pts[0];
+    const p1 = pts[1];
+    const result = [];
+    const dLat = p1[0] - p0[0];
+    const dLng = p1[1] - p0[1];
+    const perpLat = -dLng * 0.06;
+    const perpLng = dLat * 0.06;
+
+    for (let i = 0; i <= pointsPerSegment; i++) {
+      const t = i / pointsPerSegment;
+      const sag = 4 * t * (1 - t);
+      const lat = p0[0] + dLat * t + perpLat * sag;
+      const lng = p0[1] + dLng * t + perpLng * sag;
+      result.push([lat, lng]);
+    }
+    return result;
+  }
+
+  const result = [];
+
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = i === 0 ? [2 * pts[0][0] - pts[1][0], 2 * pts[0][1] - pts[1][1]] : pts[i - 1];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = (i + 2 < n) ? pts[i + 2] : [2 * pts[n - 1][0] - pts[n - 2][0], 2 * pts[n - 1][1] - pts[n - 2][1]];
+
+    for (let step = 0; step < pointsPerSegment; step++) {
+      const t = step / pointsPerSegment;
+      const t2 = t * t;
+      const t3 = t2 * t;
+
+      const f0 = -0.5 * t3 + t2 - 0.5 * t;
+      const f1 = 1.5 * t3 - 2.5 * t2 + 1.0;
+      const f2 = -1.5 * t3 + 2.0 * t2 + 0.5 * t;
+      const f3 = 0.5 * t3 - 0.5 * t2;
+
+      const lat = f0 * p0[0] + f1 * p1[0] + f2 * p2[0] + f3 * p3[0];
+      const lng = f0 * p0[1] + f1 * p1[1] + f2 * p2[1] + f3 * p3[1];
+
+      result.push([lat, lng]);
+    }
+  }
+  result.push(pts[n - 1]);
+  return result;
+}
+window.generateSmoothMaritimeSpline = generateSmoothMaritimeSpline;
+
+/**
+ * Ultra-Smooth Professional Vessel Animator
+ * Uses arc-length parameterization for constant cruising speed
+ * and an angular low-pass filter for smooth vessel heading rotation.
+ */
+class SmoothMaritimeVesselAnimator {
+  constructor(map, layerGroup, options = {}) {
+    this.map = map;
+    this.layerGroup = layerGroup;
+    this.color = options.color || "#0284c7";
+    this.marker = null;
+    this.animId = null;
+    this.splinePoints = [];
+    this.cumDistances = [];
+    this.totalDistance = 0;
+    this.currentProgress = 0;
+    this.currentAngle = 0;
+    this.lastTime = 0;
+    this.speedScale = options.speedScale || 0.000035;
+  }
+
+  setRoute(rawWaypoints, color) {
+    this.stop();
+    if (color) this.color = color;
+    if (!rawWaypoints || rawWaypoints.length < 2) return;
+
+    this.splinePoints = generateSmoothMaritimeSpline(rawWaypoints, 20);
+
+    this.cumDistances = [0];
+    let total = 0;
+    for (let i = 1; i < this.splinePoints.length; i++) {
+      const p1 = this.splinePoints[i - 1];
+      const p2 = this.splinePoints[i];
+      const d = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+      total += d;
+      this.cumDistances.push(total);
+    }
+    this.totalDistance = total;
+    this.currentProgress = 0;
+
+    this.createMarker();
+    this.start();
+  }
+
+  createMarker() {
+    if (this.marker && this.layerGroup) {
+      this.layerGroup.removeLayer(this.marker);
+    }
+    const startPt = this.splinePoints[0];
+    const initialHeading = this.getHeadingAtProgress(0);
+    this.currentAngle = initialHeading;
+
+    const iconHtml = `
+      <div class="smooth-tanker-pin" style="transform: rotate(${initialHeading}deg);">
+        <div class="tanker-svg-wrap">
+          <svg width="34" height="34" viewBox="0 0 34 34">
+            <path d="M17 3 L24 11 L23 29 L17 32 L11 29 L10 11 Z" fill="${this.color}" stroke="#ffffff" stroke-width="1.8"/>
+            <rect x="14" y="16" width="6" height="8" rx="1.5" fill="#ffffff" opacity="0.95"/>
+            <circle cx="17" cy="8" r="2.2" fill="#ffffff"/>
+            <polygon points="17,4 19.5,9 14.5,9" fill="#facc15"/>
+          </svg>
+          <div class="tanker-wake-glow" style="background:${this.color};"></div>
+        </div>
+      </div>
+    `;
+
+    const customIcon = L.divIcon({
+      html: iconHtml,
+      className: "vessel-div-icon-container",
+      iconSize: [34, 34],
+      iconAnchor: [17, 17]
+    });
+
+    this.marker = L.marker(startPt, { icon: customIcon, zIndexOffset: 1000 }).addTo(this.layerGroup);
+  }
+
+  getPositionAndHeadingAtProgress(prog) {
+    if (!this.splinePoints.length || this.totalDistance === 0) return { latLng: [0, 0], angle: 0 };
+    const targetDist = prog * this.totalDistance;
+
+    let low = 0;
+    let high = this.cumDistances.length - 1;
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      if (this.cumDistances[mid] <= targetDist) {
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    const idx = Math.max(0, Math.min(this.splinePoints.length - 2, high));
+    const d0 = this.cumDistances[idx];
+    const d1 = this.cumDistances[idx + 1];
+    const segDist = d1 - d0;
+    const ratio = segDist > 0 ? (targetDist - d0) / segDist : 0;
+
+    const p0 = this.splinePoints[idx];
+    const p1 = this.splinePoints[idx + 1];
+
+    const lat = p0[0] + (p1[0] - p0[0]) * ratio;
+    const lng = p0[1] + (p1[1] - p0[1]) * ratio;
+
+    const nextIdx = Math.min(this.splinePoints.length - 1, idx + 1);
+    const dLat = this.splinePoints[nextIdx][0] - p0[0];
+    const dLng = this.splinePoints[nextIdx][1] - p0[1];
+
+    let angleRad = Math.atan2(dLng, dLat);
+    let angleDeg = (angleRad * 180) / Math.PI;
+    if (angleDeg < 0) angleDeg += 360;
+
+    return { latLng: [lat, lng], angle: angleDeg };
+  }
+
+  getHeadingAtProgress(prog) {
+    return this.getPositionAndHeadingAtProgress(prog).angle;
+  }
+
+  start() {
+    this.stop();
+    this.lastTime = performance.now();
+
+    const loop = (time) => {
+      const dt = Math.min(100, time - this.lastTime);
+      this.lastTime = time;
+
+      this.currentProgress = (this.currentProgress + this.speedScale * dt) % 1.0;
+      const { latLng, angle } = this.getPositionAndHeadingAtProgress(this.currentProgress);
+
+      if (this.marker) {
+        this.marker.setLatLng(latLng);
+
+        let diff = angle - this.currentAngle;
+        while (diff < -180) diff += 360;
+        while (diff > 180) diff -= 360;
+        this.currentAngle = (this.currentAngle + diff * 0.18 + 360) % 360;
+
+        const pinEl = this.marker.getElement();
+        if (pinEl) {
+          const inner = pinEl.querySelector(".smooth-tanker-pin");
+          if (inner) {
+            inner.style.transform = `rotate(${this.currentAngle}deg)`;
+          }
+        }
+      }
+
+      this.animId = requestAnimationFrame(loop);
+    };
+
+    this.animId = requestAnimationFrame(loop);
+  }
+
+  stop() {
+    if (this.animId) {
+      cancelAnimationFrame(this.animId);
+      this.animId = null;
+    }
+  }
+}
+window.SmoothMaritimeVesselAnimator = SmoothMaritimeVesselAnimator;
 
 /* ==========================================================================
    1. CLIENT-SIDE CHAPTER ROUTER
@@ -1433,6 +1683,7 @@ function renderChapter7Visual() {
 let ch1Map = null;
 let ch1Markers = {};
 let ch1TankerAnimId = null;
+let ch1VesselAnimator = null;
 
 function selectEcoFlowStage(idx) {
   const stages = OIL_DATA.dubaiOmanEcosystem.animatedFlowStages;
@@ -1456,11 +1707,13 @@ function initChapter1EcosystemMap() {
     ch1Map = null;
   }
   if (ch1TankerAnimId) cancelAnimationFrame(ch1TankerAnimId);
+  if (ch1VesselAnimator) {
+    ch1VesselAnimator.stop();
+    ch1VesselAnimator = null;
+  }
 
   ch1Map = L.map("chapter1EcoMap", { center: [25.2, 54.5], zoom: 6 });
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    attribution: "&copy; OpenStreetMap &copy; CARTO"
-  }).addTo(ch1Map);
+  createSatelliteHybridLayerGroup().addTo(ch1Map);
 
   ch1Markers = {};
   const grades = OIL_DATA.dubaiOmanEcosystem.nineMiddleEastGrades;
@@ -1517,37 +1770,23 @@ function initChapter1EcosystemMap() {
     dashArray: "6, 6"
   }).addTo(ch1Map).bindPopup("<strong>ADCOP Pipeline (1.8 Mb/d):</strong> Carries Murban crude from onshore Abu Dhabi across the Hajar Mountains to Fujairah port on the Arabian Sea.");
 
-  // Animated Shipping Route from Persian Gulf / Oman to Asia
+  // Animated Shipping Route from Persian Gulf / Oman to Asia (Curved maritime waypoints)
   const seaRouteCoords = [
-    [26.64, 50.16], [26.56, 56.45], [23.63, 58.52], [15.5, 68.0], [6.0, 80.5], [1.25, 103.85], [14.0, 114.0], [29.9, 121.8]
+    [26.64, 50.16], [26.2, 53.0], [26.56, 56.45], [24.5, 58.5], [23.63, 58.52], [15.5, 68.0], [5.8, 80.5], [5.9, 95.0], [1.25, 103.85], [14.0, 114.0], [29.9, 121.8]
   ];
-  L.polyline(seaRouteCoords, {
-    color: "#d97706",
+  const smoothSeaRoute = generateSmoothMaritimeSpline(seaRouteCoords, 20);
+  L.polyline(smoothSeaRoute, {
+    color: "#f59e0b",
     weight: 4,
-    className: "leaflet-ant-flow"
+    className: "leaflet-ant-flow maritime-smooth-line"
   }).addTo(ch1Map);
 
-  // Animated Moving Tanker Icon along the Sea Route
-  const shipIcon = L.divIcon({
-    html: `<div style="font-size:20px; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.3));">🚢</div>`,
-    className: "",
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
+  // Ultra-Smooth Rotating Vessel along the Sea Route
+  ch1VesselAnimator = new SmoothMaritimeVesselAnimator(ch1Map, ch1Map, {
+    color: "#f59e0b",
+    speedScale: 0.00003
   });
-  const shipMarker = L.marker(seaRouteCoords[0], { icon: shipIcon }).addTo(ch1Map);
-  let t = 0;
-  function animateCh1Ship() {
-    t = (t + 0.0025) % 1;
-    const totalSegs = seaRouteCoords.length - 1;
-    const segFloat = t * totalSegs;
-    const idx = Math.floor(segFloat);
-    const frac = segFloat - idx;
-    const p1 = seaRouteCoords[idx];
-    const p2 = seaRouteCoords[Math.min(idx + 1, totalSegs)];
-    shipMarker.setLatLng([p1[0] + (p2[0] - p1[0]) * frac, p1[1] + (p2[1] - p1[1]) * frac]);
-    ch1TankerAnimId = requestAnimationFrame(animateCh1Ship);
-  }
-  animateCh1Ship();
+  ch1VesselAnimator.setRoute(seaRouteCoords, "#f59e0b");
 }
 
 function zoomChapter1Map(viewMode) {
@@ -1583,9 +1822,7 @@ function initChapter2DemandMap() {
   }
 
   ch2Map = L.map("chapter2DemandMap", { center: [26.0, 105.0], zoom: 4 });
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    attribution: "&copy; OpenStreetMap &copy; CARTO"
-  }).addTo(ch2Map);
+  createSatelliteHybridLayerGroup().addTo(ch2Map);
 
   ch2RefMarkers = {};
   const refineries = OIL_DATA.asianRefineriesList;
@@ -1616,23 +1853,24 @@ function initChapter2DemandMap() {
   // Draw Animated Import Flow Corridors into the 4 Asian Nations
   const importFlows = [
     // Middle East -> India (Jamnagar)
-    { coords: [[25.12, 56.36], [22.36, 69.85]], color: "#d97706", label: "Middle East → India (2.1 Mb/d)" },
+    { coords: [[25.12, 56.36], [23.5, 63.0], [22.36, 69.85]], color: "#d97706", label: "Middle East → India (2.1 Mb/d)" },
     // Middle East -> China / Korea / Japan
-    { coords: [[25.12, 56.36], [6.0, 80.5], [1.25, 103.85], [30.05, 122.10]], color: "#d97706", label: "Middle East → China (5.0 Mb/d)" },
-    { coords: [[1.25, 103.85], [35.50, 129.38], [35.53, 140.08]], color: "#d97706", label: "Middle East → Korea & Japan (4.3 Mb/d)" },
+    { coords: [[25.12, 56.36], [16.0, 68.0], [5.8, 80.5], [5.9, 95.0], [1.25, 103.85], [14.0, 114.5], [30.05, 122.10]], color: "#d97706", label: "Middle East → China (5.0 Mb/d)" },
+    { coords: [[1.25, 103.85], [15.0, 115.0], [24.0, 122.0], [35.50, 129.38], [35.53, 140.08]], color: "#d97706", label: "Middle East → Korea & Japan (4.3 Mb/d)" },
     // Russia Kozmino -> China Shandong
-    { coords: [[42.73, 133.00], [36.06, 120.38]], color: "#dc2626", label: "Russia ESPO (Kozmino) → China (3-Day Shuttle)" },
+    { coords: [[42.73, 133.00], [38.5, 130.5], [34.5, 128.0], [36.06, 120.38]], color: "#dc2626", label: "Russia ESPO (Kozmino) → China (3-Day Shuttle)" },
     // Russia Suez -> India
-    { coords: [[29.9, 32.5], [12.6, 43.3], [22.36, 69.85]], color: "#dc2626", label: "Russia Urals (via Suez) → India (1.8 Mb/d)" },
+    { coords: [[29.9, 32.5], [20.0, 39.0], [12.6, 43.3], [12.0, 52.0], [22.36, 69.85]], color: "#dc2626", label: "Russia Urals (via Suez) → India (1.8 Mb/d)" },
     // Atlantic / WAF -> Asia
-    { coords: [[-34.5, 18.5], [1.25, 103.85], [35.50, 129.38]], color: "#0284c7", label: "US WTI Midland & West Africa → Asia (3.6 Mb/d)" }
+    { coords: [[-34.5, 18.5], [-25.0, 50.0], [-10.0, 75.0], [1.25, 103.85], [20.0, 118.0], [35.50, 129.38]], color: "#0284c7", label: "US WTI Midland & West Africa → Asia (3.6 Mb/d)" }
   ];
 
   importFlows.forEach(f => {
-    L.polyline(f.coords, {
+    const smoothPoints = generateSmoothMaritimeSpline(f.coords, 18);
+    L.polyline(smoothPoints, {
       color: f.color,
-      weight: 3.5,
-      className: "leaflet-ant-flow"
+      weight: 3.8,
+      className: "leaflet-ant-flow maritime-smooth-line"
     }).addTo(ch2Map).bindPopup(`<strong>${f.label}</strong>`);
   });
 }
@@ -1658,6 +1896,7 @@ function focusRefineryOnChapter2Map(refId) {
 let currentOspGrade = "Arab Light";
 let ch3Map = null;
 let ch3RouteLayer = null;
+let ch3VesselAnimator = null;
 
 function setOspPreset(gradeName, basePrice, ospDiff, clickedBtn) {
   currentOspGrade = gradeName;
@@ -1755,11 +1994,13 @@ function initChapter3FreightMap() {
     ch3Map.remove();
     ch3Map = null;
   }
+  if (ch3VesselAnimator) {
+    ch3VesselAnimator.stop();
+    ch3VesselAnimator = null;
+  }
 
   ch3Map = L.map("chapter3FreightMap", { center: [20.0, 82.0], zoom: 3 });
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    attribution: "&copy; OpenStreetMap &copy; CARTO"
-  }).addTo(ch3Map);
+  createSatelliteHybridLayerGroup().addTo(ch3Map);
 
   switchChapter3VesselRoute("vlcc");
 }
@@ -1767,26 +2008,30 @@ function initChapter3FreightMap() {
 function switchChapter3VesselRoute(vesselId) {
   if (!ch3Map) return;
   if (ch3RouteLayer) ch3Map.removeLayer(ch3RouteLayer);
+  if (ch3VesselAnimator) {
+    ch3VesselAnimator.stop();
+    ch3VesselAnimator = null;
+  }
 
   ch3RouteLayer = L.layerGroup().addTo(ch3Map);
 
   const routes = {
     vlcc: {
-      coords: [[26.64, 50.16], [26.56, 56.45], [6.0, 80.5], [1.25, 103.85], [29.95, 121.72]],
+      coords: [[26.64, 50.16], [26.2, 53.0], [26.56, 56.45], [24.5, 58.5], [16.0, 66.0], [6.0, 80.5], [5.9, 95.0], [1.25, 103.85], [14.0, 114.5], [29.95, 121.72]],
       color: "#d97706",
       center: [18.0, 88.0],
       zoom: 4,
       title: "VLCC Supertanker Corridor (Ras Tanura → Hormuz → Malacca → Ningbo China | 2,000,000 bbls | $2.15/bbl)"
     },
     suezmax: {
-      coords: [[44.72, 37.77], [41.0, 29.0], [31.2, 32.3], [27.5, 34.0], [12.6, 43.3], [22.36, 69.85]],
+      coords: [[44.72, 37.77], [41.0, 29.0], [36.5, 26.0], [31.2, 32.3], [27.5, 34.0], [12.6, 43.3], [12.0, 52.0], [22.36, 69.85]],
       color: "#0284c7",
       center: [26.0, 48.0],
       zoom: 4,
       title: "Suezmax Canal Route (Russian Black Sea → Suez Canal → Red Sea → Jamnagar India | 1,000,000 bbls | $4.20/bbl)"
     },
     aframax: {
-      coords: [[42.73, 133.00], [38.0, 129.0], [34.5, 126.0], [36.06, 120.38]],
+      coords: [[42.73, 133.00], [38.5, 130.5], [34.5, 128.0], [36.06, 120.38]],
       color: "#059669",
       center: [38.5, 126.5],
       zoom: 5,
@@ -1795,7 +2040,9 @@ function switchChapter3VesselRoute(vesselId) {
   };
 
   const r = routes[vesselId] || routes.vlcc;
-  L.polyline(r.coords, { color: r.color, weight: 5, className: "leaflet-ant-flow" })
+  const smoothCoords = generateSmoothMaritimeSpline(r.coords, 20);
+
+  L.polyline(smoothCoords, { color: r.color, weight: 5, className: "leaflet-ant-flow maritime-smooth-line" })
     .addTo(ch3RouteLayer)
     .bindPopup(`<strong>${r.title}</strong>`)
     .openPopup();
@@ -1807,6 +2054,12 @@ function switchChapter3VesselRoute(vesselId) {
   L.circleMarker(r.coords[r.coords.length - 1], { radius: 8, fillColor: "#990000", color: "#0f172a", weight: 2, fillOpacity: 1 })
     .addTo(ch3RouteLayer)
     .bindTooltip("Asian Receiving Refinery", { permanent: true });
+
+  ch3VesselAnimator = new SmoothMaritimeVesselAnimator(ch3Map, ch3RouteLayer, {
+    color: r.color,
+    speedScale: 0.000035
+  });
+  ch3VesselAnimator.setRoute(r.coords, r.color);
 
   ch3Map.flyTo(r.center, r.zoom, { duration: 1.0 });
 }
@@ -2127,6 +2380,8 @@ function updateAtlanticCompSim() {
   }
 }
 
+let ch5VesselAnimators = [];
+
 function initChapter5AtlanticRussiaMap() {
   const el = document.getElementById("chapter5GlobalMap");
   if (!el || typeof L === "undefined") return;
@@ -2135,11 +2390,11 @@ function initChapter5AtlanticRussiaMap() {
     ch5Map.remove();
     ch5Map = null;
   }
+  ch5VesselAnimators.forEach(a => a.stop());
+  ch5VesselAnimators = [];
 
   ch5Map = L.map("chapter5GlobalMap", { center: [22.0, 45.0], zoom: 2 });
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    attribution: "&copy; OpenStreetMap &copy; CARTO"
-  }).addTo(ch5Map);
+  createSatelliteHybridLayerGroup().addTo(ch5Map);
 
   ch5LayerGroup = L.layerGroup().addTo(ch5Map);
   filterChapter5Map("all");
@@ -2147,23 +2402,61 @@ function initChapter5AtlanticRussiaMap() {
 
 function filterChapter5Map(mode) {
   if (!ch5Map || !ch5LayerGroup) return;
+  ch5VesselAnimators.forEach(a => a.stop());
+  ch5VesselAnimators = [];
   ch5LayerGroup.clearLayers();
 
   const allRoutes = [
-    { id: "wti_midland", name: "US WTI Midland (Corpus Christi Texas → Cape of Good Hope → Korea/China)", coords: [[27.80, -97.39], [15.0, -60.0], [-34.5, 18.5], [1.25, 103.85], [35.50, 129.38]], color: "#0284c7" },
-    { id: "brent_forties", name: "North Sea Brent / Forties & Johan Sverdrup (Scotland/Norway → Asia)", coords: [[58.5, 1.5], [36.0, -5.5], [31.2, 32.3], [12.6, 43.3], [1.25, 103.85], [35.50, 129.38]], color: "#0369a1" },
-    { id: "waf_nigeria_angola", name: "West Africa Bonny Light & Cabinda (Nigeria/Angola → China & India)", coords: [[-5.55, 12.19], [-34.5, 18.5], [1.25, 103.85], [29.95, 121.72]], color: "#7c3aed" },
-    { id: "urals", name: "Russian Urals (Baltic Primorsk & Black Sea → Suez Canal → Jamnagar India)", coords: [[60.35, 28.62], [55.0, 5.0], [36.0, -5.5], [31.2, 32.3], [12.6, 43.3], [22.36, 69.85]], color: "#dc2626" },
-    { id: "espo", name: "Russian ESPO & Sokol (Kozmino Pacific & Sakhalin → Shandong China 3-Day Shuttle)", coords: [[42.73, 133.00], [36.06, 120.38]], color: "#b91c1c" }
+    { 
+      id: "wti_midland", 
+      name: "US WTI Midland (Corpus Christi Texas → Cape of Good Hope → Korea/China)", 
+      coords: [[27.80, -97.39], [25.0, -88.0], [20.0, -68.0], [-34.8, 18.5], [-20.0, 60.0], [5.8, 80.5], [1.25, 103.85], [20.0, 118.0], [35.50, 129.38]], 
+      color: "#0284c7" 
+    },
+    { 
+      id: "brent_forties", 
+      name: "North Sea Brent / Forties & Johan Sverdrup (Scotland/Norway → Suez → Asia)", 
+      coords: [[58.5, 1.5], [51.0, 1.5], [44.0, -9.0], [36.0, -6.0], [37.0, 11.0], [31.2, 32.3], [12.6, 43.3], [5.8, 80.5], [1.25, 103.85], [35.50, 129.38]], 
+      color: "#0369a1" 
+    },
+    { 
+      id: "waf_nigeria_angola", 
+      name: "West Africa Bonny Light & Cabinda (Nigeria/Angola → China & India)", 
+      coords: [[-5.55, 12.19], [-20.0, 10.0], [-34.8, 18.5], [-25.0, 50.0], [-5.0, 80.0], [1.25, 103.85], [20.0, 115.0], [29.95, 121.72]], 
+      color: "#7c3aed" 
+    },
+    { 
+      id: "urals", 
+      name: "Russian Urals (Baltic Primorsk & Black Sea → Suez Canal → Jamnagar India)", 
+      coords: [[60.35, 28.62], [57.0, 19.0], [55.3, 12.8], [51.0, 1.5], [36.0, -6.0], [37.0, 11.0], [31.2, 32.3], [12.6, 43.3], [15.0, 60.0], [22.36, 69.85]], 
+      color: "#dc2626" 
+    },
+    { 
+      id: "espo", 
+      name: "Russian ESPO & Sokol (Kozmino Pacific & Sakhalin → Shandong China 3-Day Shuttle)", 
+      coords: [[42.73, 133.00], [38.5, 130.5], [34.5, 128.0], [36.06, 120.38]], 
+      color: "#b91c1c" 
+    }
   ];
 
-  allRoutes.forEach(r => {
-    L.polyline(r.coords, { color: r.color, weight: 4, className: "leaflet-ant-flow" })
+  allRoutes.forEach((r, idx) => {
+    const smoothCoords = generateSmoothMaritimeSpline(r.coords, 20);
+    L.polyline(smoothCoords, { color: r.color, weight: 4.2, className: "leaflet-ant-flow maritime-smooth-line" })
       .addTo(ch5LayerGroup)
       .bindPopup(`<strong>${r.name}</strong>`);
     L.circleMarker(r.coords[0], { radius: 8, fillColor: r.color, color: "#0f172a", weight: 2, fillOpacity: 1 })
       .addTo(ch5LayerGroup)
       .bindPopup(`<strong>Origin:</strong> ${r.name}`);
+
+    // Add animated vessel on the first two primary trade flows
+    if (idx < 2) {
+      const animator = new SmoothMaritimeVesselAnimator(ch5Map, ch5LayerGroup, {
+        color: r.color,
+        speedScale: 0.00003
+      });
+      animator.setRoute(r.coords, r.color);
+      ch5VesselAnimators.push(animator);
+    }
   });
 
   ch5Map.flyTo([22.0, 45.0], 2, { duration: 1.0 });
@@ -2969,11 +3262,7 @@ function initBuyerSourcingMap() {
 
   L.control.zoom({ position: "topleft" }).addTo(STATE.mapInstance);
 
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
-    subdomains: "abcd",
-    maxZoom: 19
-  }).addTo(STATE.mapInstance);
+  createSatelliteHybridLayerGroup().addTo(STATE.mapInstance);
 
   // Plot terminals for China by default
   plotBuyerTerminals("china");
@@ -3037,6 +3326,10 @@ function initTankerRouteMap() {
     STATE.mapInstance.remove();
     STATE.mapInstance = null;
   }
+  if (STATE.vesselAnimator) {
+    STATE.vesselAnimator.stop();
+    STATE.vesselAnimator = null;
+  }
 
   STATE.mapInstance = L.map("tankerRouteMap", {
     center: [18.0, 85.0],
@@ -3048,11 +3341,7 @@ function initTankerRouteMap() {
 
   L.control.zoom({ position: "topleft" }).addTo(STATE.mapInstance);
 
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
-    subdomains: "abcd",
-    maxZoom: 19
-  }).addTo(STATE.mapInstance);
+  createSatelliteHybridLayerGroup().addTo(STATE.mapInstance);
 
   // Plot Chokepoints
   if (OIL_DATA.chokepoints) {
@@ -3111,61 +3400,31 @@ function selectTankerRoute(routeId) {
   if (STATE.routePolyline) STATE.mapInstance.removeLayer(STATE.routePolyline);
   if (STATE.vesselMarker) STATE.mapInstance.removeLayer(STATE.vesselMarker);
   if (STATE.vesselAnimationId) cancelAnimationFrame(STATE.vesselAnimationId);
+  if (STATE.vesselAnimator) {
+    STATE.vesselAnimator.stop();
+    STATE.vesselAnimator = null;
+  }
 
-  STATE.routePolyline = L.polyline(route.waypoints, {
-    color: "#0284c7",
-    weight: 3.5,
-    opacity: 0.85,
-    dashArray: "6, 8"
+  const smoothCoords = generateSmoothMaritimeSpline(route.waypoints, 20);
+  STATE.routePolyline = L.polyline(smoothCoords, {
+    color: "#38bdf8",
+    weight: 4.2,
+    opacity: 0.9,
+    dashArray: "6, 8",
+    className: "maritime-smooth-line"
   }).addTo(STATE.mapInstance);
 
   STATE.mapInstance.fitBounds(STATE.routePolyline.getBounds(), { padding: [50, 50] });
 
-  const shipIcon = L.divIcon({
-    className: "ship-icon",
-    html: `<div style="background:#d97706; width:16px; height:16px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 10px rgba(217,119,6,0.8);"></div>`,
-    iconSize: [16, 16],
-    iconAnchor: [8, 8]
+  STATE.vesselAnimator = new SmoothMaritimeVesselAnimator(STATE.mapInstance, STATE.mapInstance, {
+    color: "#f59e0b",
+    speedScale: 0.000035
   });
-
-  STATE.vesselMarker = L.marker(route.waypoints[0], { icon: shipIcon }).addTo(STATE.mapInstance);
-
-  animateVesselAlongPath(route.waypoints);
+  STATE.vesselAnimator.setRoute(route.waypoints, "#f59e0b");
 }
 
 function animateVesselAlongPath(waypoints) {
-  let currentSegment = 0;
-  let progress = 0;
-  const speed = 0.005;
-
-  function step() {
-    if (!STATE.vesselMarker || currentSegment >= waypoints.length - 1) {
-      currentSegment = 0;
-      progress = 0;
-    }
-
-    const start = waypoints[currentSegment];
-    const end = waypoints[currentSegment + 1];
-
-    if (!start || !end) return;
-
-    progress += speed;
-    if (progress >= 1) {
-      progress = 0;
-      currentSegment++;
-      if (currentSegment >= waypoints.length - 1) {
-        currentSegment = 0;
-      }
-    }
-
-    const currentLat = start[0] + (end[0] - start[0]) * progress;
-    const currentLng = start[1] + (end[1] - start[1]) * progress;
-
-    STATE.vesselMarker.setLatLng([currentLat, currentLng]);
-    STATE.vesselAnimationId = requestAnimationFrame(step);
-  }
-
-  STATE.vesselAnimationId = requestAnimationFrame(step);
+  // Deprecated in favor of SmoothMaritimeVesselAnimator
 }
 
 /* ==========================================================================
@@ -3747,7 +4006,8 @@ function initChapter10Simulator() {
 }
 
 let ch10ShockTileLayers = null;
-let ch10ShockCurrentBasemap = "voyager";
+let ch10ShockCurrentBasemap = "satellite";
+let ch10ShockVesselAnimator = null;
 
 function initChapter10ShockMap() {
   const el = document.getElementById("chapter10ShockMap");
@@ -3756,6 +4016,10 @@ function initChapter10ShockMap() {
   if (ch10ShockMap) {
     ch10ShockMap.remove();
     ch10ShockMap = null;
+  }
+  if (ch10ShockVesselAnimator) {
+    ch10ShockVesselAnimator.stop();
+    ch10ShockVesselAnimator = null;
   }
   el.innerHTML = "";
   delete el.dataset.maritimeUpgraded;
@@ -3780,20 +4044,17 @@ function initChapter10ShockMap() {
       attribution: "&copy; OpenStreetMap &copy; CARTO",
       maxZoom: 18
     }),
-    satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-      attribution: "&copy; Esri, Maxar",
-      maxZoom: 18
-    })
+    satellite: createSatelliteHybridLayerGroup()
   };
 
-  ch10ShockCurrentBasemap = "voyager";
-  ch10ShockTileLayers.voyager.addTo(ch10ShockMap);
+  ch10ShockCurrentBasemap = "satellite";
+  ch10ShockTileLayers.satellite.addTo(ch10ShockMap);
 
   const toggleEl = document.createElement("div");
   toggleEl.className = "ch10-map-basemap-toggle";
   toggleEl.innerHTML = `
-    <button type="button" class="ch10-map-btn active" id="btnCh10SMapVoyager">🗺️ Map</button>
-    <button type="button" class="ch10-map-btn" id="btnCh10SMapSatellite">🛰️ Satellite</button>
+    <button type="button" class="ch10-map-btn active" id="btnCh10SMapSatellite">🛰️ Satellite</button>
+    <button type="button" class="ch10-map-btn" id="btnCh10SMapVoyager">🗺️ Map</button>
   `;
   L.DomEvent.disableClickPropagation(toggleEl);
   L.DomEvent.disableScrollPropagation(toggleEl);
@@ -3838,6 +4099,10 @@ function updateShockMap() {
     cancelAnimationFrame(ch10ShockAnim);
     ch10ShockAnim = null;
   }
+  if (ch10ShockVesselAnimator) {
+    ch10ShockVesselAnimator.stop();
+    ch10ShockVesselAnimator = null;
+  }
   ch10ShockLayers.clearLayers();
 
   const scenarios = OIL_DATA.shockScenarios;
@@ -3849,34 +4114,38 @@ function updateShockMap() {
   // If "Before", show standard routes as healthy green lines
   if (!isAfter) {
     (sc.mapSevered || []).forEach(r => {
-      L.polyline(r.coords, { color: "#059669", weight: 3.5, opacity: 0.85, interactive: false }).addTo(ch10ShockLayers)
+      const curvedCoords = generateSmoothMaritimeSpline(r.coords, 20);
+      L.polyline(curvedCoords, { color: "#10b981", weight: 3.8, opacity: 0.9, interactive: false, className: "maritime-smooth-line" }).addTo(ch10ShockLayers)
         .bindTooltip(`Normal Flow: ${r.name}`, { permanent: false });
     });
     // Add default tanker
     if (sc.mapSevered && sc.mapSevered.length > 0) {
-      animateTankerOnRoute(sc.mapSevered[0].coords, "#059669");
+      ch10ShockVesselAnimator = new SmoothMaritimeVesselAnimator(ch10ShockMap, ch10ShockLayers, { color: "#10b981", speedScale: 0.000035 });
+      ch10ShockVesselAnimator.setRoute(sc.mapSevered[0].coords, "#10b981");
     }
     return;
   }
 
   // If "After Shock", show severed routes as RED DASHED
   (sc.mapSevered || []).forEach(r => {
-    L.polyline(r.coords, { color: "#dc2626", weight: 3.5, dashArray: "6, 6", opacity: 0.8, interactive: false }).addTo(ch10ShockLayers)
+    const curvedCoords = generateSmoothMaritimeSpline(r.coords, 20);
+    L.polyline(curvedCoords, { color: "#ef4444", weight: 3.8, dashArray: "6, 6", opacity: 0.85, interactive: false, className: "maritime-smooth-line" }).addTo(ch10ShockLayers)
       .bindTooltip(`❌ SEVERED: ${r.name}`, { permanent: true });
     
     // X marker at origin
-    L.circleMarker(r.coords[0], { radius: 7, fillColor: "#dc2626", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
-      .addTo(ch10ShockLayers).bindTooltip(`Supply Cut: ${r.coords[0]}`, { permanent: false });
+    L.circleMarker(r.coords[0], { radius: 7, fillColor: "#ef4444", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
+      .addTo(ch10ShockLayers).bindTooltip(`Supply Cut: ${r.name}`, { permanent: false });
   });
 
   // Show replacement routes as vibrant lines
   (sc.mapReplacement || []).forEach(r => {
-    L.polyline(r.coords, { color: r.color || "#0284c7", weight: 4.5, className: "leaflet-ant-flow", interactive: false }).addTo(ch10ShockLayers)
+    const curvedCoords = generateSmoothMaritimeSpline(r.coords, 20);
+    L.polyline(curvedCoords, { color: r.color || "#0284c7", weight: 4.5, className: "leaflet-ant-flow maritime-smooth-line", interactive: false }).addTo(ch10ShockLayers)
       .bindTooltip(`🟢 EMERGENCY ROUTE: ${r.name}`, { permanent: false });
 
     // Green origin and blue destination
-    L.circleMarker(r.coords[0], { radius: 8, fillColor: "#059669", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
-      .addTo(ch10ShockLayers).bindTooltip(`Replacement Hub: ${r.coords[0]}`, { permanent: false });
+    L.circleMarker(r.coords[0], { radius: 8, fillColor: "#10b981", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
+      .addTo(ch10ShockLayers).bindTooltip(`Replacement Hub: ${r.name}`, { permanent: false });
 
     L.circleMarker(r.coords[r.coords.length - 1], { radius: 8, fillColor: "#0284c7", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
       .addTo(ch10ShockLayers).bindTooltip(`Receiving Port`, { permanent: false });
@@ -3884,42 +4153,17 @@ function updateShockMap() {
 
   // Animate replacement tanker on the primary replacement route
   if (sc.mapReplacement && sc.mapReplacement.length > 0) {
-    animateTankerOnRoute(sc.mapReplacement[0].coords, sc.mapReplacement[0].color || "#0284c7");
+    ch10ShockVesselAnimator = new SmoothMaritimeVesselAnimator(ch10ShockMap, ch10ShockLayers, { color: sc.mapReplacement[0].color || "#38bdf8", speedScale: 0.000035 });
+    ch10ShockVesselAnimator.setRoute(sc.mapReplacement[0].coords, sc.mapReplacement[0].color || "#38bdf8");
   }
-}
-
-function animateTankerOnRoute(waypoints, colorHex) {
-  if (!waypoints || waypoints.length < 2 || !ch10ShockLayers) return;
-
-  const tankerIcon = L.divIcon({
-    html: `<div style="font-size:22px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));">🚢</div>`,
-    className: "",
-    iconSize: [26, 26],
-    iconAnchor: [13, 13]
-  });
-
-  const ship = L.marker(waypoints[0], { icon: tankerIcon }).addTo(ch10ShockLayers);
-  let prog = 0;
-
-  function stepAnim() {
-    prog = (prog + 0.0035) % 1;
-    const segs = waypoints.length - 1;
-    const f = prog * segs;
-    const idx = Math.floor(f);
-    const r = f - idx;
-    const a = waypoints[idx];
-    const b = waypoints[Math.min(idx + 1, segs)];
-    ship.setLatLng([a[0] + (b[0] - a[0]) * r, a[1] + (b[1] - a[1]) * r]);
-    ch10ShockAnim = requestAnimationFrame(stepAnim);
-  }
-  stepAnim();
 }
 
 // ----------------------------------------------------------------------------
 // INTERACTIVE FUTURE ROUTES MAP & CARDS CONTROLLER
 // ----------------------------------------------------------------------------
 let ch10FutureTileLayers = null;
-let ch10FutureCurrentBasemap = "voyager";
+let ch10FutureCurrentBasemap = "satellite";
+let ch10FutureVesselAnimator = null;
 
 function initChapter10FutureMap() {
   const el = document.getElementById("chapter10FutureMap");
@@ -3928,6 +4172,10 @@ function initChapter10FutureMap() {
   if (ch10FutureMap) {
     ch10FutureMap.remove();
     ch10FutureMap = null;
+  }
+  if (ch10FutureVesselAnimator) {
+    ch10FutureVesselAnimator.stop();
+    ch10FutureVesselAnimator = null;
   }
   el.innerHTML = "";
   delete el.dataset.maritimeUpgraded;
@@ -3952,21 +4200,18 @@ function initChapter10FutureMap() {
       attribution: "&copy; OpenStreetMap &copy; CARTO",
       maxZoom: 18
     }),
-    satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-      attribution: "&copy; Esri, Maxar",
-      maxZoom: 18
-    })
+    satellite: createSatelliteHybridLayerGroup()
   };
 
-  ch10FutureCurrentBasemap = "voyager";
-  ch10FutureTileLayers.voyager.addTo(ch10FutureMap);
+  ch10FutureCurrentBasemap = "satellite";
+  ch10FutureTileLayers.satellite.addTo(ch10FutureMap);
 
   // Basemap switch controls (compact, top-right, non-blocking)
   const toggleEl = document.createElement("div");
   toggleEl.className = "ch10-map-basemap-toggle";
   toggleEl.innerHTML = `
-    <button type="button" class="ch10-map-btn active" id="btnCh10FMapVoyager">🗺️ Map</button>
-    <button type="button" class="ch10-map-btn" id="btnCh10FMapSatellite">🛰️ Satellite</button>
+    <button type="button" class="ch10-map-btn active" id="btnCh10FMapSatellite">🛰️ Satellite</button>
+    <button type="button" class="ch10-map-btn" id="btnCh10FMapVoyager">🗺️ Map</button>
   `;
   L.DomEvent.disableClickPropagation(toggleEl);
   L.DomEvent.disableScrollPropagation(toggleEl);
@@ -4134,11 +4379,16 @@ function selectFutureRoute(routeId) {
   // Draw on Future Map
   if (ch10FutureMap && ch10FutureLayers) {
     ch10FutureLayers.clearLayers();
+    if (ch10FutureVesselAnimator) {
+      ch10FutureVesselAnimator.stop();
+      ch10FutureVesselAnimator = null;
+    }
 
-    const line = L.polyline(route.waypoints, {
+    const smoothWaypoints = generateSmoothMaritimeSpline(route.waypoints, 18);
+    const line = L.polyline(smoothWaypoints, {
       color: route.color || "#0284c7",
       weight: 5,
-      className: "pulse-pipeline",
+      className: "pulse-pipeline maritime-smooth-line",
       interactive: false,
       isPipeline: true
     }).addTo(ch10FutureLayers);
@@ -4150,6 +4400,15 @@ function selectFutureRoute(routeId) {
     L.circleMarker(route.waypoints[route.waypoints.length - 1], { radius: 7, fillColor: "#0f172a", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
       .addTo(ch10FutureLayers).bindTooltip(`<strong>Destination: ${route.destinationCountry}</strong><br><span style="font-size:11px;">${route.geography.split("→")[1] || "Terminus"}</span>`, { permanent: false, direction: "top" });
 
+    // Animate tanker on maritime & arctic corridors
+    if (route.category === "arctic" || route.category === "malacca_bypass" || route.id.includes("maritime") || route.id.includes("sea") || route.id.includes("nsr")) {
+      ch10FutureVesselAnimator = new SmoothMaritimeVesselAnimator(ch10FutureMap, ch10FutureLayers, {
+        color: route.color || "#0284c7",
+        speedScale: 0.000035
+      });
+      ch10FutureVesselAnimator.setRoute(route.waypoints, route.color || "#0284c7");
+    }
+
     ch10FutureMap.fitBounds(line.getBounds(), { padding: [45, 45], maxZoom: 6 });
   }
 }
@@ -4160,6 +4419,7 @@ function selectFutureRoute(routeId) {
 let ch11Map = null;
 let ch11Layers = null;
 let ch11AnimTimer = null;
+let ch11VesselAnimator = null;
 
 function renderChapter11Visual() {
   const d = OIL_DATA.chapter11Data;
@@ -4548,6 +4808,10 @@ function initChapter11Visual() {
     try { ch11Map.remove(); } catch (e) {}
     ch11Map = null;
   }
+  if (ch11VesselAnimator) {
+    ch11VesselAnimator.stop();
+    ch11VesselAnimator = null;
+  }
 
   ch11Map = L.map("chapter11BypassMap", {
     center: [24.0, 56.0],
@@ -4558,10 +4822,7 @@ function initChapter11Visual() {
     attributionControl: false
   });
 
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    subdomains: "abcd",
-    maxZoom: 19
-  }).addTo(ch11Map);
+  createSatelliteHybridLayerGroup().addTo(ch11Map);
 
   ch11Layers = L.layerGroup().addTo(ch11Map);
 
@@ -4629,6 +4890,10 @@ function selectChapter11Route(routeId) {
   // Draw on Leaflet Map
   if (ch11Map && ch11Layers) {
     ch11Layers.clearLayers();
+    if (ch11VesselAnimator) {
+      ch11VesselAnimator.stop();
+      ch11VesselAnimator = null;
+    }
 
     // If it's a Hormuz bypass, draw Hormuz chokepoint marker
     if (route.id === "adcop_fujairah" || route.id === "saudi_east_west" || route.id === "saudi_oman" || route.id === "basra_aqaba") {
@@ -4641,12 +4906,14 @@ function selectChapter11Route(routeId) {
       }).addTo(ch11Layers).bindTooltip("<strong>Strait of Hormuz (Chokepoint)</strong><br><span style='color:#dc2626; font-weight:700;'>20.8 Mb/d Vulnerability Zone</span>", { permanent: false, direction: "top" });
     }
 
-    // Draw Route Polyline
-    const line = L.polyline(route.waypoints, {
+    // Draw Smooth Route Polyline
+    const smoothCoords = generateSmoothMaritimeSpline(route.waypoints, 18);
+    const line = L.polyline(smoothCoords, {
       color: route.color || "#2563eb",
       weight: 5,
       opacity: 0.9,
-      dashArray: route.category === "concept" ? "6, 8" : null
+      dashArray: route.category === "concept" ? "6, 8" : null,
+      className: "maritime-smooth-line"
     }).addTo(ch11Layers);
 
     // Draw origin and destination markers
@@ -4665,6 +4932,13 @@ function selectChapter11Route(routeId) {
       weight: 2,
       fillOpacity: 1
     }).addTo(ch11Layers).bindTooltip(`<strong>Terminus / Asia Gate:</strong> ${route.name.split('(')[0]}<br><span style='font-size:11px;'>Deep-water Offloading Port</span>`, { permanent: false, direction: "top" });
+
+    // Ultra-smooth vessel animation on the route
+    ch11VesselAnimator = new SmoothMaritimeVesselAnimator(ch11Map, ch11Layers, {
+      color: route.color || "#38bdf8",
+      speedScale: 0.000035
+    });
+    ch11VesselAnimator.setRoute(route.waypoints, route.color || "#38bdf8");
 
     ch11Map.fitBounds(line.getBounds(), { padding: [50, 50], maxZoom: 6 });
   }

@@ -281,7 +281,13 @@
     const lat = p1[0] + (p2[0] - p1[0]) * segFrac;
     const lng = p1[1] + (p2[1] - p1[1]) * segFrac;
 
-    return { lat, lng, bearing: 0 };
+    const dLat = p2[0] - p1[0];
+    const dLng = p2[1] - p1[1];
+    let angleRad = Math.atan2(dLng, dLat);
+    let angleDeg = (angleRad * 180) / Math.PI;
+    if (angleDeg < 0) angleDeg += 360;
+
+    return { lat, lng, bearing: angleDeg };
   }
 
   function formatNauticalCoord(lat, lng) {
@@ -307,12 +313,12 @@
     return "GLOBAL MARITIME TRADE CORRIDOR";
   }
 
-  // Clean 🚢 Ship Emoji Marker with Call-Sign Badge (Replaces polygon/wake)
-  function createAisTankerEmojiHtml(color, vesselName) {
+  // Clean 🚢 Ship Emoji Marker with Call-Sign Badge & Smooth Rotation
+  function createAisTankerEmojiHtml(color, vesselName, bearing = 0) {
     return `
       <div class="ais-vessel-marker-wrap" title="${vesselName}">
         <div class="ais-vessel-callsign" style="border-color:${color};">${vesselName.replace("MT ", "")}</div>
-        <div class="ais-ship-emoji-pin">🚢</div>
+        <div class="ais-ship-emoji-pin" style="transform: rotate(${bearing}deg); transition: transform 0.2s linear;">🚢</div>
       </div>
     `;
   }
@@ -391,6 +397,8 @@
       url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       subdomains: [],
       overlayUrl: "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+      oceanOverlayUrl: "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}",
+      cartoLabelsUrl: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png",
       bg: "#040d1a"
     },
     bathymetry: {
@@ -564,11 +572,13 @@
 
     if (state.baseLayer) state.map.removeLayer(state.baseLayer);
     if (state.refLayer) state.map.removeLayer(state.refLayer);
+    if (state.oceanLayer) state.map.removeLayer(state.oceanLayer);
+    if (state.cartoLabelsLayer) state.map.removeLayer(state.cartoLabelsLayer);
     if (state.seamarkLayer) state.map.removeLayer(state.seamarkLayer);
 
     const opts = {
       maxZoom: 19,
-      attribution: "&copy; Esri &copy; OpenStreetMap &copy; CARTO &copy; OpenSeaMap"
+      attribution: "&copy; Esri, Maxar &copy; OpenStreetMap &copy; CARTO &copy; OpenSeaMap"
     };
     if (cfg.subdomains && cfg.subdomains.length) opts.subdomains = cfg.subdomains;
 
@@ -578,9 +588,21 @@
     state.baseLayer.bringToBack();
 
     if (cfg.overlayUrl) {
-      state.refLayer = L.tileLayer(cfg.overlayUrl, { maxZoom: 19, opacity: 0.92 });
+      state.refLayer = L.tileLayer(cfg.overlayUrl, { maxZoom: 19, opacity: 0.95 });
       state.refLayer._isMaritimeManaged = true;
       state.refLayer.addTo(state.map);
+    }
+
+    if (cfg.oceanOverlayUrl) {
+      state.oceanLayer = L.tileLayer(cfg.oceanOverlayUrl, { maxZoom: 19, opacity: 0.95 });
+      state.oceanLayer._isMaritimeManaged = true;
+      state.oceanLayer.addTo(state.map);
+    }
+
+    if (cfg.cartoLabelsUrl) {
+      state.cartoLabelsLayer = L.tileLayer(cfg.cartoLabelsUrl, { subdomains: "abcd", maxZoom: 19, opacity: 0.95 });
+      state.cartoLabelsLayer._isMaritimeManaged = true;
+      state.cartoLabelsLayer.addTo(state.map);
     }
 
     state.seamarkLayer = L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png", {
@@ -701,6 +723,11 @@
           item.progress = (item.progress + 0.00055) % 1;
           const pos = getPointAndBearingAtProgress(item.corridor.waypoints, item.progress);
           item.marker.setLatLng([pos.lat, pos.lng]);
+          const el = item.marker.getElement();
+          if (el) {
+            const pin = el.querySelector(".ais-ship-emoji-pin");
+            if (pin) pin.style.transform = `rotate(${pos.bearing}deg)`;
+          }
         });
       }
       state.animFrameId = requestAnimationFrame(animateAisFleet);
@@ -745,8 +772,14 @@
     L.polyline = function (latlngs, options) {
       const opts = Object.assign({}, options || {});
       const isPipeline = opts.isPipeline || opts.rawWaypoints || opts.className === "pulse-pipeline";
-      const seaWaypoints = (opts.dashArray === "6, 6" || isPipeline) ? latlngs : matchSmartSeaWaypoints(latlngs);
-      const primaryLine = origPolylineFactory.call(this, seaWaypoints, Object.assign({}, opts, {
+      const rawSeaWaypoints = (opts.dashArray === "6, 6" || isPipeline) ? latlngs : matchSmartSeaWaypoints(latlngs);
+      
+      let finalSplineWaypoints = rawSeaWaypoints;
+      if (typeof window !== "undefined" && window.generateSmoothMaritimeSpline && Array.isArray(rawSeaWaypoints) && rawSeaWaypoints.length >= 2 && rawSeaWaypoints.length < 50) {
+        finalSplineWaypoints = window.generateSmoothMaritimeSpline(rawSeaWaypoints, 18);
+      }
+
+      const primaryLine = origPolylineFactory.call(this, finalSplineWaypoints, Object.assign({}, opts, {
         weight: (opts.weight || 4) + 0.5,
         opacity: 0.95
       }));
@@ -755,7 +788,7 @@
       primaryLine.addTo = function (target) {
         if (target && !opts._isHaloLayer && opts.dashArray !== "6, 6" && !isPipeline) {
           try {
-            const haloLine = origPolylineFactory.call(L, seaWaypoints, {
+            const haloLine = origPolylineFactory.call(L, finalSplineWaypoints, {
               color: opts.color || "#38bdf8",
               weight: (opts.weight || 4) * 2.8,
               opacity: 0.25,
