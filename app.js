@@ -35,6 +35,19 @@ const STATE = {
 };
 window.STATE = STATE;
 
+// INITIALIZATION ON DOM LOAD (WITH IMMEDIATE FALLBACK IF ALREADY PARSED)
+function initApplicationLifecycle() {
+  initNavbarDropdown();
+  initRouter();
+  initThreeJsGlobe();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApplicationLifecycle);
+} else {
+  initApplicationLifecycle();
+}
+
 /* ==========================================================================
    GLOBAL MARITIME GIS & HIGH-RESOLUTION SATELLITE ENGINE
    ========================================================================== */
@@ -305,8 +318,6 @@ function handleRoute() {
 
   if (hash.startsWith("#/chapter/")) {
     let chapterId = parseInt(hash.replace("#/chapter/", ""), 10);
-    if (chapterId === 12) chapterId = 8;
-    if (chapterId > 11) chapterId = 11;
     if (!isNaN(chapterId) && chapterId >= 1 && chapterId <= 11) {
       showChapterView(chapterId);
       return;
@@ -315,7 +326,7 @@ function handleRoute() {
     showChapterView(9); // Chapter 9: The Journey of One Barrel
     return;
   } else if (hash === "#/simulator") {
-    showChapterView(8); // Chapter 8: The Crude Choice Simulator
+    showChapterView(8); // Chapter 8: 7-Crude Delivered Cost Calculator
     return;
   } else if (hash === "#/wargame" || hash === "#/shock" || hash === "#/crisis") {
     showChapterView(10); // Chapter 10: Supply Shock War Game
@@ -341,6 +352,9 @@ function showHomeView() {
   // Render Home Chapter Directory Grid & Citations
   renderHomeChapterGrid();
   renderHomeCitations();
+
+  // Render / Resize / Resume 3D Globe
+  initThreeJsGlobe();
 
   // Scroll smoothly to top
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -529,9 +543,9 @@ function renderChapterContent(chapterId) {
   } else if (chapterId === 7) {
     html += renderChapter7Visual();
   } else if (chapterId === 8) {
-    html += renderChapter12Visual(); // Chapter 08: 7-Crude Delivered Cost Calculator
+    html += renderChapter8Visual(); // Chapter 08: 7-Crude Delivered Cost Calculator
   } else if (chapterId === 9) {
-    html += renderChapter8Visual();  // Chapter 09: The Journey of One Barrel
+    html += renderChapter9Visual();  // Chapter 09: The Journey of One Barrel
   } else if (chapterId === 10) {
     html += renderChapter10Visual(); // Chapter 10: What Happens If A Major Supplier Disappears?
   } else if (chapterId === 11) {
@@ -2520,8 +2534,8 @@ function updateEfsSimulation() {
   }
 }
 
-// Chapter 8: The Journey of One Barrel (9 Stages)
-function renderChapter8Visual() {
+// Chapter 9: The Journey of One Barrel (9 Stages)
+function renderChapter9Visual() {
   return `
     <div class="journey-container">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
@@ -2641,308 +2655,8 @@ function renderActiveJourneyStep() {
   `;
 }
 
-// Chapter 9: The Commercial Trading Desk (Forward Curves & OSP Tracker)
-function renderChapter9Visual() {
-  return `
-    <div class="section-block" style="margin-bottom:28px;">
-      <div class="section-header">
-        <div>
-          <div class="section-tag">TERM STRUCTURE ENGINE</div>
-          <h3 class="section-title">Forward Curve: Backwardation vs Contango</h3>
-          <div class="section-subtitle">Toggle between market regimes to see why tankers are used for floating storage</div>
-        </div>
-        <div style="display:flex; gap:8px;">
-          <button class="action-btn active" id="btnCurveBack" onclick="toggleCurveState('backwardation')">Backwardation (Prompt Shortage)</button>
-          <button class="action-btn" id="btnCurveCont" onclick="toggleCurveState('contango')">Contango (Surplus Storage)</button>
-        </div>
-      </div>
-      <div class="section-body">
-        <div style="display:grid; grid-template-columns:1fr 2fr; gap:20px; align-items:center;">
-          <div>
-            <div id="curveMetricsHud" style="margin-bottom:12px; font-family:var(--font-mono); font-size:12px; display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
-            <p id="curveRationale" style="font-size:13px; color:#374151; line-height:1.5;">
-              Prompt physical demand exceeds immediate supply. Refiners draw down inventories. Prompt physical barrels command a premium over forward paper.
-            </p>
-          </div>
-          <div id="forwardCurveChart" style="height:220px; display:flex; align-items:flex-end; gap:16px; padding:20px 10px; background:var(--bg-surface-subtle); border-radius:8px; border:1px solid var(--border-subtle);"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- OSP Tracker Table -->
-    <div class="section-block">
-      <div class="section-header">
-        <div>
-          <div class="section-tag">SOVEREIGN PRICE SHEETS</div>
-          <h3 class="section-title">Monthly Official Selling Price (OSP) Tracker</h3>
-          <div class="section-subtitle">How Saudi Aramco, ADNOC, and SOMO set differentials on the 5th of each month</div>
-        </div>
-      </div>
-      <div class="section-body">
-        <div id="ospTrackerContainer"></div>
-      </div>
-    </div>
-  `;
-}
-
-function toggleCurveState(state) {
-  STATE.currentCurveState = state;
-  const btnBack = document.getElementById("btnCurveBack");
-  const btnCont = document.getElementById("btnCurveCont");
-  if (btnBack && btnCont) {
-    if (state === "backwardation") {
-      btnBack.classList.add("active");
-      btnCont.classList.remove("active");
-    } else {
-      btnCont.classList.add("active");
-      btnBack.classList.remove("active");
-    }
-  }
-  renderForwardCurve();
-}
-
-function renderForwardCurve() {
-  const curveData = OIL_DATA.tradingDesk.forwardCurves[STATE.currentCurveState];
-  if (!curveData) return;
-
-  const hud = document.getElementById("curveMetricsHud");
-  if (hud) {
-    hud.innerHTML = `
-      <div style="background:#ffffff; border:1px solid var(--border-subtle); padding:8px; border-radius:4px;">
-        <span style="color:#6B7280; font-size:10px;">PROMPT SPREAD (M1-M2)</span>
-        <div style="font-weight:800; color:#111827; font-size:14px;">${curveData.promptSpreadM1M2 >= 0 ? '+' : ''}$${curveData.promptSpreadM1M2.toFixed(2)}</div>
-      </div>
-      <div style="background:#ffffff; border:1px solid var(--border-subtle); padding:8px; border-radius:4px;">
-        <span style="color:#6B7280; font-size:10px;">BOX SPREAD (M1-M3)</span>
-        <div style="font-weight:800; color:#111827; font-size:14px;">${curveData.boxSpreadM1M3 >= 0 ? '+' : ''}$${curveData.boxSpreadM1M3.toFixed(2)}</div>
-      </div>
-    `;
-  }
-
-  const chart = document.getElementById("forwardCurveChart");
-  if (chart) {
-    const minP = 68;
-    const maxP = 76;
-    chart.innerHTML = curveData.contracts.map(c => {
-      const heightPercent = Math.max(15, Math.min(100, ((c.price - minP) / (maxP - minP)) * 100));
-      return `
-        <div style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
-          <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; color:#111827; margin-bottom:4px;">$${c.price.toFixed(2)}</span>
-          <div style="width:100%; height:${heightPercent}%; background:var(--color-ft-claret); border-radius:4px 4px 0 0; transition:height 0.3s ease;"></div>
-          <span style="font-family:var(--font-mono); font-size:10px; color:#6B7280; margin-top:6px;">${c.month.split(' ')[0]}</span>
-        </div>
-      `;
-    }).join("");
-  }
-}
-
-function renderOspTracker() {
-  const container = document.getElementById("ospTrackerContainer");
-  if (!container || !OIL_DATA.tradingDesk) return;
-
-  container.innerHTML = `
-    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;">
-      ${OIL_DATA.tradingDesk.ospTracker.map(noc => `
-        <div style="background:#ffffff; border:1px solid var(--border-subtle); border-radius:8px; padding:16px; box-shadow:var(--shadow-ft-card);">
-          <div style="font-family:var(--font-serif); font-size:18px; font-weight:800; color:#111827;">${noc.noc}</div>
-          <div style="font-family:var(--font-mono); font-size:11px; color:#6B7280; margin-bottom:12px;">Pricing Basis: ${noc.anchor}</div>
-          <table style="width:100%; font-family:var(--font-mono); font-size:11px; border-collapse:collapse;">
-            <thead>
-              <tr style="border-bottom:1px solid var(--border-subtle); color:#6B7280; text-align:left;">
-                <th style="padding:4px 0;">Grade</th>
-                <th style="padding:4px 0;">OSP Diff</th>
-                <th style="padding:4px 0;">MoM</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${noc.differentials.map(d => `
-                <tr style="border-bottom:1px solid #f3f0e6;">
-                  <td style="padding:6px 0; font-weight:700; color:#111827;">${d.grade}</td>
-                  <td style="padding:6px 0; color:var(--color-me-gold);">${d.diff}</td>
-                  <td style="padding:6px 0; color:${d.trend === 'up' ? '#059669' : d.trend === 'down' ? '#dc2626' : '#6B7280'};">${d.chg}</td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
-        </div>
-      `).join("")}
-    </div>
-  `;
-}
-
-// Chapter 10: How Refineries Choose Crude (7 Selection Pillars)
-function renderChapter10Visual() {
-  return `
-    <div class="seven-pillars-grid" id="sevenPillarsGrid" style="margin-bottom:28px;"></div>
-
-    <!-- 3 Blocs vs 4 Buyers Final Showdown Table -->
-    <div class="section-block">
-      <div class="section-header">
-        <div>
-          <div class="section-tag">COMPETITIVE MATRIX</div>
-          <h3 class="section-title">Middle East vs Russia vs Atlantic Basin: Sourcing Strategy</h3>
-          <div class="section-subtitle">How China, India, Japan, and South Korea divide their refinery diets</div>
-        </div>
-      </div>
-      <div class="section-body" style="overflow-x:auto;">
-        <table class="exec-table">
-          <thead>
-            <tr>
-              <th style="color:#111827;">ASIAN BUYER</th>
-              <th style="color:var(--color-me-gold);">MIDDLE EAST STRATEGY</th>
-              <th style="color:var(--color-russia-red);">RUSSIA STRATEGY</th>
-              <th style="color:var(--color-atlantic-marine);">ATLANTIC BASIN STRATEGY</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong style="color:#111827;">CHINA 🇨🇳</strong> (11.5 Mb/d)</td>
-              <td>Term baseload (44%) with Aramco &amp; ADNOC; primary chemical feed for mega-plants.</td>
-              <td>Massive buyer (21%): ESPO Pacific shuttle (2.8 days) &amp; discounted Urals for teapots.</td>
-              <td>Opportunistic: Takes US WTI Midland &amp; Brazilian Tupi when EFS narrows.</td>
-            </tr>
-            <tr>
-              <td><strong style="color:#111827;">INDIA 🇮🇳</strong> (4.9 Mb/d)</td>
-              <td>Displaced incumbent: Dropped from 65% to 44% market share post-2022.</td>
-              <td>Primary beneficiary: Imports 1.9 Mb/d of discounted Urals into Jamnagar &amp; Vadinar.</td>
-              <td>Minimal intake (~6%): Long distance freight penalty limits Atlantic imports.</td>
-            </tr>
-            <tr>
-              <td><strong style="color:#111827;">JAPAN 🇯🇵</strong> (2.5 Mb/d)</td>
-              <td>Near-total dependency (95.2%): Long-term sovereign supply security contracts.</td>
-              <td>Zero direct imports: Strict alignment with G7 sanctions and Western compliance.</td>
-              <td>Niche intake (2.8%): Light sweet WTI for high-spec domestic clean fuel blending.</td>
-            </tr>
-            <tr>
-              <td><strong style="color:#111827;">SOUTH KOREA 🇰🇷</strong> (3.0 Mb/d)</td>
-              <td>Strong foundation (67%): Saudi Aramco owns major share of S-Oil Onsan refinery.</td>
-              <td>Zero seaborne imports: Replaced Russian barrels entirely with US &amp; Middle East crude.</td>
-              <td>Major swing buyer (18%): Zero tariff under KORUS FTA makes US WTI Midland a baseload staple.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-function initSevenPillars() {
-  const container = document.getElementById("sevenPillarsGrid");
-  if (!container || !OIL_DATA.sevenPillars) return;
-
-  container.innerHTML = OIL_DATA.sevenPillars.map(p => `
-    <div class="pillar-card">
-      <div class="pillar-icon">${p.icon}</div>
-      <div class="pillar-title">${p.name}</div>
-      <div class="pillar-desc">${p.desc}</div>
-      <div class="pillar-impact">
-        <strong style="color:var(--color-ft-claret);">Trading Impact:</strong> ${p.commercialImpact}
-      </div>
-    </div>
-  `).join("");
-}
-
-// Chapter 11: Real-World Shocks & Sanctions
-function renderChapter11Visual() {
-  return `
-    <div class="section-block">
-      <div class="section-header">
-        <div>
-          <div class="section-tag">GEOPOLITICAL STRESS TESTS</div>
-          <h3 class="section-title">5 Shockwaves That Redrew the Global Oil Map</h3>
-          <div class="section-subtitle">Click a case study to see how trade flows and refining margins responded</div>
-        </div>
-      </div>
-      <div class="section-body">
-        <div class="case-study-nav" id="casePillsContainer" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
-          <button class="case-pill active" onclick="loadCaseStudy(0)">1. Iran Sanctions &amp; Shadow Fleet</button>
-          <button class="case-pill" onclick="loadCaseStudy(1)">2. Ukraine War &amp; Russian Redirection</button>
-          <button class="case-pill" onclick="loadCaseStudy(2)">3. Red Sea &amp; Bab el-Mandeb Strikes</button>
-          <button class="case-pill" onclick="loadCaseStudy(3)">4. OPEC+ Voluntary Production Cuts</button>
-          <button class="case-pill" onclick="loadCaseStudy(4)">5. Strait of Hormuz Tensions</button>
-        </div>
-
-        <div class="case-display-box" id="caseDisplayBox"></div>
-      </div>
-    </div>
-  `;
-}
-
-const CASE_STUDIES = [
-  {
-    title: "1. Iran Sanctions & Shadow Fleet Hub",
-    summary: "Dark-fleet VLCCs conduct STS transfers off Malaysia, delivering Iranian barrels to Chinese teapot refiners rebranded as 'Malaysian blend'.",
-    intel: [
-      "Volume: ~1.2–1.5 Mb/d entering China via STS.",
-      "Discount: -$8 to -$12/bbl vs Dated Brent.",
-      "Market Impact: Competes directly against Basrah & Arab Heavy, pressuring Gulf OSPs."
-    ]
-  },
-  {
-    title: "2. Ukraine War & Russian Redirection to Asia",
-    summary: "Post-sanctions, Russia redirected 3.5+ Mb/d of Urals and ESPO to India and China at steep discounts.",
-    intel: [
-      "Displaced Volume: 1.8+ Mb/d of Middle East crude displaced from Indian refineries.",
-      "Refining Margins: Reliance Jamnagar earned record margins processing discounted Urals.",
-      "Payment Shift: >60% settled in non-USD currencies (AED, CNY, RUB)."
-    ]
-  },
-  {
-    title: "3. Red Sea / Bab el-Mandeb Strikes & Cape Rerouting",
-    summary: "Houthi missile attacks forced tankers around the Cape of Good Hope, bypassing the Suez Canal.",
-    intel: [
-      "Voyage Penalty: +10–14 days and +3,500 nm transit.",
-      "Cost Impact: +$1.0M–$1.4M in bunker fuel & spiked war-risk insurance.",
-      "Market Impact: Raised landed costs for Atlantic/Russian crude, favoring Gulf barrels."
-    ]
-  },
-  {
-    title: "4. OPEC+ Voluntary Cuts on Heavy Sour Crude",
-    summary: "OPEC+ cuts targeted medium/heavy sour grades, sharply narrowing the sweet-sour differential.",
-    intel: [
-      "Spread Compression: Light-heavy differential collapsed to historic lows.",
-      "Teapot Impact: Independent refiners faced tight margins on high-sulfur feedstock.",
-      "Arb Window: Opened space for US WTI Midland exports into South Korea and China."
-    ]
-  },
-  {
-    title: "5. Strait of Hormuz Risks & Strategic Petroleum Stocks",
-    summary: "Asia relies on Hormuz for 82% of its crude imports, requiring massive strategic petroleum reserves.",
-    intel: [
-      "Asian Exposure: 82% of Hormuz crude flows to Asian buyers.",
-      "Strategic Buffer: Japan & Korea hold 100–140 days import cover.",
-      "Pipeline Limit: Bypasses take only 6.8 Mb/d, leaving ~14 Mb/d trapped if blocked."
-    ]
-  }
-];
-
-function loadCaseStudy(idx) {
-  STATE.activeCaseStudyIdx = idx;
-  const cs = CASE_STUDIES[idx];
-  const box = document.getElementById("caseDisplayBox");
-  if (!box) return;
-
-  document.querySelectorAll("#casePillsContainer .case-pill").forEach((btn, i) => {
-    if (i === idx) btn.classList.add("active");
-    else btn.classList.remove("active");
-  });
-
-  box.innerHTML = `
-    <h3 style="font-family:var(--font-serif); font-size:22px; font-weight:800; color:#111827; margin-bottom:8px;">${cs.title}</h3>
-    <p style="font-size:14px; color:#374151; line-height:1.6; margin-bottom:16px;">${cs.summary}</p>
-    <div style="background:var(--bg-surface-subtle); border-left:4px solid var(--color-ft-claret); padding:16px 20px; border-radius:0 8px 8px 0; border-top:1px solid var(--border-subtle); border-right:1px solid var(--border-subtle); border-bottom:1px solid var(--border-subtle);">
-      <div style="font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--color-ft-claret); text-transform:uppercase; margin-bottom:6px;">
-        COMMERCIAL MARKET INTELLIGENCE:
-      </div>
-      <ul style="font-size:13px; color:#374151; padding-left:18px; margin:0;">
-        ${cs.intel.map(item => `<li style="margin-bottom:4px;">${item}</li>`).join("")}
-      </ul>
-    </div>
-  `;
-}
-
 // Chapter 08: Interactive Crude Choice Simulator (7 Crudes x 4 Buyers)
-function renderChapter12Visual() {
+function renderChapter8Visual() {
   return `
     <!-- Dynamic Winner Recommendation Banner -->
     <div class="winner-banner" id="calcWinnerBanner">
@@ -5045,6 +4759,9 @@ function voteChapter11(optionKey) {
   }
 }
 
+window.renderChapter8Visual = renderChapter8Visual;
+window.renderChapter9Visual = renderChapter9Visual;
+window.renderChapter10Visual = renderChapter10Visual;
 window.renderChapter11Visual = renderChapter11Visual;
 window.initChapter11Visual = initChapter11Visual;
 window.selectChapter11Route = selectChapter11Route;

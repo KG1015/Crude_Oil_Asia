@@ -815,9 +815,23 @@
   let globeRenderer = null;
   let globeEarthGroup = null;
   let globeAnimId = null;
+  let globeInitialized = false;
   let globeTargetRotY = -1.42; // Centered on Persian Gulf / Indian Ocean / Asia
   let globeTargetRotX = 0.36;
   let globeTargetZoomZ = 215;
+
+  function handleGlobeResize() {
+    const container = document.getElementById("threeGlobeContainer");
+    if (!container || !globeRenderer || !globeCamera) return;
+    const w = container.clientWidth || 580;
+    const h = container.clientHeight || 470;
+    if (w > 0 && h > 0) {
+      globeCamera.aspect = w / h;
+      globeCamera.updateProjectionMatrix();
+      globeRenderer.setSize(w, h);
+    }
+  }
+  window.addEventListener("resize", handleGlobeResize);
 
   function latLngToVector3(lat, lng, radius) {
     const phi = (90 - lat) * (Math.PI / 180);
@@ -847,6 +861,15 @@
   function initMapLibreHeroGlobe() {
     const container = document.getElementById("threeGlobeContainer");
     if (!container || typeof THREE === "undefined") return false;
+
+    // If already mounted and rendered, simply resize and keep loop running
+    if (globeInitialized && globeRenderer && globeRenderer.domElement && container.contains(globeRenderer.domElement)) {
+      handleGlobeResize();
+      if (!isGlobeOrbiting) {
+        setGlobeRotating(true);
+      }
+      return true;
+    }
 
     try {
       if (globeAnimId) cancelAnimationFrame(globeAnimId);
@@ -1114,6 +1137,7 @@
       }
 
       syncGlobeOrbitUi();
+      globeInitialized = true;
       globeAnimId = requestAnimationFrame(animate3DGlobe);
       return true;
     } catch (err) {
@@ -1165,12 +1189,23 @@
     isGlobeOrbiting = (preset === "overview");
     if (window.STATE) window.STATE.globeRotating = isGlobeOrbiting;
     syncGlobeOrbitUi();
+
+    // Toggle active state across hero pills & in-canvas HUD buttons
+    document.querySelectorAll(".hero-action-pills .map-pill-btn, .maritime-hud-controls .maritime-hud-btn").forEach(btn => {
+      const onclickAttr = btn.getAttribute("onclick") || "";
+      if (onclickAttr.includes(`'${preset}'`)) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
   }
 
   window.MARITIME_ENGINE = {
     DEEP_WATER_CORRIDORS,
     AIS_LIVE_FLEET,
     initMapLibreHeroGlobe,
+    resizeHeroGlobe: handleGlobeResize,
     flyHeroGlobe,
     setGlobeRotating,
     enhanceLeafletMapInstance,
