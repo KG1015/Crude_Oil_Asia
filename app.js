@@ -445,21 +445,21 @@ function handleRoute() {
 
   if (hash.startsWith("#/chapter/")) {
     let chapterId = parseInt(hash.replace("#/chapter/", ""), 10);
-    if (!isNaN(chapterId) && chapterId >= 1 && chapterId <= 11) {
+    if (!isNaN(chapterId) && chapterId >= 1 && chapterId <= 10) {
       showChapterView(chapterId);
       return;
     }
-  } else if (hash === "#/journey") {
-    showChapterView(9); // Chapter 9: The Journey of One Barrel
-    return;
   } else if (hash === "#/simulator") {
     showChapterView(8); // Chapter 8: 7-Crude Delivered Cost Calculator
     return;
   } else if (hash === "#/wargame" || hash === "#/shock" || hash === "#/crisis") {
-    showChapterView(10); // Chapter 10: Supply Shock War Game
+    showChapterView(9); // Chapter 9: Crisis War Game (Supply Shocks)
     return;
   } else if (hash === "#/future" || hash === "#/futureroutes" || hash === "#/routes") {
-    showChapterView(11); // Chapter 11: Future Oil Routes
+    showChapterView(10); // Chapter 10: Future Oil Routes & Bottleneck Bypasses
+    return;
+  } else if (hash === "#/journey") {
+    showChapterView(1); // Redirect legacy journey hash to Chapter 1
     return;
   }
 
@@ -507,24 +507,21 @@ function showChapterView(chapterId) {
 
 function updateNavActiveState(activeKey) {
   const navHome = document.getElementById("navLinkHome");
-  const navJourney = document.getElementById("navLinkJourney");
   const navSim = document.getElementById("navLinkSimulator");
   const navWarGame = document.getElementById("navLinkWarGame");
   const navFuture = document.getElementById("navLinkFutureRoutes");
   const navChapters = document.getElementById("navBtnChapters");
 
-  [navHome, navJourney, navSim, navWarGame, navFuture, navChapters].forEach(el => {
+  [navHome, navSim, navWarGame, navFuture, navChapters].forEach(el => {
     if (el) el.classList.remove("active");
   });
 
   if (activeKey === "home" && navHome) {
     navHome.classList.add("active");
-  } else if (activeKey === "chapter-11" && navFuture) {
+  } else if (activeKey === "chapter-10" && navFuture) {
     navFuture.classList.add("active");
-  } else if (activeKey === "chapter-10" && navWarGame) {
+  } else if (activeKey === "chapter-9" && navWarGame) {
     navWarGame.classList.add("active");
-  } else if (activeKey === "chapter-9" && navJourney) {
-    navJourney.classList.add("active");
   } else if (activeKey === "chapter-8" && navSim) {
     navSim.classList.add("active");
   } else if (navChapters) {
@@ -654,7 +651,7 @@ function renderChapterContent(chapterId) {
     <div class="chapter-visual-wrapper">
   `;
 
-  // Inject Chapter-Specific Visual Blocks (Chapters 1 to 9)
+  // Inject Chapter-Specific Visual Blocks (Chapters 1 to 10)
   if (chapterId === 1) {
     html += renderChapter1Visual();
   } else if (chapterId === 2) {
@@ -672,29 +669,9 @@ function renderChapterContent(chapterId) {
   } else if (chapterId === 8) {
     html += renderChapter8Visual(); // Chapter 08: 7-Crude Delivered Cost Calculator
   } else if (chapterId === 9) {
-    html += renderChapter9Visual();  // Chapter 09: The Journey of One Barrel
+    html += renderChapter10Visual(); // Chapter 09: What Happens If A Major Supplier Disappears? (Crisis War Game)
   } else if (chapterId === 10) {
-    html += renderChapter10Visual(); // Chapter 10: What Happens If A Major Supplier Disappears?
-  } else if (chapterId === 11) {
-    html += renderChapter11Visual(); // Chapter 11: Future Oil Routes & Bottleneck Bypasses
-  }
-
-  // Inject Universal Maritime Intelligence Map for Chapter 9 only
-  if (chapterId === 9) {
-    html += `
-      <div class="section-block" style="margin-top:24px;">
-        <div class="section-header">
-          <div>
-            <div class="section-tag">KPLER / VORTEXA MARITIME INTELLIGENCE TERMINAL // FINAL CHAPTER</div>
-            <h3 class="section-title">Live AIS Tanker Telemetry, Nautical Seamarks &amp; Deep-Water Corridors</h3>
-            <div class="section-subtitle">Switch imagery or select vessels to inspect live AIS position and cargo manifest.</div>
-          </div>
-        </div>
-        <div class="section-body">
-          <div id="chapterUniversalMaritimeMap_${chapterId}" style="width:100%; height:460px; border-radius:10px; border:1.5px solid #0f172a;"></div>
-        </div>
-      </div>
-    `;
+    html += renderChapter11Visual(); // Chapter 10: Future Oil Routes & Bottleneck Bypasses
   }
 
   // Bottom Chapter Navigation Bar (← Previous Chapter | Selector | Next Chapter →)
@@ -751,7 +728,6 @@ function renderChapterContent(chapterId) {
       initChapter2DemandMap();
     } else if (chapterId === 3) {
       updateOspVisualizer();
-      initChapter3FreightMap();
     } else if (chapterId === 4) {
       initChapter4Simulator();
     } else if (chapterId === 5) {
@@ -764,15 +740,9 @@ function renderChapterContent(chapterId) {
     } else if (chapterId === 8) {
       initArbitrageCalculator(); // Chapter 08: 7-Crude Delivered Cost Calculator
     } else if (chapterId === 9) {
-      initJourneyOfOneBarrel();  // Chapter 09: The Journey of One Barrel
+      initChapter10Simulator();  // Chapter 09: What Happens If A Major Supplier Disappears? (Crisis War Game)
     } else if (chapterId === 10) {
-      initChapter10Simulator();  // Chapter 10: What Happens If A Major Supplier Disappears?
-    } else if (chapterId === 11) {
-      initChapter11Visual();     // Chapter 11: Future Oil Routes & Bottleneck Bypasses
-    }
-
-    if (chapterId === 9) {
-      initChapter9UniversalMap();
+      initChapter11Visual();     // Chapter 10: Future Oil Routes & Bottleneck Bypasses
     }
   }, 60);
 }
@@ -1314,24 +1284,8 @@ function renderChapter3Visual() {
       </div>
       <div class="section-body">
         <!-- 3 Vessel Blueprint Cards -->
-        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin-bottom:24px;">
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px;">
           ${vesselsHtml}
-        </div>
-
-        <!-- Interactive Vessel Class Route Map -->
-        <div style="border-top:1px solid #cbd5e1; padding-top:20px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <div>
-              <h4 style="font-family:var(--font-serif); font-size:20px; font-weight:800; color:#0f172a;">Interactive Tanker Class Route Map</h4>
-              <p style="font-size:13px; color:#1e293b;">Click a vessel class to see where VLCCs, Suezmaxes, and Aframaxes sail in the Asian crude trade</p>
-            </div>
-            <div style="display:flex; gap:8px;">
-              <button class="map-pill-btn active" onclick="switchChapter3VesselRoute('vlcc')">🚢 VLCC Route (Ras Tanura → China 2M bbls)</button>
-              <button class="map-pill-btn" onclick="switchChapter3VesselRoute('suezmax')">⚓ Suezmax Route (Russia → Suez → India 1M bbls)</button>
-              <button class="map-pill-btn" onclick="switchChapter3VesselRoute('aframax')">🚤 Aframax Shuttle (Kozmino → China 700k bbls)</button>
-            </div>
-          </div>
-          <div id="chapter3FreightMap" style="width:100%; height:420px; border-radius:10px; border:1.5px solid #cbd5e1;"></div>
         </div>
       </div>
     </div>
@@ -1971,23 +1925,62 @@ function initChapter1EcosystemMap() {
   ch1VesselAnimators.push(animOman);
 }
 
+let ch1ActivePulseMarker = null;
+
 function zoomChapter1Map(viewMode) {
   if (!ch1Map) return;
+  document.querySelectorAll("#viewChapter .map-pill-btn").forEach(b => {
+    const fn = b.getAttribute("onclick") || "";
+    if (fn.includes(`'${viewMode}'`)) b.classList.add("active");
+    else if (fn.includes("zoomChapter1Map")) b.classList.remove("active");
+  });
+
+  if (ch1ActivePulseMarker && ch1RouteLayers) {
+    ch1RouteLayers.removeLayer(ch1ActivePulseMarker);
+    ch1ActivePulseMarker = null;
+  }
+
   if (viewMode === "gulf") {
-    ch1Map.flyTo([25.6, 53.5], 6, { duration: 1.2 });
+    ch1Map.flyTo([25.6, 53.5], 6, { duration: 1.1 });
   } else if (viewMode === "oman_fujairah") {
-    ch1Map.flyTo([24.2, 57.5], 7, { duration: 1.2 });
+    ch1Map.flyTo([24.2, 57.5], 7, { duration: 1.1 });
   } else {
-    ch1Map.flyTo([18.0, 86.0], 4, { duration: 1.2 });
+    ch1Map.flyTo([18.0, 86.0], 4, { duration: 1.1 });
   }
 }
 
 function focusGradeOnChapter1Map(gradeId) {
-  if (!ch1Map || !ch1Markers[gradeId]) return;
+  const mapEl = document.getElementById("chapter1EcoMap");
+  if (mapEl) {
+    mapEl.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  if (!ch1Map) {
+    initChapter1EcosystemMap();
+  }
+  if (!ch1Map) return;
+  ch1Map.invalidateSize();
+
   const m = ch1Markers[gradeId];
+  const g = OIL_DATA.dubaiOmanEcosystem.nineMiddleEastGrades.find(x => x.id === gradeId);
+  if (!m || !g) return;
+
   ch1Map.flyTo(m.getLatLng(), 7, { duration: 1.0 });
   m.openPopup();
-  document.getElementById("chapter1EcoMap")?.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  if (ch1ActivePulseMarker && ch1RouteLayers) {
+    ch1RouteLayers.removeLayer(ch1ActivePulseMarker);
+    ch1ActivePulseMarker = null;
+  }
+
+  ch1ActivePulseMarker = L.circleMarker(m.getLatLng(), {
+    radius: 20,
+    color: "#f59e0b",
+    weight: 3,
+    dashArray: "4, 4",
+    fillColor: "#f59e0b",
+    fillOpacity: 0.25,
+    className: "pulse-pipeline"
+  }).addTo(ch1RouteLayers);
 }
 
 // --- CHAPTER 2: ASIAN CRUDE DEMAND & REFINERIES MAP ---
@@ -2115,28 +2108,84 @@ function initChapter2DemandMap() {
   });
 }
 
+let ch2ActivePulseMarker = null;
+
 function filterChapter2Map(countryFilter) {
   if (!ch2Map) return;
-  if (countryFilter === "China") ch2Map.flyTo([33.0, 120.5], 5, { duration: 1.1 });
-  else if (countryFilter === "India") ch2Map.flyTo([21.5, 76.0], 5, { duration: 1.1 });
-  else if (countryFilter === "Japan") ch2Map.flyTo([35.2, 137.5], 6, { duration: 1.1 });
-  else if (countryFilter === "South Korea") ch2Map.flyTo([35.3, 128.2], 7, { duration: 1.1 });
-  else ch2Map.flyTo([26.0, 105.0], 4, { duration: 1.1 });
+  document.querySelectorAll("#viewChapter .map-pill-btn").forEach(b => {
+    const fn = b.getAttribute("onclick") || "";
+    if (fn.includes(`'${countryFilter}'`)) b.classList.add("active");
+    else if (fn.includes("filterChapter2Map")) b.classList.remove("active");
+  });
+
+  if (ch2ActivePulseMarker && ch2RouteLayers) {
+    ch2RouteLayers.removeLayer(ch2ActivePulseMarker);
+    ch2ActivePulseMarker = null;
+  }
+
+  if (countryFilter === "China") {
+    ch2Map.flyTo([32.0, 118.0], 5, { duration: 1.1 });
+    const zpc = ch2RefMarkers["zhoushan_zpc"] || ch2RefMarkers["china_zpc"];
+    if (zpc) zpc.openPopup();
+  } else if (countryFilter === "India") {
+    ch2Map.flyTo([21.5, 76.0], 5, { duration: 1.1 });
+    const jamnagar = ch2RefMarkers["jamnagar"] || ch2RefMarkers["india_reliance"];
+    if (jamnagar) jamnagar.openPopup();
+  } else if (countryFilter === "Japan") {
+    ch2Map.flyTo([35.5, 138.0], 6, { duration: 1.1 });
+    const eneos = ch2RefMarkers["eneos_negishi"] || ch2RefMarkers["japan_eneos"];
+    if (eneos) eneos.openPopup();
+  } else if (countryFilter === "South Korea") {
+    ch2Map.flyTo([35.8, 128.5], 6.5, { duration: 1.1 });
+    const ulsan = ch2RefMarkers["sk_ulsan"] || ch2RefMarkers["sk_energy_ulsan"];
+    if (ulsan) ulsan.openPopup();
+  } else {
+    ch2Map.flyTo([23.0, 88.0], 3.8, { duration: 1.1 });
+  }
 }
 
 function focusRefineryOnChapter2Map(refId) {
-  if (!ch2Map || !ch2RefMarkers[refId]) return;
-  const m = ch2RefMarkers[refId];
+  const mapEl = document.getElementById("chapter2DemandMap");
+  if (mapEl) {
+    mapEl.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  if (!ch2Map) {
+    initChapter2DemandMap();
+  }
+  if (!ch2Map) return;
+  ch2Map.invalidateSize();
+
+  let targetId = refId;
+  if (refId === "india_reliance") targetId = "jamnagar";
+  if (refId === "china_zpc") targetId = "zhoushan_zpc";
+  if (refId === "japan_eneos") targetId = "eneos_negishi";
+  if (refId === "sk_energy_ulsan") targetId = "sk_ulsan";
+
+  const m = ch2RefMarkers[targetId] || ch2RefMarkers[refId];
+  const r = OIL_DATA.asianRefineriesList.find(x => x.id === targetId || x.id === refId);
+  if (!m || !r) return;
+
   ch2Map.flyTo(m.getLatLng(), 7, { duration: 1.0 });
   m.openPopup();
-  document.getElementById("chapter2DemandMap")?.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  if (ch2ActivePulseMarker && ch2RouteLayers) {
+    ch2RouteLayers.removeLayer(ch2ActivePulseMarker);
+    ch2ActivePulseMarker = null;
+  }
+
+  ch2ActivePulseMarker = L.circleMarker(m.getLatLng(), {
+    radius: 22,
+    color: "#38bdf8",
+    weight: 3,
+    dashArray: "4, 4",
+    fillColor: "#38bdf8",
+    fillOpacity: 0.25,
+    className: "pulse-pipeline"
+  }).addTo(ch2RouteLayers);
 }
 
-// --- CHAPTER 3: OSP INTERACTIVE VISUALIZER & VESSEL CLASS ROUTE MAP ---
+// --- CHAPTER 3: OSP INTERACTIVE FORMULA VISUALIZER ---
 let currentOspGrade = "Arab Light";
-let ch3Map = null;
-let ch3RouteLayer = null;
-let ch3VesselAnimator = null;
 
 function setOspPreset(gradeName, basePrice, ospDiff, clickedBtn) {
   currentOspGrade = gradeName;
@@ -2224,86 +2273,6 @@ function updateOspVisualizer() {
       </div>
     `;
   }
-}
-
-function initChapter3FreightMap() {
-  const el = document.getElementById("chapter3FreightMap");
-  if (!el || typeof L === "undefined") return;
-
-  if (ch3Map) {
-    ch3Map.remove();
-    ch3Map = null;
-  }
-  if (ch3VesselAnimator) {
-    ch3VesselAnimator.destroy();
-    ch3VesselAnimator = null;
-  }
-
-  const mapObj = createStandardChapterMap("chapter3FreightMap", { center: [20.0, 82.0], zoom: 3.5 });
-  if (!mapObj) return;
-  ch3Map = mapObj.map;
-
-  switchChapter3VesselRoute("vlcc");
-}
-
-function switchChapter3VesselRoute(vesselId) {
-  if (!ch3Map) return;
-  if (ch3RouteLayer) ch3Map.removeLayer(ch3RouteLayer);
-  if (ch3VesselAnimator) {
-    ch3VesselAnimator.destroy();
-    ch3VesselAnimator = null;
-  }
-
-  ch3RouteLayer = L.layerGroup().addTo(ch3Map);
-
-  const routes = {
-    vlcc: {
-      coords: [[26.64, 50.16], [26.2, 53.0], [26.56, 56.45], [24.5, 58.5], [16.0, 66.0], [6.0, 80.5], [5.9, 95.0], [1.25, 103.85], [14.0, 114.5], [29.95, 121.72]],
-      color: "#d97706",
-      center: [18.0, 88.0],
-      zoom: 4,
-      title: "VLCC Supertanker Corridor (Ras Tanura → Hormuz → Malacca → Ningbo China | 2,000,000 bbls | $2.15/bbl)"
-    },
-    suezmax: {
-      coords: [[44.72, 37.77], [41.0, 29.0], [36.5, 26.0], [31.2, 32.3], [27.5, 34.0], [12.6, 43.3], [12.0, 52.0], [22.36, 69.85]],
-      color: "#0284c7",
-      center: [26.0, 48.0],
-      zoom: 4,
-      title: "Suezmax Canal Route (Russian Black Sea → Suez Canal → Red Sea → Jamnagar India | 1,000,000 bbls | $4.20/bbl)"
-    },
-    aframax: {
-      coords: [[42.73, 133.00], [38.5, 130.5], [34.5, 128.0], [36.06, 120.38]],
-      color: "#059669",
-      center: [38.5, 126.5],
-      zoom: 5,
-      title: "Aframax Pacific Shuttle (Kozmino Port Russia → Qingdao Shandong China | 700,000 bbls | 3-Day Voyage | $1.15/bbl)"
-    }
-  };
-
-  const r = routes[vesselId] || routes.vlcc;
-  const smoothCoords = generateSmoothMaritimeSpline(r.coords, 20);
-
-  L.polyline(smoothCoords, { color: r.color, weight: 5, className: "leaflet-ant-flow maritime-smooth-line" })
-    .addTo(ch3RouteLayer)
-    .bindPopup(`<strong>${r.title}</strong>`)
-    .openPopup();
-
-  L.circleMarker(r.coords[0], { radius: 8, fillColor: r.color, color: "#0f172a", weight: 2, fillOpacity: 1 })
-    .addTo(ch3RouteLayer)
-    .bindTooltip("Loading Export Terminal", { permanent: true });
-
-  L.circleMarker(r.coords[r.coords.length - 1], { radius: 8, fillColor: "#990000", color: "#0f172a", weight: 2, fillOpacity: 1 })
-    .addTo(ch3RouteLayer)
-    .bindTooltip("Asian Receiving Refinery", { permanent: true });
-
-  ch3VesselAnimator = new SmoothMaritimeVesselAnimator(ch3Map, ch3RouteLayer, {
-    color: r.color,
-    speedScale: 0.000035,
-    tooltip: r.title
-  });
-  ch3VesselAnimator.setRoute(r.coords, r.color);
-
-  ch3Map.flyTo(r.center, r.zoom, { duration: 1.0 });
 }
 
 // --- CHAPTER 4: REFINERY PREFERENCE SIMULATOR & ANIMATED ROUTE MAP ---
@@ -2634,13 +2603,8 @@ function initChapter5AtlanticRussiaMap() {
   filterChapter5Map("all");
 }
 
-function filterChapter5Map(mode) {
-  if (!ch5Map || !ch5LayerGroup) return;
-  ch5VesselAnimators.forEach(a => a.destroy());
-  ch5VesselAnimators = [];
-  ch5LayerGroup.clearLayers();
-
-  const allRoutes = [
+function getChapter5RoutesData() {
+  return [
     { 
       id: "wti_midland", 
       name: "US WTI Midland (Corpus Christi Texas → Cape of Good Hope → Korea/China)", 
@@ -2687,6 +2651,21 @@ function filterChapter5Map(mode) {
       speed: 0.000045
     }
   ];
+}
+
+function filterChapter5Map(mode) {
+  if (!ch5Map || !ch5LayerGroup) return;
+  document.querySelectorAll("#viewChapter .map-pill-btn").forEach(b => {
+    const fn = b.getAttribute("onclick") || "";
+    if (fn.includes(`'all'`)) b.classList.add("active");
+    else if (fn.includes("focusChapter5Grade") || fn.includes("filterChapter5Map")) b.classList.remove("active");
+  });
+
+  ch5VesselAnimators.forEach(a => a.destroy());
+  ch5VesselAnimators = [];
+  ch5LayerGroup.clearLayers();
+
+  const allRoutes = getChapter5RoutesData();
 
   allRoutes.forEach(r => {
     const smoothCoords = generateSmoothMaritimeSpline(r.coords, 20);
@@ -2711,21 +2690,150 @@ function filterChapter5Map(mode) {
 }
 
 function focusChapter5Grade(gradeId) {
+  const mapEl = document.getElementById("chapter5GlobalMap");
+  if (mapEl) {
+    mapEl.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  if (!ch5Map) {
+    initChapter5AtlanticRussiaMap();
+  }
   if (!ch5Map) return;
-  const targets = {
-    wti_midland: { center: [10.0, -25.0], zoom: 3 },
-    brent_forties: { center: [57.0, 2.0], zoom: 5 },
-    johan_sverdrup: { center: [60.8, 5.0], zoom: 5 },
-    waf_nigeria_angola: { center: [-2.0, 10.0], zoom: 4 },
-    urals: { center: [40.0, 35.0], zoom: 3 },
-    espo: { center: [39.5, 126.5], zoom: 5 },
-    sokol: { center: [48.0, 138.0], zoom: 5 }
-  };
-  const t = targets[gradeId] || { center: [22.0, 45.0], zoom: 2.2 };
-  ch5Map.flyTo(t.center, t.zoom, { duration: 1.1 });
-  document.getElementById("chapter5GlobalMap")?.scrollIntoView({ behavior: "smooth", block: "center" });
-}
+  ch5Map.invalidateSize();
 
+  let routeKey = gradeId;
+  if (gradeId === "johan_sverdrup") routeKey = "brent_forties";
+  if (gradeId === "sokol") routeKey = "espo";
+  if (gradeId === "bonny_light" || gradeId === "nemba") routeKey = "waf_nigeria_angola";
+
+  document.querySelectorAll("#viewChapter .map-pill-btn").forEach(b => {
+    const fn = b.getAttribute("onclick") || "";
+    if (fn.includes(`'${routeKey}'`) || fn.includes(`'${gradeId}'`)) b.classList.add("active");
+    else if (fn.includes("focusChapter5Grade") || fn.includes("filterChapter5Map")) b.classList.remove("active");
+  });
+
+  const routeDetails = {
+    wti_midland: {
+      name: "🇺🇸 US WTI Midland (Permian Basin)",
+      port: "Corpus Christi & Houston, Texas (Gulf of Mexico)",
+      api: "40.5° (Light Sweet)",
+      sulfur: "0.20% (Ultra-Low Sulfur)",
+      distance: "15,200 nm (Cape of Good Hope)",
+      days: "44–48 days via VLCC",
+      freight: "$4.80–$5.20 / bbl",
+      dest: "Yeosu & Ulsan (South Korea), Ningbo (China)",
+      center: [15.0, 30.0],
+      zoom: 2.3
+    },
+    brent_forties: {
+      name: "🇬🇧🇳🇴 North Sea Brent, Forties & Johan Sverdrup",
+      port: "Hound Point (Scotland) & Mongstad (Norway)",
+      api: "38.0°–28.0° (Sweet & Medium Heavy)",
+      sulfur: "0.40%–0.80% (Low Sulfur)",
+      distance: "8,500 nm via Suez Canal",
+      days: "28–32 days via Suezmax",
+      freight: "$3.90–$4.40 / bbl",
+      dest: "Qingdao & Huizhou (China), Jamnagar (India)",
+      center: [32.0, 50.0],
+      zoom: 3.0
+    },
+    waf_nigeria_angola: {
+      name: "🇳🇬🇦🇴 West Africa Sweet (Bonny Light & Cabinda)",
+      port: "Bonny Terminal (Nigeria) & Malongo (Angola)",
+      api: "35.3°–32.0° (Light Sweet)",
+      sulfur: "0.15%–0.30% (Wax-rich, low sulfur)",
+      distance: "11,200 nm (Cape of Good Hope)",
+      days: "35–38 days via VLCC",
+      freight: "$4.10–$4.60 / bbl",
+      dest: "Shandong Independent Refineries & Reliance India",
+      center: [-2.0, 60.0],
+      zoom: 2.5
+    },
+    urals: {
+      name: "🇷🇺 Russian Urals (Suez Pivot to India)",
+      port: "Primorsk (Baltic Sea) & Novorossiysk (Black Sea)",
+      api: "31.5° (Medium Sour)",
+      sulfur: "1.44% (Sour benchmark)",
+      distance: "7,800 nm via Suez Canal",
+      days: "26–30 days via Aframax / Suezmax",
+      freight: "$6.50–$8.50 / bbl (Shadow tanker freight)",
+      dest: "Jamnagar & Vadinar (Gujarat, India)",
+      center: [35.0, 50.0],
+      zoom: 3.0
+    },
+    espo: {
+      name: "🇷🇺 Russian ESPO & Sokol Pacific Express",
+      port: "Kozmino Pacific Port (ESPO) & De-Kastri (Sokol)",
+      api: "34.8°–37.7° (Sweet Asian favorite)",
+      sulfur: "0.55%–0.25% (Low sulfur)",
+      distance: "1,100 nm (Sea of Japan)",
+      days: "3.0–3.5 days fast shuttle via Aframax",
+      freight: "$1.10–$1.50 / bbl (Lowest transit cost to China)",
+      dest: "Qingdao, Dongjiakou & Rizhao (Shandong, China)",
+      center: [38.5, 126.5],
+      zoom: 5.5
+    }
+  };
+
+  const d = routeDetails[routeKey] || routeDetails.wti_midland;
+
+  ch5VesselAnimators.forEach(a => a.destroy());
+  ch5VesselAnimators = [];
+  ch5LayerGroup.clearLayers();
+
+  const allRoutes = getChapter5RoutesData();
+
+  allRoutes.forEach(r => {
+    const isTarget = (r.id === routeKey);
+    const smoothCoords = generateSmoothMaritimeSpline(r.coords, 20);
+
+    L.polyline(smoothCoords, {
+      color: isTarget ? r.color : "#64748b",
+      weight: isTarget ? 5.5 : 2.0,
+      opacity: isTarget ? 1.0 : 0.25,
+      className: isTarget ? "leaflet-ant-flow maritime-smooth-line" : ""
+    }).addTo(ch5LayerGroup);
+
+    if (isTarget) {
+      const originMarker = L.circleMarker(r.coords[0], {
+        radius: 10,
+        fillColor: r.color,
+        color: "#ffffff",
+        weight: 3,
+        fillOpacity: 1
+      }).addTo(ch5LayerGroup);
+
+      originMarker.bindPopup(`
+        <div style="font-family:Inter,sans-serif; min-width:240px;">
+          <div style="font-weight:800; font-size:14px; color:#0f172a; margin-bottom:4px;">${d.name}</div>
+          <div style="font-size:11.5px; font-weight:800; color:#0284c7; margin-bottom:6px;">API: ${d.api} | Sulfur: ${d.sulfur}</div>
+          <div style="font-size:12px; color:#1e293b;"><strong>⚓ Export Port:</strong> ${d.port}</div>
+          <div style="font-size:12px; color:#1e293b;"><strong>🚢 Voyage:</strong> ${d.days} (${d.distance})</div>
+          <div style="font-size:12px; color:#990000;"><strong>💰 Delivered Freight:</strong> ${d.freight}</div>
+          <div style="font-size:12px; color:#059669; margin-top:4px;"><strong>🌏 Asian Destination:</strong> ${d.dest}</div>
+        </div>
+      `).openPopup();
+
+      L.circleMarker(r.coords[r.coords.length - 1], {
+        radius: 8,
+        fillColor: "#059669",
+        color: "#ffffff",
+        weight: 2,
+        fillOpacity: 1
+      }).addTo(ch5LayerGroup).bindTooltip(`Receiving Port: ${d.dest}`, { permanent: false });
+
+      const animator = new SmoothMaritimeVesselAnimator(ch5Map, ch5LayerGroup, {
+        color: r.color,
+        speedScale: r.speed * 1.2,
+        initialProgress: 0.25,
+        tooltip: `${r.shipName} (${d.days})`
+      });
+      animator.setRoute(r.coords, r.color);
+      ch5VesselAnimators.push(animator);
+    }
+  });
+
+  ch5Map.flyTo(d.center, d.zoom, { duration: 1.1 });
+}
 
 function updateEfsSimulation() {
   const slider = document.getElementById("efsSlider");
@@ -2766,210 +2874,6 @@ function updateEfsSimulation() {
     meStatus.style.color = "#059669";
     meDesc.textContent = "Middle Eastern barrels dominate Asian refinery diets. National oil companies raise monthly OSPs aggressively.";
   }
-}
-
-// Chapter 9: The Journey of One Barrel (9 Stages)
-function renderChapter9Visual() {
-  return `
-    <div class="journey-container">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
-        <div>
-          <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--color-me-gold); text-transform:uppercase;">
-            STEP-BY-STEP LOGISTICS
-          </span>
-          <h3 style="font-family:var(--font-serif); font-size:22px; font-weight:800; color:#111827;">The 9 Stages of One Barrel</h3>
-        </div>
-        <div id="journeyStepBadge" style="font-family:var(--font-mono); font-size:12px; font-weight:700; color:#111827; background:var(--bg-surface-subtle); padding:4px 10px; border-radius:4px; border:1px solid var(--border-subtle);">
-          STEP 1 OF 9
-        </div>
-      </div>
-
-      <!-- 9-Step Progress Track -->
-      <div class="journey-track" id="journeyTrackContainer">
-        <!-- Dynamically populated -->
-      </div>
-
-      <!-- Active Spotlight Card -->
-      <div class="journey-spotlight" id="journeySpotlightContainer">
-        <!-- Dynamically populated -->
-      </div>
-
-      <!-- Navigation Buttons -->
-      <div class="journey-nav-footer">
-        <button class="action-btn" id="btnJourneyPrev" onclick="stepJourney(-1)">&larr; Previous Stage</button>
-        <div class="journey-dots" id="journeyDotsContainer"></div>
-        <button class="action-btn active" id="btnJourneyNext" onclick="stepJourney(1)">Next Stage &rarr;</button>
-      </div>
-    </div>
-  `;
-}
-
-function initJourneyOfOneBarrel() {
-  const steps = OIL_DATA.journeyOfOneBarrel;
-  if (!steps || steps.length === 0) return;
-
-  const trackContainer = document.getElementById("journeyTrackContainer");
-  if (!trackContainer) return;
-
-  trackContainer.innerHTML = steps.map((s, idx) => `
-    <button class="journey-step-btn ${idx === STATE.activeJourneyStep ? 'active' : ''}" onclick="setJourneyStep(${idx})">
-      <span class="step-icon">${s.icon}</span>
-      <span class="step-num">STAGE 0${s.step}</span>
-      <span class="step-title">${s.title}</span>
-    </button>
-  `).join("");
-
-  const dotsContainer = document.getElementById("journeyDotsContainer");
-  if (dotsContainer) {
-    dotsContainer.innerHTML = steps.map((_, idx) => `
-      <div class="journey-dot ${idx === STATE.activeJourneyStep ? 'active' : ''}"></div>
-    `).join("");
-  }
-
-  renderActiveJourneyStep();
-}
-
-function setJourneyStep(idx) {
-  const steps = OIL_DATA.journeyOfOneBarrel;
-  if (!steps || idx < 0 || idx >= steps.length) return;
-  STATE.activeJourneyStep = idx;
-
-  document.querySelectorAll(".journey-step-btn").forEach((btn, i) => {
-    if (i === idx) btn.classList.add("active");
-    else btn.classList.remove("active");
-  });
-
-  document.querySelectorAll(".journey-dot").forEach((dot, i) => {
-    if (i === idx) dot.classList.add("active");
-    else dot.classList.remove("active");
-  });
-
-  const prevBtn = document.getElementById("btnJourneyPrev");
-  const nextBtn = document.getElementById("btnJourneyNext");
-  if (prevBtn) prevBtn.disabled = idx === 0;
-  if (nextBtn) nextBtn.disabled = idx === steps.length - 1;
-
-  const badge = document.getElementById("journeyStepBadge");
-  if (badge) badge.textContent = `STAGE ${idx + 1} OF ${steps.length}`;
-
-  if (ch9Map && CH9_STEP_COORDS[idx]) {
-    ch9Map.flyTo(CH9_STEP_COORDS[idx], Math.max(5, ch9Map.getZoom()), { duration: 1.0 });
-    if (ch9StepMarkers[idx]) ch9StepMarkers[idx].openTooltip();
-  }
-
-  renderActiveJourneyStep();
-}
-
-function stepJourney(delta) {
-  setJourneyStep(STATE.activeJourneyStep + delta);
-}
-
-function renderActiveJourneyStep() {
-  const step = OIL_DATA.journeyOfOneBarrel[STATE.activeJourneyStep];
-  if (!step) return;
-
-  const container = document.getElementById("journeySpotlightContainer");
-  if (!container) return;
-
-  container.innerHTML = `
-    <div>
-      <span class="journey-badge">${step.location}</span>
-      <h3 class="journey-step-heading">${step.step}. ${step.title} &mdash; ${step.subtitle}</h3>
-      <p class="journey-desc">${step.description}</p>
-    </div>
-    <div class="journey-telemetry">
-      <div class="telemetry-row">
-        <span class="telemetry-label">PHYSICAL HARDWARE FACT</span>
-        <span class="telemetry-val" style="color:var(--color-atlantic-marine);">${step.volumeOrFact}</span>
-      </div>
-      <div class="telemetry-row">
-        <span class="telemetry-label">COMMERCIAL COST BUILDUP</span>
-        <span class="telemetry-val" style="color:var(--color-me-gold);">${step.pricingImpact}</span>
-      </div>
-      <div class="telemetry-row">
-        <span class="telemetry-label">OPERATIONAL RISK FACTOR</span>
-        <span class="telemetry-val" style="color:var(--color-russia-red);">${step.riskFactor}</span>
-      </div>
-    </div>
-  `;
-}
-
-let ch9Map = null;
-let ch9Layers = null;
-let ch9VesselAnimator = null;
-let ch9StepMarkers = [];
-
-const CH9_STEP_COORDS = [
-  [25.40, 49.60],  // 1. Ghawar
-  [25.93, 49.67],  // 2. Abqaiq
-  [26.64, 50.16],  // 3. Ras Tanura
-  [26.56, 56.45],  // 4. Hormuz
-  [5.80, 80.50],   // 5. Indian Ocean
-  [1.25, 103.85],  // 6. Malacca
-  [14.00, 114.50], // 7. South China Sea
-  [29.95, 121.72], // 8. Ningbo
-  [30.05, 122.10]  // 9. Zhoushan Refinery
-];
-
-function initChapter9UniversalMap() {
-  const mapEl = document.getElementById("chapterUniversalMaritimeMap_9");
-  if (!mapEl || typeof L === "undefined") return;
-
-  if (ch9Map) {
-    try { ch9Map.remove(); } catch (e) {}
-    ch9Map = null;
-  }
-  if (ch9VesselAnimator) {
-    ch9VesselAnimator.destroy();
-    ch9VesselAnimator = null;
-  }
-
-  const mapObj = createStandardChapterMap("chapterUniversalMaritimeMap_9", {
-    center: [20.0, 85.0],
-    zoom: 3.5
-  });
-  if (!mapObj) return;
-  ch9Map = mapObj.map;
-  ch9Layers = L.layerGroup().addTo(ch9Map);
-  ch9StepMarkers = [];
-
-  // Smooth route of the barrel
-  const smoothRoute = generateSmoothMaritimeSpline(CH9_STEP_COORDS, 20);
-  L.polyline(smoothRoute, {
-    color: "#f59e0b",
-    weight: 4.8,
-    className: "leaflet-ant-flow maritime-smooth-line"
-  }).addTo(ch9Layers).bindTooltip("Full 9-Stage Voyage: Ghawar Wellhead → Zhoushan Refinery");
-
-  // Plot 9 stage pins
-  OIL_DATA.journeyOfOneBarrel.forEach((s, idx) => {
-    const pt = CH9_STEP_COORDS[idx];
-    if (!pt) return;
-    const isSpecial = idx === 0 || idx === 3 || idx === 5 || idx === 8;
-    const marker = L.circleMarker(pt, {
-      radius: isSpecial ? 8 : 6,
-      fillColor: idx === 0 ? "#10b981" : idx === 8 ? "#dc2626" : "#0284c7",
-      color: "#ffffff",
-      weight: 2,
-      fillOpacity: 1
-    }).addTo(ch9Layers);
-
-    marker.bindTooltip(`<strong>Stage ${s.step}: ${s.title}</strong><br><span style="font-size:11px;">${s.location}</span>`, {
-      direction: "top",
-      offset: [0, -8]
-    });
-    marker.on("click", () => setJourneyStep(idx));
-    ch9StepMarkers.push(marker);
-  });
-
-  // Animated Tanker on the Voyage
-  ch9VesselAnimator = new SmoothMaritimeVesselAnimator(ch9Map, ch9Layers, {
-    color: "#f59e0b",
-    speedScale: 0.000032,
-    initialProgress: 0.25,
-    tooltip: "🚢 VLCC 'Cosgold Lake' — 2M bbls Arab Light on 9-Stage Voyage"
-  });
-  ch9VesselAnimator.setRoute(CH9_STEP_COORDS, "#f59e0b");
 }
 
 // Chapter 08: Interactive Crude Choice Simulator (7 Crudes x 4 Buyers)
@@ -4250,15 +4154,21 @@ function updateShockMap() {
 
   // If "Before", show standard routes as healthy green lines
   if (!isAfter) {
-    (sc.mapSevered || []).forEach(r => {
+    const normalRoutes = (sc.mapSevered && sc.mapSevered.length > 0) ? sc.mapSevered : [
+      {
+        name: "Persian Gulf → East Asia Baseload Flow",
+        coords: [[26.64, 50.16], [26.2, 53.0], [26.56, 56.45], [24.5, 58.5], [15.0, 66.0], [5.8, 80.5], [5.9, 95.0], [1.25, 103.85], [15.0, 114.5], [29.87, 121.54]]
+      }
+    ];
+    normalRoutes.forEach(r => {
       const curvedCoords = generateSmoothMaritimeSpline(r.coords, 20);
-      L.polyline(curvedCoords, { color: "#10b981", weight: 3.8, opacity: 0.9, interactive: false, className: "maritime-smooth-line" }).addTo(ch10ShockLayers)
+      L.polyline(curvedCoords, { color: "#10b981", weight: 4.0, opacity: 0.9, interactive: false, className: "maritime-smooth-line" }).addTo(ch10ShockLayers)
         .bindTooltip(`Normal Flow: ${r.name}`, { permanent: false });
     });
     // Add default tanker
-    if (sc.mapSevered && sc.mapSevered.length > 0) {
-      ch10ShockVesselAnimator = new SmoothMaritimeVesselAnimator(ch10ShockMap, ch10ShockLayers, { color: "#10b981", speedScale: 0.000035 });
-      ch10ShockVesselAnimator.setRoute(sc.mapSevered[0].coords, "#10b981");
+    if (normalRoutes.length > 0) {
+      ch10ShockVesselAnimator = new SmoothMaritimeVesselAnimator(ch10ShockMap, ch10ShockLayers, { color: "#10b981", speedScale: 0.000035, tooltip: `🚢 Baseline Crude Flow: ${normalRoutes[0].name}` });
+      ch10ShockVesselAnimator.setRoute(normalRoutes[0].coords, "#10b981");
     }
     return;
   }

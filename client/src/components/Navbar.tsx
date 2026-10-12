@@ -71,17 +71,6 @@ export const Navbar: React.FC = () => {
           </div>
 
           <Link
-            to="/journey"
-            className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1 ${
-              location.pathname === '/journey'
-                ? 'bg-paper-subtle text-ft-claret font-bold border border-paper-border'
-                : 'text-ink hover:bg-paper'
-            }`}
-          >
-            <span>🚢</span> Journey of a Barrel
-          </Link>
-
-          <Link
             to="/simulator"
             className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1 ${
               location.pathname === '/simulator'
@@ -93,9 +82,9 @@ export const Navbar: React.FC = () => {
           </Link>
 
           <Link
-            to="/chapter/10"
+            to="/chapter/9"
             className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1 ${
-              location.pathname === '/chapter/10'
+              location.pathname === '/chapter/9'
                 ? 'bg-paper-subtle text-ft-claret font-bold border border-paper-border'
                 : 'text-ink hover:bg-paper'
             }`}

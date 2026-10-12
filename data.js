@@ -1081,21 +1081,9 @@ const OIL_DATA = {
     {
       id: 9,
       number: "09",
-      title: "The Journey of One Barrel",
-      subtitle: "9 Key Stages from Desert Wellhead to Fuel Tank",
-      sectionTag: "CHAPTER 09 // PHYSICAL JOURNEY",
-      summary: "Tracking a 42-gallon crude barrel through production, marine logistics, and refining.",
-      whatIsThis: "Nine physical stages: wellhead, gas separation, export terminal, VLCC transit, chokepoints, refining, and final consumer delivery.",
-      whyItMatters: "Details value and cost accumulation across extraction, shipping, and chemical conversion.",
-      tradingImpact: "Lifting ($3.50), transit ($2.60), and refining ($5.90) transform a $74 crude barrel into $88+ of high-value refined fuels.",
-      mapId: "saudi_to_china"
-    },
-    {
-      id: 10,
-      number: "10",
       title: "What Happens If A Major Supplier Disappears?",
       subtitle: "Interactive Supply Shock Simulator, Live Flow Diverter & Future Pipeline Corridors",
-      sectionTag: "STRATEGY WAR GAME // CHAPTER 10",
+      sectionTag: "STRATEGY WAR GAME // CHAPTER 09",
       summary: "Interactive crisis scenarios (Russia, UAE, Saudi Arabia, Hormuz, Atlantic Arbitrage) and 10 future bypass pipeline routes.",
       whatIsThis: "A real-time strategic war game simulating the disappearance of top crude suppliers (Russia, UAE, Saudi Arabia) and maritime chokepoint closures.",
       whyItMatters: "Asia imports 22.4 million barrels every single day with near-zero domestic backup. A single outage forces billions of dollars in emergency crude rerouting.",
@@ -1103,11 +1091,11 @@ const OIL_DATA = {
       mapId: "corridor_me"
     },
     {
-      id: 11,
-      number: "11",
+      id: 10,
+      number: "10",
       title: "Future Oil Routes: How Asia Could Bypass Tomorrow's Bottlenecks",
       subtitle: "Can Steel Pipelines, Arctic Shortcuts & Atlantic Supertankers Defeat Naval Blockades?",
-      sectionTag: "CHAPTER 11 // FUTURE BYPASS CORRIDORS",
+      sectionTag: "CHAPTER 10 // FUTURE BYPASS CORRIDORS",
       summary: "A beginner-friendly strategic guide analyzing 9 global pipeline and seaborne bypass routes, likelihood of success, strategist rankings, and Asia's 2040 energy security.",
       whatIsThis: "Strategic pipeline bypasses (ADCOP, East-West, Basra-Aqaba), Arctic routes (NSR), and Atlantic supertanker highways designed to avoid maritime choke points.",
       whyItMatters: "Over 80% of Asia's crude currently crosses Hormuz or Malacca. Steel pipelines and Atlantic routes offer structural escape valves during wartime.",
@@ -1995,7 +1983,19 @@ const OIL_DATA = {
       winner: "Asian Refiners (feedstock cost plunges) & US Shale Exporters",
       loser: "Middle Eastern NOCs (forced to discount barrels to defend market share)",
       verdict: "Commercial victory for Asia. Cheap Atlantic oil breaks the Middle East monopoly and caps OPEC pricing power.",
-      mapSevered: [],
+      mapSevered: [
+        { 
+          name: "Persian Gulf → East Asia Baseload Flow", 
+          coords: [
+            [26.64, 50.16], [26.2, 53.0], [26.56, 56.45], [24.5, 58.5], [15.0, 66.0], 
+            [5.8, 80.5], [5.9, 95.0], [1.25, 103.85], [6.0, 108.5], [15.0, 114.5], [22.0, 119.0], [29.87, 121.54]
+          ] 
+        },
+        { 
+          name: "Persian Gulf → West Coast India Baseline Flow", 
+          coords: [[26.64, 50.16], [26.2, 53.0], [26.56, 56.45], [24.5, 58.5], [23.0, 64.0], [22.43, 69.83]] 
+        }
+      ],
       mapReplacement: [
         { 
           name: "US Corpus Christi → South Korea (WTI Midland +1.5M)", 

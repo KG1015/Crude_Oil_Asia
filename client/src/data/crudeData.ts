@@ -353,13 +353,6 @@ export const PLAIN_ENGLISH_CHAPTERS = [
     title: '7-Crude Delivered Cost Calculator',
     subtitle: 'Compare Landed Costs & Margins Across All 4 Asian Buyers',
     summary: 'Compare FOB prices, ocean freight, sulfur cleaning costs, and netback margins for 7 major crudes side-by-side.'
-  },
-  {
-    id: 9,
-    route: '/chapter/9',
-    title: 'The Journey of One Barrel',
-    subtitle: 'Final Chapter: 9 Illustrated Stages from Desert Wellhead to Your Fuel Tank',
-    summary: 'Follow one 42-gallon barrel of crude step-by-step from 2,000 meters underground in Saudi Arabia all the way to an Asian highway.'
   }
 ];
 
