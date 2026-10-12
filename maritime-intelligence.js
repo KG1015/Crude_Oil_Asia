@@ -758,8 +758,15 @@
       const skipMaritime = (options && (options.noMaritime === true || options.maritime === false)) ||
         (containerEl && (
           containerEl.dataset.noMaritime === "true" ||
+          containerEl.id === "chapter1EcoMap" ||
+          containerEl.id === "chapter2DemandMap" ||
+          containerEl.id === "chapter3FreightMap" ||
+          containerEl.id === "chapter5GlobalMap" ||
+          containerEl.id === "buyerSourcingMap" ||
+          containerEl.id === "tankerRouteMap" ||
           containerEl.id === "chapter10FutureMap" ||
-          containerEl.id === "chapter10ShockMap"
+          containerEl.id === "chapter10ShockMap" ||
+          containerEl.id === "chapter11BypassMap"
         ));
 
       if (containerEl && !skipMaritime) {

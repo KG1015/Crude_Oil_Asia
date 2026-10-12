@@ -82,6 +82,14 @@ function createSatelliteHybridLayerGroup() {
   });
   const group = L.layerGroup([imagery, boundaries, oceanRef, cartoLabels]);
   group._isSatelliteHybrid = true;
+  group.bringToBack = function() {
+    [imagery, boundaries, oceanRef, cartoLabels].forEach(l => {
+      if (l && typeof l.bringToBack === "function") {
+        l.bringToBack();
+      }
+    });
+    return this;
+  };
   return group;
 }
 window.createSatelliteHybridLayerGroup = createSatelliteHybridLayerGroup;
@@ -160,15 +168,22 @@ class SmoothMaritimeVesselAnimator {
     this.splinePoints = [];
     this.cumDistances = [];
     this.totalDistance = 0;
-    this.currentProgress = 0;
+    this.initialProgress = options.initialProgress !== undefined ? options.initialProgress : 0;
+    this.currentProgress = this.initialProgress;
     this.currentAngle = 0;
     this.lastTime = 0;
     this.speedScale = options.speedScale || 0.000035;
+    this.tooltip = options.tooltip || null;
   }
 
-  setRoute(rawWaypoints, color) {
+  setRoute(rawWaypoints, color, initialProgress) {
     this.stop();
     if (color) this.color = color;
+    if (initialProgress !== undefined) {
+      this.currentProgress = initialProgress;
+    } else {
+      this.currentProgress = this.initialProgress;
+    }
     if (!rawWaypoints || rawWaypoints.length < 2) return;
 
     this.splinePoints = generateSmoothMaritimeSpline(rawWaypoints, 20);
@@ -183,7 +198,6 @@ class SmoothMaritimeVesselAnimator {
       this.cumDistances.push(total);
     }
     this.totalDistance = total;
-    this.currentProgress = 0;
 
     this.createMarker();
     this.start();
@@ -191,14 +205,14 @@ class SmoothMaritimeVesselAnimator {
 
   createMarker() {
     if (this.marker && this.layerGroup) {
-      this.layerGroup.removeLayer(this.marker);
+      try { this.layerGroup.removeLayer(this.marker); } catch (e) {}
+      this.marker = null;
     }
-    const startPt = this.splinePoints[0];
-    const initialHeading = this.getHeadingAtProgress(0);
-    this.currentAngle = initialHeading;
+    const { latLng, angle } = this.getPositionAndHeadingAtProgress(this.currentProgress);
+    this.currentAngle = angle;
 
     const iconHtml = `
-      <div class="smooth-tanker-pin" style="transform: rotate(${initialHeading}deg);">
+      <div class="smooth-tanker-pin" style="transform: rotate(${angle}deg);">
         <div class="tanker-svg-wrap">
           <svg width="34" height="34" viewBox="0 0 34 34">
             <path d="M17 3 L24 11 L23 29 L17 32 L11 29 L10 11 Z" fill="${this.color}" stroke="#ffffff" stroke-width="1.8"/>
@@ -218,7 +232,10 @@ class SmoothMaritimeVesselAnimator {
       iconAnchor: [17, 17]
     });
 
-    this.marker = L.marker(startPt, { icon: customIcon, zIndexOffset: 1000 }).addTo(this.layerGroup);
+    this.marker = L.marker(latLng, { icon: customIcon, zIndexOffset: 1000 }).addTo(this.layerGroup);
+    if (this.tooltip) {
+      this.marker.bindTooltip(this.tooltip, { direction: "top", offset: [0, -12] });
+    }
   }
 
   getPositionAndHeadingAtProgress(prog) {
@@ -302,8 +319,118 @@ class SmoothMaritimeVesselAnimator {
       this.animId = null;
     }
   }
+
+  destroy() {
+    this.stop();
+    if (this.marker && this.layerGroup) {
+      try { this.layerGroup.removeLayer(this.marker); } catch (e) {}
+      this.marker = null;
+    }
+  }
 }
 window.SmoothMaritimeVesselAnimator = SmoothMaritimeVesselAnimator;
+
+/**
+ * Standard Maritime Map Initializer with Chapter 10 Experience:
+ * - High-resolution Satellite Hybrid basemap by default
+ * - Sleek, non-intrusive Satellite / Map toggle control
+ * - Non-blocking drag & zoom hint
+ * - Smooth cursor states (grab / grabbing)
+ * - Skips redundant external overlays (noMaritime: true)
+ */
+function createStandardChapterMap(containerId, options = {}) {
+  const el = document.getElementById(containerId);
+  if (!el || typeof L === "undefined") return null;
+
+  el.dataset.noMaritime = "true";
+  el.innerHTML = "";
+
+  const defaultOpts = {
+    center: [20.0, 75.0],
+    zoom: 4,
+    minZoom: 2,
+    maxZoom: 18,
+    dragging: true,
+    scrollWheelZoom: true,
+    touchZoom: true,
+    doubleClickZoom: true,
+    boxZoom: true,
+    keyboard: true,
+    tap: false,
+    noMaritime: true
+  };
+
+  const mapInstance = L.map(containerId, Object.assign({}, defaultOpts, options));
+  if (mapInstance.dragging) mapInstance.dragging.enable();
+
+  const tileLayers = {
+    satellite: createSatelliteHybridLayerGroup(),
+    voyager: L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      attribution: "&copy; OpenStreetMap &copy; CARTO",
+      maxZoom: 18
+    })
+  };
+
+  let currentBasemap = options.defaultBasemap || "satellite";
+  tileLayers[currentBasemap].addTo(mapInstance);
+
+  // Basemap Switcher Toggle (Top Right)
+  const toggleEl = document.createElement("div");
+  toggleEl.className = "ch10-map-basemap-toggle";
+  toggleEl.innerHTML = `
+    <button type="button" class="ch10-map-btn ${currentBasemap === 'satellite' ? 'active' : ''}" data-basemap="satellite">🛰️ Satellite</button>
+    <button type="button" class="ch10-map-btn ${currentBasemap === 'voyager' ? 'active' : ''}" data-basemap="voyager">🗺️ Map</button>
+  `;
+  L.DomEvent.disableClickPropagation(toggleEl);
+  L.DomEvent.disableScrollPropagation(toggleEl);
+  el.appendChild(toggleEl);
+
+  const btnSat = toggleEl.querySelector('[data-basemap="satellite"]');
+  const btnVoy = toggleEl.querySelector('[data-basemap="voyager"]');
+
+  btnVoy.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (currentBasemap === "voyager") return;
+    mapInstance.removeLayer(tileLayers.satellite);
+    tileLayers.voyager.addTo(mapInstance);
+    if (tileLayers.voyager && typeof tileLayers.voyager.bringToBack === "function") {
+      tileLayers.voyager.bringToBack();
+    }
+    currentBasemap = "voyager";
+    btnVoy.classList.add("active");
+    btnSat.classList.remove("active");
+  });
+
+  btnSat.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (currentBasemap === "satellite") return;
+    mapInstance.removeLayer(tileLayers.voyager);
+    tileLayers.satellite.addTo(mapInstance);
+    if (tileLayers.satellite && typeof tileLayers.satellite.bringToBack === "function") {
+      tileLayers.satellite.bringToBack();
+    }
+    currentBasemap = "satellite";
+    btnSat.classList.add("active");
+    btnVoy.classList.remove("active");
+  });
+
+  // Drag Hint (Bottom Right)
+  const dragHint = document.createElement("div");
+  dragHint.className = "ch10-map-drag-hint";
+  dragHint.innerHTML = "🖐️ Click &amp; drag to pan • Scroll to zoom";
+  el.appendChild(dragHint);
+
+  el.style.cursor = "grab";
+  mapInstance.on("dragstart", () => { el.style.cursor = "grabbing"; });
+  mapInstance.on("dragend", () => { el.style.cursor = "grab"; });
+
+  return {
+    map: mapInstance,
+    tileLayers,
+    getCurrentBasemap: () => currentBasemap
+  };
+}
+window.createStandardChapterMap = createStandardChapterMap;
 
 /* ==========================================================================
    1. CLIENT-SIDE CHAPTER ROUTER
@@ -645,11 +772,7 @@ function renderChapterContent(chapterId) {
     }
 
     if (chapterId === 9) {
-      const uniMapId = `chapterUniversalMaritimeMap_${chapterId}`;
-      const uniEl = document.getElementById(uniMapId);
-      if (uniEl && typeof L !== "undefined") {
-        L.map(uniMapId, { center: [20.0, 82.0], zoom: 4 });
-      }
+      initChapter9UniversalMap();
     }
   }, 60);
 }
@@ -1697,7 +1820,8 @@ function renderChapter7Visual() {
 let ch1Map = null;
 let ch1Markers = {};
 let ch1TankerAnimId = null;
-let ch1VesselAnimator = null;
+let ch1VesselAnimators = [];
+let ch1RouteLayers = null;
 
 function selectEcoFlowStage(idx) {
   const stages = OIL_DATA.dubaiOmanEcosystem.animatedFlowStages;
@@ -1721,14 +1845,14 @@ function initChapter1EcosystemMap() {
     ch1Map = null;
   }
   if (ch1TankerAnimId) cancelAnimationFrame(ch1TankerAnimId);
-  if (ch1VesselAnimator) {
-    ch1VesselAnimator.stop();
-    ch1VesselAnimator = null;
-  }
+  ch1VesselAnimators.forEach(a => a.destroy());
+  ch1VesselAnimators = [];
 
-  ch1Map = L.map("chapter1EcoMap", { center: [25.2, 54.5], zoom: 6 });
-  createSatelliteHybridLayerGroup().addTo(ch1Map);
+  const mapObj = createStandardChapterMap("chapter1EcoMap", { center: [24.5, 56.5], zoom: 5.5 });
+  if (!mapObj) return;
+  ch1Map = mapObj.map;
 
+  ch1RouteLayers = L.layerGroup().addTo(ch1Map);
   ch1Markers = {};
   const grades = OIL_DATA.dubaiOmanEcosystem.nineMiddleEastGrades;
 
@@ -1740,7 +1864,7 @@ function initChapter1EcosystemMap() {
       color: "#0f172a",
       weight: 2,
       fillOpacity: 0.95
-    }).addTo(ch1Map);
+    }).addTo(ch1RouteLayers);
 
     marker.bindPopup(`
       <div style="font-family:Inter,sans-serif; min-width:210px;">
@@ -1761,7 +1885,7 @@ function initChapter1EcosystemMap() {
     color: "#ffffff",
     weight: 2.5,
     fillOpacity: 1
-  }).addTo(ch1Map);
+  }).addTo(ch1RouteLayers);
   dubaiMarker.bindPopup(`
     <div style="font-family:Inter,sans-serif;">
       <div style="font-weight:800; font-size:14px; color:#990000;">🇦🇪 Dubai (Fateh Marine Terminal)</div>
@@ -1774,33 +1898,77 @@ function initChapter1EcosystemMap() {
   L.polyline([[22.18, 56.45], [23.63, 58.52]], {
     color: "#059669",
     weight: 4,
-    dashArray: "6, 6"
-  }).addTo(ch1Map).bindPopup("<strong>Oman Main Oil Line Pipeline (450 km):</strong> Connects Fahud, Yibal & Mukhaizna fields directly to Mina al Fahal Terminal outside the Strait of Hormuz.");
+    dashArray: "6, 6",
+    className: "pulse-pipeline"
+  }).addTo(ch1RouteLayers).bindPopup("<strong>Oman Main Oil Line Pipeline (450 km):</strong> Connects Fahud, Yibal & Mukhaizna fields directly to Mina al Fahal Terminal outside the Strait of Hormuz.");
 
   // Draw Habshan-Fujairah ADCOP Pipeline (Onshore Abu Dhabi -> Fujairah outside Hormuz)
   L.polyline([[23.90, 53.65], [25.12, 56.36]], {
     color: "#0284c7",
     weight: 4,
-    dashArray: "6, 6"
-  }).addTo(ch1Map).bindPopup("<strong>ADCOP Pipeline (1.8 Mb/d):</strong> Carries Murban crude from onshore Abu Dhabi across the Hajar Mountains to Fujairah port on the Arabian Sea.");
+    dashArray: "6, 6",
+    className: "pulse-pipeline"
+  }).addTo(ch1RouteLayers).bindPopup("<strong>ADCOP Pipeline (1.8 Mb/d):</strong> Carries Murban crude from onshore Abu Dhabi across the Hajar Mountains to Fujairah port on the Arabian Sea.");
 
-  // Animated Shipping Route from Persian Gulf / Oman to Asia (Curved maritime waypoints)
+  // 1. Primary Persian Gulf to Asia Arterial Sea Route
   const seaRouteCoords = [
     [26.64, 50.16], [26.2, 53.0], [26.56, 56.45], [24.5, 58.5], [23.63, 58.52], [15.5, 68.0], [5.8, 80.5], [5.9, 95.0], [1.25, 103.85], [14.0, 114.0], [29.9, 121.8]
   ];
   const smoothSeaRoute = generateSmoothMaritimeSpline(seaRouteCoords, 20);
   L.polyline(smoothSeaRoute, {
     color: "#f59e0b",
-    weight: 4,
+    weight: 4.2,
     className: "leaflet-ant-flow maritime-smooth-line"
-  }).addTo(ch1Map);
+  }).addTo(ch1RouteLayers).bindTooltip("Persian Gulf → East Asia VLCC Arterial Route");
 
-  // Ultra-Smooth Rotating Vessel along the Sea Route
-  ch1VesselAnimator = new SmoothMaritimeVesselAnimator(ch1Map, ch1Map, {
+  const animMain = new SmoothMaritimeVesselAnimator(ch1Map, ch1RouteLayers, {
     color: "#f59e0b",
-    speedScale: 0.00003
+    speedScale: 0.000030,
+    initialProgress: 0.18,
+    tooltip: "🚢 VLCC 'Neda' — 2M bbls Arab Light → East Asia"
   });
-  ch1VesselAnimator.setRoute(seaRouteCoords, "#f59e0b");
+  animMain.setRoute(seaRouteCoords, "#f59e0b");
+  ch1VesselAnimators.push(animMain);
+
+  // 2. Fujairah Export Feeder (Outside Hormuz bypass)
+  const fujairahCoords = [
+    [25.12, 56.36], [24.6, 58.2], [23.0, 62.5], [15.5, 68.0], [5.8, 80.5]
+  ];
+  const smoothFujairah = generateSmoothMaritimeSpline(fujairahCoords, 18);
+  L.polyline(smoothFujairah, {
+    color: "#0284c7",
+    weight: 3.5,
+    className: "leaflet-ant-flow maritime-smooth-line"
+  }).addTo(ch1RouteLayers).bindTooltip("Fujairah ADCOP Marine Terminal → Asia (Hormuz-Free)");
+
+  const animFujairah = new SmoothMaritimeVesselAnimator(ch1Map, ch1RouteLayers, {
+    color: "#0284c7",
+    speedScale: 0.000035,
+    initialProgress: 0.55,
+    tooltip: "🚢 VLCC 'Murban Star' — Fujairah Terminal (Hormuz-Bypass) → Asia"
+  });
+  animFujairah.setRoute(fujairahCoords, "#0284c7");
+  ch1VesselAnimators.push(animFujairah);
+
+  // 3. Mina al Fahal (Oman) Feeder
+  const omanCoords = [
+    [23.63, 58.52], [22.4, 60.5], [15.5, 68.0], [5.8, 80.5]
+  ];
+  const smoothOman = generateSmoothMaritimeSpline(omanCoords, 18);
+  L.polyline(smoothOman, {
+    color: "#059669",
+    weight: 3.5,
+    className: "leaflet-ant-flow maritime-smooth-line"
+  }).addTo(ch1RouteLayers).bindTooltip("Mina al Fahal Muscat → Asia (Oman Blend)");
+
+  const animOman = new SmoothMaritimeVesselAnimator(ch1Map, ch1RouteLayers, {
+    color: "#059669",
+    speedScale: 0.000032,
+    initialProgress: 0.80,
+    tooltip: "🚢 Suezmax 'Sohar Trader' — Oman Blend → India/China"
+  });
+  animOman.setRoute(omanCoords, "#059669");
+  ch1VesselAnimators.push(animOman);
 }
 
 function zoomChapter1Map(viewMode) {
@@ -1825,6 +1993,8 @@ function focusGradeOnChapter1Map(gradeId) {
 // --- CHAPTER 2: ASIAN CRUDE DEMAND & REFINERIES MAP ---
 let ch2Map = null;
 let ch2RefMarkers = {};
+let ch2RouteLayers = null;
+let ch2VesselAnimators = [];
 
 function initChapter2DemandMap() {
   const el = document.getElementById("chapter2DemandMap");
@@ -1834,10 +2004,14 @@ function initChapter2DemandMap() {
     ch2Map.remove();
     ch2Map = null;
   }
+  ch2VesselAnimators.forEach(a => a.destroy());
+  ch2VesselAnimators = [];
 
-  ch2Map = L.map("chapter2DemandMap", { center: [26.0, 105.0], zoom: 4 });
-  createSatelliteHybridLayerGroup().addTo(ch2Map);
+  const mapObj = createStandardChapterMap("chapter2DemandMap", { center: [23.0, 88.0], zoom: 3.8 });
+  if (!mapObj) return;
+  ch2Map = mapObj.map;
 
+  ch2RouteLayers = L.layerGroup().addTo(ch2Map);
   ch2RefMarkers = {};
   const refineries = OIL_DATA.asianRefineriesList;
 
@@ -1849,7 +2023,7 @@ function initChapter2DemandMap() {
       color: "#0f172a",
       weight: 2,
       fillOpacity: 0.92
-    }).addTo(ch2Map);
+    }).addTo(ch2RouteLayers);
 
     marker.bindPopup(`
       <div style="font-family:Inter,sans-serif; min-width:230px;">
@@ -1866,26 +2040,78 @@ function initChapter2DemandMap() {
 
   // Draw Animated Import Flow Corridors into the 4 Asian Nations
   const importFlows = [
-    // Middle East -> India (Jamnagar)
-    { coords: [[25.12, 56.36], [23.5, 63.0], [22.36, 69.85]], color: "#d97706", label: "Middle East → India (2.1 Mb/d)" },
-    // Middle East -> China / Korea / Japan
-    { coords: [[25.12, 56.36], [16.0, 68.0], [5.8, 80.5], [5.9, 95.0], [1.25, 103.85], [14.0, 114.5], [30.05, 122.10]], color: "#d97706", label: "Middle East → China (5.0 Mb/d)" },
-    { coords: [[1.25, 103.85], [15.0, 115.0], [24.0, 122.0], [35.50, 129.38], [35.53, 140.08]], color: "#d97706", label: "Middle East → Korea & Japan (4.3 Mb/d)" },
-    // Russia Kozmino -> China Shandong
-    { coords: [[42.73, 133.00], [38.5, 130.5], [34.5, 128.0], [36.06, 120.38]], color: "#dc2626", label: "Russia ESPO (Kozmino) → China (3-Day Shuttle)" },
-    // Russia Suez -> India
-    { coords: [[29.9, 32.5], [20.0, 39.0], [12.6, 43.3], [12.0, 52.0], [22.36, 69.85]], color: "#dc2626", label: "Russia Urals (via Suez) → India (1.8 Mb/d)" },
-    // Atlantic / WAF -> Asia
-    { coords: [[-34.5, 18.5], [-25.0, 50.0], [-10.0, 75.0], [1.25, 103.85], [20.0, 118.0], [35.50, 129.38]], color: "#0284c7", label: "US WTI Midland & West Africa → Asia (3.6 Mb/d)" }
+    // Middle East -> China (5.0 Mb/d)
+    {
+      coords: [[25.12, 56.36], [16.0, 68.0], [5.8, 80.5], [5.9, 95.0], [1.25, 103.85], [14.0, 114.5], [30.05, 122.10]],
+      color: "#d97706",
+      label: "Middle East → China (5.0 Mb/d)",
+      shipName: "🇨🇳 VLCC 'Cosgold Lake' — 2M bbls Arab Light → Ningbo",
+      initProg: 0.20,
+      speed: 0.000030
+    },
+    // Middle East -> India (2.1 Mb/d)
+    {
+      coords: [[25.12, 56.36], [23.5, 63.0], [22.36, 69.85]],
+      color: "#f59e0b",
+      label: "Middle East → India (2.1 Mb/d)",
+      shipName: "🇮🇳 VLCC 'Desh Shanti' — Basrah Heavy → Jamnagar",
+      initProg: 0.55,
+      speed: 0.000038
+    },
+    // Middle East -> Korea & Japan (4.3 Mb/d)
+    {
+      coords: [[1.25, 103.85], [15.0, 115.0], [24.0, 122.0], [35.50, 129.38], [35.53, 140.08]],
+      color: "#059669",
+      label: "Middle East → Korea & Japan (4.3 Mb/d)",
+      shipName: "🇯🇵🇰🇷 VLCC 'Apollo Energy' — Murban → Ulsan/Chiba",
+      initProg: 0.65,
+      speed: 0.000034
+    },
+    // Russia Kozmino -> China Shandong (3-Day Shuttle)
+    {
+      coords: [[42.73, 133.00], [38.5, 130.5], [34.5, 128.0], [36.06, 120.38]],
+      color: "#dc2626",
+      label: "Russia ESPO (Kozmino) → China (3-Day Shuttle)",
+      shipName: "🇷🇺🇨🇳 Aframax 'Zaliv Baikal' — ESPO Shuttle → Qingdao",
+      initProg: 0.35,
+      speed: 0.000045
+    },
+    // Russia Suez -> India (1.8 Mb/d)
+    {
+      coords: [[29.9, 32.5], [20.0, 39.0], [12.6, 43.3], [12.0, 52.0], [22.36, 69.85]],
+      color: "#b91c1c",
+      label: "Russia Urals (via Suez) → India (1.8 Mb/d)",
+      shipName: "🇷🇺🇮🇳 Suezmax 'Likovka' — Urals → Vadinar",
+      initProg: 0.25,
+      speed: 0.000036
+    },
+    // Atlantic / WAF -> Asia (3.6 Mb/d)
+    {
+      coords: [[-34.5, 18.5], [-25.0, 50.0], [-10.0, 75.0], [1.25, 103.85], [20.0, 118.0], [35.50, 129.38]],
+      color: "#0284c7",
+      label: "US WTI Midland & West Africa → Asia (3.6 Mb/d)",
+      shipName: "🇺🇸 VLCC 'Eagle Veracruz' — WTI Midland → Yeosu",
+      initProg: 0.10,
+      speed: 0.000028
+    }
   ];
 
   importFlows.forEach(f => {
-    const smoothPoints = generateSmoothMaritimeSpline(f.coords, 18);
+    const smoothPoints = generateSmoothMaritimeSpline(f.coords, 20);
     L.polyline(smoothPoints, {
       color: f.color,
-      weight: 3.8,
+      weight: 4.2,
       className: "leaflet-ant-flow maritime-smooth-line"
-    }).addTo(ch2Map).bindPopup(`<strong>${f.label}</strong>`);
+    }).addTo(ch2RouteLayers).bindPopup(`<strong>${f.label}</strong>`);
+
+    const animator = new SmoothMaritimeVesselAnimator(ch2Map, ch2RouteLayers, {
+      color: f.color,
+      speedScale: f.speed,
+      initialProgress: f.initProg,
+      tooltip: f.shipName
+    });
+    animator.setRoute(f.coords, f.color);
+    ch2VesselAnimators.push(animator);
   });
 }
 
@@ -2009,12 +2235,13 @@ function initChapter3FreightMap() {
     ch3Map = null;
   }
   if (ch3VesselAnimator) {
-    ch3VesselAnimator.stop();
+    ch3VesselAnimator.destroy();
     ch3VesselAnimator = null;
   }
 
-  ch3Map = L.map("chapter3FreightMap", { center: [20.0, 82.0], zoom: 3 });
-  createSatelliteHybridLayerGroup().addTo(ch3Map);
+  const mapObj = createStandardChapterMap("chapter3FreightMap", { center: [20.0, 82.0], zoom: 3.5 });
+  if (!mapObj) return;
+  ch3Map = mapObj.map;
 
   switchChapter3VesselRoute("vlcc");
 }
@@ -2023,7 +2250,7 @@ function switchChapter3VesselRoute(vesselId) {
   if (!ch3Map) return;
   if (ch3RouteLayer) ch3Map.removeLayer(ch3RouteLayer);
   if (ch3VesselAnimator) {
-    ch3VesselAnimator.stop();
+    ch3VesselAnimator.destroy();
     ch3VesselAnimator = null;
   }
 
@@ -2071,7 +2298,8 @@ function switchChapter3VesselRoute(vesselId) {
 
   ch3VesselAnimator = new SmoothMaritimeVesselAnimator(ch3Map, ch3RouteLayer, {
     color: r.color,
-    speedScale: 0.000035
+    speedScale: 0.000035,
+    tooltip: r.title
   });
   ch3VesselAnimator.setRoute(r.coords, r.color);
 
@@ -2293,12 +2521,18 @@ function runRefineryPreferenceSimulator() {
       : `🔴 Freight Arbitrage Closed ($${freight.toFixed(2)}/bbl = $${vlccTotalMillions}M — Uneconomic!)`;
   }
 
+let ch4VesselAnimator = null;
+
   if (ch4Map && ch4RouteGroup) {
     const newRouteKey = `${gradeKey}_${country}_${tier}`;
     // Only rebuild the route & reset ship position when Origin or Destination changes!
     if (ch4LastRouteKey !== newRouteKey || !ch4ActivePolyline) {
       ch4LastRouteKey = newRouteKey;
       if (ch4AnimFrame) cancelAnimationFrame(ch4AnimFrame);
+      if (ch4VesselAnimator) {
+        ch4VesselAnimator.destroy();
+        ch4VesselAnimator = null;
+      }
       ch4RouteGroup.clearLayers();
 
       const start = preset.originCoords;
@@ -2313,11 +2547,12 @@ function runRefineryPreferenceSimulator() {
         waypoints = [start, [26.0, 56.5], [8.0, 77.0], end[1] > 100 ? [1.25, 103.85] : end, end];
       }
 
-      ch4ActivePolyline = L.polyline(waypoints, {
+      const smoothWaypoints = generateSmoothMaritimeSpline(waypoints, 20);
+      ch4ActivePolyline = L.polyline(smoothWaypoints, {
         color: routeThemeColor,
         weight: 4.5,
         dashArray: (!isCheapFreight && !isModerateFreight) ? "8, 8" : null,
-        className: "leaflet-ant-flow"
+        className: "leaflet-ant-flow maritime-smooth-line"
       }).addTo(ch4RouteGroup);
 
       L.circleMarker(start, { radius: 8, fillColor: "#d97706", color: "#0f172a", weight: 2, fillOpacity: 1 })
@@ -2325,28 +2560,12 @@ function runRefineryPreferenceSimulator() {
       L.circleMarker(end, { radius: 9, fillColor: "#059669", color: "#0f172a", weight: 2, fillOpacity: 1 })
         .addTo(ch4RouteGroup).bindTooltip(`Matched Refinery: ${matched.ref}`, { permanent: true });
 
-      const tankerIcon = L.divIcon({
-        html: `<div style="font-size:20px;">🚢</div>`,
-        className: "",
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
+      ch4VesselAnimator = new SmoothMaritimeVesselAnimator(ch4Map, ch4RouteGroup, {
+        color: routeThemeColor,
+        speedScale: 0.000035,
+        tooltip: `🚢 Freight: $${freight.toFixed(2)}/bbl ($${vlccTotalMillions}M/VLCC)`
       });
-      ch4ActiveShip = L.marker(start, { icon: tankerIcon }).addTo(ch4RouteGroup);
-      ch4ActiveShip.bindTooltip(`🚢 Freight: $${freight.toFixed(2)}/bbl ($${vlccTotalMillions}M/VLCC)`, { direction: "top" });
-
-      let prog = 0;
-      function animCh4() {
-        prog = (prog + 0.004) % 1;
-        const segs = waypoints.length - 1;
-        const f = prog * segs;
-        const i = Math.floor(f);
-        const r = f - i;
-        const a = waypoints[i];
-        const b = waypoints[Math.min(i + 1, segs)];
-        ch4ActiveShip.setLatLng([a[0] + (b[0] - a[0]) * r, a[1] + (b[1] - a[1]) * r]);
-        ch4AnimFrame = requestAnimationFrame(animCh4);
-      }
-      animCh4();
+      ch4VesselAnimator.setRoute(waypoints, routeThemeColor);
       ch4Map.fitBounds(L.latLngBounds(waypoints), { padding: [35, 35] });
     } else {
       // Just update the existing route line color & ship tooltip smoothly while ship keeps sailing!
@@ -2354,8 +2573,8 @@ function runRefineryPreferenceSimulator() {
         color: routeThemeColor,
         dashArray: (!isCheapFreight && !isModerateFreight) ? "8, 8" : null
       });
-      if (ch4ActiveShip) {
-        ch4ActiveShip.setTooltipContent(`🚢 Freight: $${freight.toFixed(2)}/bbl ($${vlccTotalMillions}M/VLCC)`);
+      if (ch4VesselAnimator && ch4VesselAnimator.marker) {
+        ch4VesselAnimator.marker.setTooltipContent(`🚢 Freight: $${freight.toFixed(2)}/bbl ($${vlccTotalMillions}M/VLCC)`);
       }
     }
   }
@@ -2404,11 +2623,12 @@ function initChapter5AtlanticRussiaMap() {
     ch5Map.remove();
     ch5Map = null;
   }
-  ch5VesselAnimators.forEach(a => a.stop());
+  ch5VesselAnimators.forEach(a => a.destroy());
   ch5VesselAnimators = [];
 
-  ch5Map = L.map("chapter5GlobalMap", { center: [22.0, 45.0], zoom: 2 });
-  createSatelliteHybridLayerGroup().addTo(ch5Map);
+  const mapObj = createStandardChapterMap("chapter5GlobalMap", { center: [22.0, 45.0], zoom: 2.2 });
+  if (!mapObj) return;
+  ch5Map = mapObj.map;
 
   ch5LayerGroup = L.layerGroup().addTo(ch5Map);
   filterChapter5Map("all");
@@ -2416,7 +2636,7 @@ function initChapter5AtlanticRussiaMap() {
 
 function filterChapter5Map(mode) {
   if (!ch5Map || !ch5LayerGroup) return;
-  ch5VesselAnimators.forEach(a => a.stop());
+  ch5VesselAnimators.forEach(a => a.destroy());
   ch5VesselAnimators = [];
   ch5LayerGroup.clearLayers();
 
@@ -2425,35 +2645,50 @@ function filterChapter5Map(mode) {
       id: "wti_midland", 
       name: "US WTI Midland (Corpus Christi Texas → Cape of Good Hope → Korea/China)", 
       coords: [[27.80, -97.39], [25.0, -88.0], [20.0, -68.0], [-34.8, 18.5], [-20.0, 60.0], [5.8, 80.5], [1.25, 103.85], [20.0, 118.0], [35.50, 129.38]], 
-      color: "#0284c7" 
+      color: "#0284c7",
+      shipName: "🇺🇸 VLCC 'Eagle Veracruz' — WTI Midland → Yeosu",
+      initProg: 0.10,
+      speed: 0.000028
     },
     { 
       id: "brent_forties", 
       name: "North Sea Brent / Forties & Johan Sverdrup (Scotland/Norway → Suez → Asia)", 
       coords: [[58.5, 1.5], [51.0, 1.5], [44.0, -9.0], [36.0, -6.0], [37.0, 11.0], [31.2, 32.3], [12.6, 43.3], [5.8, 80.5], [1.25, 103.85], [35.50, 129.38]], 
-      color: "#0369a1" 
+      color: "#0369a1",
+      shipName: "🇬🇧🇳🇴 Suezmax 'Stena Polaris' — Brent/Sverdrup → Asia",
+      initProg: 0.30,
+      speed: 0.000032
     },
     { 
       id: "waf_nigeria_angola", 
       name: "West Africa Bonny Light & Cabinda (Nigeria/Angola → China & India)", 
       coords: [[-5.55, 12.19], [-20.0, 10.0], [-34.8, 18.5], [-25.0, 50.0], [-5.0, 80.0], [1.25, 103.85], [20.0, 115.0], [29.95, 121.72]], 
-      color: "#7c3aed" 
+      color: "#7c3aed",
+      shipName: "🇳🇬🇦🇴 VLCC 'Maran Canopus' — Bonny Light → Ningbo",
+      initProg: 0.50,
+      speed: 0.000030
     },
     { 
       id: "urals", 
       name: "Russian Urals (Baltic Primorsk & Black Sea → Suez Canal → Jamnagar India)", 
       coords: [[60.35, 28.62], [57.0, 19.0], [55.3, 12.8], [51.0, 1.5], [36.0, -6.0], [37.0, 11.0], [31.2, 32.3], [12.6, 43.3], [15.0, 60.0], [22.36, 69.85]], 
-      color: "#dc2626" 
+      color: "#dc2626",
+      shipName: "🇷🇺 Suezmax 'NS Century' — Urals → Jamnagar",
+      initProg: 0.70,
+      speed: 0.000034
     },
     { 
       id: "espo", 
       name: "Russian ESPO & Sokol (Kozmino Pacific & Sakhalin → Shandong China 3-Day Shuttle)", 
       coords: [[42.73, 133.00], [38.5, 130.5], [34.5, 128.0], [36.06, 120.38]], 
-      color: "#b91c1c" 
+      color: "#b91c1c",
+      shipName: "🇷🇺 Aframax 'Krymsk Shuttle' — ESPO → Qingdao",
+      initProg: 0.40,
+      speed: 0.000045
     }
   ];
 
-  allRoutes.forEach((r, idx) => {
+  allRoutes.forEach(r => {
     const smoothCoords = generateSmoothMaritimeSpline(r.coords, 20);
     L.polyline(smoothCoords, { color: r.color, weight: 4.2, className: "leaflet-ant-flow maritime-smooth-line" })
       .addTo(ch5LayerGroup)
@@ -2462,18 +2697,17 @@ function filterChapter5Map(mode) {
       .addTo(ch5LayerGroup)
       .bindPopup(`<strong>Origin:</strong> ${r.name}`);
 
-    // Add animated vessel on the first two primary trade flows
-    if (idx < 2) {
-      const animator = new SmoothMaritimeVesselAnimator(ch5Map, ch5LayerGroup, {
-        color: r.color,
-        speedScale: 0.00003
-      });
-      animator.setRoute(r.coords, r.color);
-      ch5VesselAnimators.push(animator);
-    }
+    const animator = new SmoothMaritimeVesselAnimator(ch5Map, ch5LayerGroup, {
+      color: r.color,
+      speedScale: r.speed,
+      initialProgress: r.initProg,
+      tooltip: r.shipName
+    });
+    animator.setRoute(r.coords, r.color);
+    ch5VesselAnimators.push(animator);
   });
 
-  ch5Map.flyTo([22.0, 45.0], 2, { duration: 1.0 });
+  ch5Map.flyTo([22.0, 45.0], 2.2, { duration: 1.0 });
 }
 
 function focusChapter5Grade(gradeId) {
@@ -2487,7 +2721,7 @@ function focusChapter5Grade(gradeId) {
     espo: { center: [39.5, 126.5], zoom: 5 },
     sokol: { center: [48.0, 138.0], zoom: 5 }
   };
-  const t = targets[gradeId] || { center: [22.0, 45.0], zoom: 2 };
+  const t = targets[gradeId] || { center: [22.0, 45.0], zoom: 2.2 };
   ch5Map.flyTo(t.center, t.zoom, { duration: 1.1 });
   document.getElementById("chapter5GlobalMap")?.scrollIntoView({ behavior: "smooth", block: "center" });
 }
@@ -2618,6 +2852,11 @@ function setJourneyStep(idx) {
   const badge = document.getElementById("journeyStepBadge");
   if (badge) badge.textContent = `STAGE ${idx + 1} OF ${steps.length}`;
 
+  if (ch9Map && CH9_STEP_COORDS[idx]) {
+    ch9Map.flyTo(CH9_STEP_COORDS[idx], Math.max(5, ch9Map.getZoom()), { duration: 1.0 });
+    if (ch9StepMarkers[idx]) ch9StepMarkers[idx].openTooltip();
+  }
+
   renderActiveJourneyStep();
 }
 
@@ -2653,6 +2892,84 @@ function renderActiveJourneyStep() {
       </div>
     </div>
   `;
+}
+
+let ch9Map = null;
+let ch9Layers = null;
+let ch9VesselAnimator = null;
+let ch9StepMarkers = [];
+
+const CH9_STEP_COORDS = [
+  [25.40, 49.60],  // 1. Ghawar
+  [25.93, 49.67],  // 2. Abqaiq
+  [26.64, 50.16],  // 3. Ras Tanura
+  [26.56, 56.45],  // 4. Hormuz
+  [5.80, 80.50],   // 5. Indian Ocean
+  [1.25, 103.85],  // 6. Malacca
+  [14.00, 114.50], // 7. South China Sea
+  [29.95, 121.72], // 8. Ningbo
+  [30.05, 122.10]  // 9. Zhoushan Refinery
+];
+
+function initChapter9UniversalMap() {
+  const mapEl = document.getElementById("chapterUniversalMaritimeMap_9");
+  if (!mapEl || typeof L === "undefined") return;
+
+  if (ch9Map) {
+    try { ch9Map.remove(); } catch (e) {}
+    ch9Map = null;
+  }
+  if (ch9VesselAnimator) {
+    ch9VesselAnimator.destroy();
+    ch9VesselAnimator = null;
+  }
+
+  const mapObj = createStandardChapterMap("chapterUniversalMaritimeMap_9", {
+    center: [20.0, 85.0],
+    zoom: 3.5
+  });
+  if (!mapObj) return;
+  ch9Map = mapObj.map;
+  ch9Layers = L.layerGroup().addTo(ch9Map);
+  ch9StepMarkers = [];
+
+  // Smooth route of the barrel
+  const smoothRoute = generateSmoothMaritimeSpline(CH9_STEP_COORDS, 20);
+  L.polyline(smoothRoute, {
+    color: "#f59e0b",
+    weight: 4.8,
+    className: "leaflet-ant-flow maritime-smooth-line"
+  }).addTo(ch9Layers).bindTooltip("Full 9-Stage Voyage: Ghawar Wellhead → Zhoushan Refinery");
+
+  // Plot 9 stage pins
+  OIL_DATA.journeyOfOneBarrel.forEach((s, idx) => {
+    const pt = CH9_STEP_COORDS[idx];
+    if (!pt) return;
+    const isSpecial = idx === 0 || idx === 3 || idx === 5 || idx === 8;
+    const marker = L.circleMarker(pt, {
+      radius: isSpecial ? 8 : 6,
+      fillColor: idx === 0 ? "#10b981" : idx === 8 ? "#dc2626" : "#0284c7",
+      color: "#ffffff",
+      weight: 2,
+      fillOpacity: 1
+    }).addTo(ch9Layers);
+
+    marker.bindTooltip(`<strong>Stage ${s.step}: ${s.title}</strong><br><span style="font-size:11px;">${s.location}</span>`, {
+      direction: "top",
+      offset: [0, -8]
+    });
+    marker.on("click", () => setJourneyStep(idx));
+    ch9StepMarkers.push(marker);
+  });
+
+  // Animated Tanker on the Voyage
+  ch9VesselAnimator = new SmoothMaritimeVesselAnimator(ch9Map, ch9Layers, {
+    color: "#f59e0b",
+    speedScale: 0.000032,
+    initialProgress: 0.25,
+    tooltip: "🚢 VLCC 'Cosgold Lake' — 2M bbls Arab Light on 9-Stage Voyage"
+  });
+  ch9VesselAnimator.setRoute(CH9_STEP_COORDS, "#f59e0b");
 }
 
 // Chapter 08: Interactive Crude Choice Simulator (7 Crudes x 4 Buyers)
@@ -2957,33 +3274,40 @@ function recalculateArbitrage() {
 /* ==========================================================================
    5. LEAFLET MAPS IMPLEMENTATION FOR CHAPTERS
    ========================================================================== */
+let buyerSourcingMap = null;
+let buyerSourcingLayers = null;
+let buyerSourcingAnimators = [];
+
 function initBuyerSourcingMap() {
   const mapEl = document.getElementById("buyerSourcingMap");
   if (!mapEl || typeof L === "undefined") return;
 
+  if (buyerSourcingMap) {
+    buyerSourcingMap.remove();
+    buyerSourcingMap = null;
+  }
   if (STATE.mapInstance) {
-    STATE.mapInstance.remove();
+    try { STATE.mapInstance.remove(); } catch (e) {}
     STATE.mapInstance = null;
   }
+  buyerSourcingAnimators.forEach(a => a.destroy());
+  buyerSourcingAnimators = [];
 
-  STATE.mapInstance = L.map("buyerSourcingMap", {
-    center: [32.0, 115.0],
-    zoom: 4,
-    minZoom: 2,
-    maxZoom: 9,
-    zoomControl: false
+  const mapObj = createStandardChapterMap("buyerSourcingMap", {
+    center: [28.0, 110.0],
+    zoom: 4
   });
-
-  L.control.zoom({ position: "topleft" }).addTo(STATE.mapInstance);
-
-  createSatelliteHybridLayerGroup().addTo(STATE.mapInstance);
+  if (!mapObj) return;
+  buyerSourcingMap = mapObj.map;
+  STATE.mapInstance = buyerSourcingMap;
+  buyerSourcingLayers = L.layerGroup().addTo(buyerSourcingMap);
 
   // Plot terminals for China by default
   plotBuyerTerminals("china");
 }
 
 function zoomSourcingMap(buyerKey) {
-  if (!STATE.mapInstance || !OIL_DATA.asianBuyers[buyerKey]) return;
+  if (!buyerSourcingMap || !OIL_DATA.asianBuyers[buyerKey]) return;
 
   const centers = {
     china: { center: [32.0, 115.0], zoom: 4 },
@@ -2993,36 +3317,34 @@ function zoomSourcingMap(buyerKey) {
   };
 
   const cfg = centers[buyerKey] || centers.china;
-  STATE.mapInstance.flyTo(cfg.center, cfg.zoom, { duration: 1.2 });
+  buyerSourcingMap.flyTo(cfg.center, cfg.zoom, { duration: 1.2 });
 
   document.querySelectorAll(".section-header .map-pill-btn").forEach(b => b.classList.remove("active"));
-  event.target.classList.add("active");
+  if (event && event.target) event.target.classList.add("active");
 
   plotBuyerTerminals(buyerKey);
 }
 
 function plotBuyerTerminals(buyerKey) {
-  if (!STATE.mapInstance) return;
+  if (!buyerSourcingMap || !buyerSourcingLayers) return;
 
-  // Clear existing markers
-  STATE.mapInstance.eachLayer(layer => {
-    if (layer instanceof L.Marker) {
-      STATE.mapInstance.removeLayer(layer);
-    }
-  });
+  buyerSourcingAnimators.forEach(a => a.destroy());
+  buyerSourcingAnimators = [];
+  buyerSourcingLayers.clearLayers();
 
   const b = OIL_DATA.asianBuyers[buyerKey];
   if (!b || !b.primaryTerminals) return;
 
+  // Plot Port/Terminal Pins
   b.primaryTerminals.forEach(t => {
     const icon = L.divIcon({
       className: "terminal-pin",
-      html: `<div style="background:#0284c7; width:14px; height:14px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 6px rgba(2,132,199,0.6);"></div>`,
+      html: `<div style="background:#0284c7; width:14px; height:14px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 8px rgba(2,132,199,0.8);"></div>`,
       iconSize: [14, 14]
     });
 
     L.marker([t.lat, t.lng], { icon })
-      .addTo(STATE.mapInstance)
+      .addTo(buyerSourcingLayers)
       .bindPopup(`
         <div style="font-family:var(--font-mono); font-size:12px;">
           <strong style="color:#0284c7;">⚓ ${t.name}</strong><br/>
@@ -3030,44 +3352,140 @@ function plotBuyerTerminals(buyerKey) {
         </div>
       `);
   });
+
+  // Dynamic Inbound Maritime Corridors for this Asian Buyer
+  const buyerFeederRoutes = {
+    china: [
+      {
+        name: "Persian Gulf → Malacca → Ningbo/Zhoushan (5.0 Mb/d)",
+        coords: [[25.12, 56.36], [16.0, 68.0], [5.8, 80.5], [5.9, 95.0], [1.25, 103.85], [14.0, 114.5], [29.95, 121.72]],
+        color: "#d97706",
+        ship: "🇨🇳 VLCC 'Cosgold Lake' — Arab Light → Zhoushan",
+        prog: 0.35,
+        speed: 0.000030
+      },
+      {
+        name: "Russia ESPO Kozmino → Qingdao Shandong (3-Day Shuttle)",
+        coords: [[42.73, 133.00], [38.5, 130.5], [34.5, 128.0], [36.06, 120.38]],
+        color: "#dc2626",
+        ship: "🇷🇺 Aframax 'Zaliv Baikal' — ESPO Shuttle → Qingdao",
+        prog: 0.60,
+        speed: 0.000045
+      }
+    ],
+    india: [
+      {
+        name: "Persian Gulf → Jamnagar/Vadinar (2.1 Mb/d)",
+        coords: [[25.12, 56.36], [23.5, 63.0], [22.36, 69.85]],
+        color: "#f59e0b",
+        ship: "🇮🇳 VLCC 'Desh Shanti' — Basrah Heavy → Jamnagar",
+        prog: 0.45,
+        speed: 0.000038
+      },
+      {
+        name: "Russia Urals (via Suez & Red Sea) → Vadinar (1.8 Mb/d)",
+        coords: [[29.9, 32.5], [20.0, 39.0], [12.6, 43.3], [12.0, 52.0], [22.36, 69.85]],
+        color: "#dc2626",
+        ship: "🇷🇺 Suezmax 'NS Century' — Urals → Vadinar",
+        prog: 0.50,
+        speed: 0.000034
+      }
+    ],
+    japan: [
+      {
+        name: "Persian Gulf → Malacca → Tokyo Bay / Chiba (2.3 Mb/d)",
+        coords: [[25.12, 56.36], [16.0, 68.0], [5.8, 80.5], [1.25, 103.85], [18.0, 118.0], [28.0, 128.0], [35.53, 140.08]],
+        color: "#d97706",
+        ship: "🇯🇵 VLCC 'Apollo Energy' — Murban/Oman → Chiba",
+        prog: 0.55,
+        speed: 0.000032
+      },
+      {
+        name: "US WTI Midland & Alaska ANS → Japan",
+        coords: [[54.0, -165.0], [45.0, 160.0], [38.0, 145.0], [35.53, 140.08]],
+        color: "#0284c7",
+        ship: "🇺🇸 Aframax 'Polar Discovery' — ANS → Yokohama",
+        prog: 0.40,
+        speed: 0.000036
+      }
+    ],
+    southKorea: [
+      {
+        name: "Middle East → Malacca → Ulsan / Onsan (2.7 Mb/d)",
+        coords: [[25.12, 56.36], [16.0, 68.0], [5.8, 80.5], [1.25, 103.85], [18.0, 118.0], [30.0, 126.0], [35.50, 129.38]],
+        color: "#d97706",
+        ship: "🇰🇷 VLCC 'Front Altair' — Basrah/Murban → Ulsan",
+        prog: 0.60,
+        speed: 0.000032
+      },
+      {
+        name: "US WTI Midland (via Cape) → Yeosu GS Caltex",
+        coords: [[-34.5, 18.5], [-20.0, 60.0], [5.8, 80.5], [1.25, 103.85], [20.0, 118.0], [34.82, 127.75]],
+        color: "#0284c7",
+        ship: "🇺🇸 VLCC 'Eagle Veracruz' — WTI Midland → Yeosu",
+        prog: 0.35,
+        speed: 0.000028
+      }
+    ]
+  };
+
+  const activeRoutes = buyerFeederRoutes[buyerKey] || buyerFeederRoutes.china;
+  activeRoutes.forEach(r => {
+    const smooth = generateSmoothMaritimeSpline(r.coords, 20);
+    L.polyline(smooth, {
+      color: r.color,
+      weight: 4.2,
+      className: "leaflet-ant-flow maritime-smooth-line"
+    }).addTo(buyerSourcingLayers).bindTooltip(r.name);
+
+    const anim = new SmoothMaritimeVesselAnimator(buyerSourcingMap, buyerSourcingLayers, {
+      color: r.color,
+      speedScale: r.speed,
+      initialProgress: r.prog,
+      tooltip: r.ship
+    });
+    anim.setRoute(r.coords, r.color);
+    buyerSourcingAnimators.push(anim);
+  });
 }
+
+let tankerRouteMapInstance = null;
+let tankerRouteLayers = null;
+let tankerRouteVesselAnimator = null;
 
 function initTankerRouteMap() {
   const mapEl = document.getElementById("tankerRouteMap");
   if (!mapEl || typeof L === "undefined") return;
 
-  if (STATE.mapInstance) {
-    STATE.mapInstance.remove();
-    STATE.mapInstance = null;
+  if (tankerRouteMapInstance) {
+    tankerRouteMapInstance.remove();
+    tankerRouteMapInstance = null;
   }
-  if (STATE.vesselAnimator) {
-    STATE.vesselAnimator.stop();
-    STATE.vesselAnimator = null;
+  if (tankerRouteVesselAnimator) {
+    tankerRouteVesselAnimator.destroy();
+    tankerRouteVesselAnimator = null;
   }
 
-  STATE.mapInstance = L.map("tankerRouteMap", {
+  const mapObj = createStandardChapterMap("tankerRouteMap", {
     center: [18.0, 85.0],
-    zoom: 3,
-    minZoom: 2,
-    maxZoom: 9,
-    zoomControl: false
+    zoom: 3.2
   });
-
-  L.control.zoom({ position: "topleft" }).addTo(STATE.mapInstance);
-
-  createSatelliteHybridLayerGroup().addTo(STATE.mapInstance);
+  if (!mapObj) return;
+  tankerRouteMapInstance = mapObj.map;
+  STATE.mapInstance = tankerRouteMapInstance;
+  tankerRouteLayers = L.layerGroup().addTo(tankerRouteMapInstance);
 
   // Plot Chokepoints
   if (OIL_DATA.chokepoints) {
     OIL_DATA.chokepoints.forEach(cp => {
       const icon = L.divIcon({
         className: "cp-icon",
-        html: `<div style="background:#dc2626; width:12px; height:12px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 8px rgba(220,38,38,0.6);"></div>`,
+        html: `<div style="background:#dc2626; width:12px; height:12px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 8px rgba(220,38,38,0.8);"></div>`,
         iconSize: [12, 12]
       });
 
       L.marker(cp.location, { icon })
-        .addTo(STATE.mapInstance)
+        .addTo(tankerRouteLayers)
         .bindPopup(`
           <div style="font-family:var(--font-mono); font-size:12px;">
             <strong style="color:#dc2626;">🚨 CHOKEPOINT: ${cp.name}</strong><br/>
@@ -3095,7 +3513,7 @@ function initTankerRouteMap() {
 function selectTankerRoute(routeId) {
   STATE.activeRouteId = routeId;
   const route = OIL_DATA.tankerRoutes.find(r => r.id === routeId);
-  if (!route || !STATE.mapInstance) return;
+  if (!route || !tankerRouteMapInstance) return;
 
   document.querySelectorAll(".map-route-btn").forEach(b => b.classList.remove("active"));
   const btn = document.getElementById(`btnRoute_${routeId}`);
@@ -3111,30 +3529,31 @@ function selectTankerRoute(routeId) {
   if (dur) dur.textContent = `${route.transitDays} Days (@${route.speedKnots} kts)`;
   if (freight) freight.textContent = `$${route.freightCostPerBbl.toFixed(2)} / bbl`;
 
-  if (STATE.routePolyline) STATE.mapInstance.removeLayer(STATE.routePolyline);
-  if (STATE.vesselMarker) STATE.mapInstance.removeLayer(STATE.vesselMarker);
-  if (STATE.vesselAnimationId) cancelAnimationFrame(STATE.vesselAnimationId);
-  if (STATE.vesselAnimator) {
-    STATE.vesselAnimator.stop();
-    STATE.vesselAnimator = null;
+  if (STATE.routePolyline && tankerRouteLayers) {
+    try { tankerRouteLayers.removeLayer(STATE.routePolyline); } catch (e) {}
+  }
+  if (tankerRouteVesselAnimator) {
+    tankerRouteVesselAnimator.destroy();
+    tankerRouteVesselAnimator = null;
   }
 
   const smoothCoords = generateSmoothMaritimeSpline(route.waypoints, 20);
   STATE.routePolyline = L.polyline(smoothCoords, {
     color: "#38bdf8",
-    weight: 4.2,
-    opacity: 0.9,
-    dashArray: "6, 8",
-    className: "maritime-smooth-line"
-  }).addTo(STATE.mapInstance);
+    weight: 4.8,
+    opacity: 0.95,
+    className: "leaflet-ant-flow maritime-smooth-line"
+  }).addTo(tankerRouteLayers);
 
-  STATE.mapInstance.fitBounds(STATE.routePolyline.getBounds(), { padding: [50, 50] });
+  tankerRouteMapInstance.fitBounds(STATE.routePolyline.getBounds(), { padding: [50, 50] });
 
-  STATE.vesselAnimator = new SmoothMaritimeVesselAnimator(STATE.mapInstance, STATE.mapInstance, {
+  tankerRouteVesselAnimator = new SmoothMaritimeVesselAnimator(tankerRouteMapInstance, tankerRouteLayers, {
     color: "#f59e0b",
-    speedScale: 0.000035
+    speedScale: 0.000035,
+    tooltip: `🚢 ${route.vesselClass}: ${route.name} ($${route.freightCostPerBbl.toFixed(2)}/bbl)`
   });
-  STATE.vesselAnimator.setRoute(route.waypoints, "#f59e0b");
+  tankerRouteVesselAnimator.setRoute(route.waypoints, "#f59e0b");
+  STATE.vesselAnimator = tankerRouteVesselAnimator;
 }
 
 function animateVesselAlongPath(waypoints) {
@@ -3732,7 +4151,7 @@ function initChapter10ShockMap() {
     ch10ShockMap = null;
   }
   if (ch10ShockVesselAnimator) {
-    ch10ShockVesselAnimator.stop();
+    ch10ShockVesselAnimator.destroy();
     ch10ShockVesselAnimator = null;
   }
   el.innerHTML = "";
@@ -3778,7 +4197,9 @@ function initChapter10ShockMap() {
     if (ch10ShockCurrentBasemap === "voyager") return;
     ch10ShockMap.removeLayer(ch10ShockTileLayers.satellite);
     ch10ShockTileLayers.voyager.addTo(ch10ShockMap);
-    ch10ShockTileLayers.voyager.bringToBack();
+    if (ch10ShockTileLayers.voyager && typeof ch10ShockTileLayers.voyager.bringToBack === "function") {
+      ch10ShockTileLayers.voyager.bringToBack();
+    }
     ch10ShockCurrentBasemap = "voyager";
     toggleEl.querySelector("#btnCh10SMapVoyager").classList.add("active");
     toggleEl.querySelector("#btnCh10SMapSatellite").classList.remove("active");
@@ -3788,7 +4209,9 @@ function initChapter10ShockMap() {
     if (ch10ShockCurrentBasemap === "satellite") return;
     ch10ShockMap.removeLayer(ch10ShockTileLayers.voyager);
     ch10ShockTileLayers.satellite.addTo(ch10ShockMap);
-    ch10ShockTileLayers.satellite.bringToBack();
+    if (ch10ShockTileLayers.satellite && typeof ch10ShockTileLayers.satellite.bringToBack === "function") {
+      ch10ShockTileLayers.satellite.bringToBack();
+    }
     ch10ShockCurrentBasemap = "satellite";
     toggleEl.querySelector("#btnCh10SMapSatellite").classList.add("active");
     toggleEl.querySelector("#btnCh10SMapVoyager").classList.remove("active");
@@ -3814,7 +4237,7 @@ function updateShockMap() {
     ch10ShockAnim = null;
   }
   if (ch10ShockVesselAnimator) {
-    ch10ShockVesselAnimator.stop();
+    ch10ShockVesselAnimator.destroy();
     ch10ShockVesselAnimator = null;
   }
   ch10ShockLayers.clearLayers();
@@ -3888,7 +4311,7 @@ function initChapter10FutureMap() {
     ch10FutureMap = null;
   }
   if (ch10FutureVesselAnimator) {
-    ch10FutureVesselAnimator.stop();
+    ch10FutureVesselAnimator.destroy();
     ch10FutureVesselAnimator = null;
   }
   el.innerHTML = "";
@@ -3935,7 +4358,9 @@ function initChapter10FutureMap() {
     if (ch10FutureCurrentBasemap === "voyager") return;
     ch10FutureMap.removeLayer(ch10FutureTileLayers.satellite);
     ch10FutureTileLayers.voyager.addTo(ch10FutureMap);
-    ch10FutureTileLayers.voyager.bringToBack();
+    if (ch10FutureTileLayers.voyager && typeof ch10FutureTileLayers.voyager.bringToBack === "function") {
+      ch10FutureTileLayers.voyager.bringToBack();
+    }
     ch10FutureCurrentBasemap = "voyager";
     toggleEl.querySelector("#btnCh10FMapVoyager").classList.add("active");
     toggleEl.querySelector("#btnCh10FMapSatellite").classList.remove("active");
@@ -3945,7 +4370,9 @@ function initChapter10FutureMap() {
     if (ch10FutureCurrentBasemap === "satellite") return;
     ch10FutureMap.removeLayer(ch10FutureTileLayers.voyager);
     ch10FutureTileLayers.satellite.addTo(ch10FutureMap);
-    ch10FutureTileLayers.satellite.bringToBack();
+    if (ch10FutureTileLayers.satellite && typeof ch10FutureTileLayers.satellite.bringToBack === "function") {
+      ch10FutureTileLayers.satellite.bringToBack();
+    }
     ch10FutureCurrentBasemap = "satellite";
     toggleEl.querySelector("#btnCh10FMapSatellite").classList.add("active");
     toggleEl.querySelector("#btnCh10FMapVoyager").classList.remove("active");
@@ -4094,7 +4521,7 @@ function selectFutureRoute(routeId) {
   if (ch10FutureMap && ch10FutureLayers) {
     ch10FutureLayers.clearLayers();
     if (ch10FutureVesselAnimator) {
-      ch10FutureVesselAnimator.stop();
+      ch10FutureVesselAnimator.destroy();
       ch10FutureVesselAnimator = null;
     }
 
@@ -4523,20 +4950,16 @@ function initChapter11Visual() {
     ch11Map = null;
   }
   if (ch11VesselAnimator) {
-    ch11VesselAnimator.stop();
+    ch11VesselAnimator.destroy();
     ch11VesselAnimator = null;
   }
 
-  ch11Map = L.map("chapter11BypassMap", {
+  const mapObj = createStandardChapterMap("chapter11BypassMap", {
     center: [24.0, 56.0],
-    zoom: 5,
-    minZoom: 2,
-    maxZoom: 10,
-    zoomControl: true,
-    attributionControl: false
+    zoom: 5
   });
-
-  createSatelliteHybridLayerGroup().addTo(ch11Map);
+  if (!mapObj) return;
+  ch11Map = mapObj.map;
 
   ch11Layers = L.layerGroup().addTo(ch11Map);
 
@@ -4605,7 +5028,7 @@ function selectChapter11Route(routeId) {
   if (ch11Map && ch11Layers) {
     ch11Layers.clearLayers();
     if (ch11VesselAnimator) {
-      ch11VesselAnimator.stop();
+      ch11VesselAnimator.destroy();
       ch11VesselAnimator = null;
     }
 
@@ -4621,13 +5044,13 @@ function selectChapter11Route(routeId) {
     }
 
     // Draw Smooth Route Polyline
-    const smoothCoords = generateSmoothMaritimeSpline(route.waypoints, 18);
+    const smoothCoords = generateSmoothMaritimeSpline(route.waypoints, 20);
     const line = L.polyline(smoothCoords, {
       color: route.color || "#2563eb",
       weight: 5,
-      opacity: 0.9,
+      opacity: 0.95,
       dashArray: route.category === "concept" ? "6, 8" : null,
-      className: "maritime-smooth-line"
+      className: "leaflet-ant-flow maritime-smooth-line"
     }).addTo(ch11Layers);
 
     // Draw origin and destination markers
@@ -4650,7 +5073,8 @@ function selectChapter11Route(routeId) {
     // Ultra-smooth vessel animation on the route
     ch11VesselAnimator = new SmoothMaritimeVesselAnimator(ch11Map, ch11Layers, {
       color: route.color || "#38bdf8",
-      speedScale: 0.000035
+      speedScale: 0.000035,
+      tooltip: `🚢 ${route.name} (${route.status})`
     });
     ch11VesselAnimator.setRoute(route.waypoints, route.color || "#38bdf8");
 
