@@ -353,6 +353,20 @@ export const PLAIN_ENGLISH_CHAPTERS = [
     title: '7-Crude Delivered Cost Calculator',
     subtitle: 'Compare Landed Costs & Margins Across All 4 Asian Buyers',
     summary: 'Compare FOB prices, ocean freight, sulfur cleaning costs, and netback margins for 7 major crudes side-by-side.'
+  },
+  {
+    id: 9,
+    route: '/chapter/9',
+    title: 'What Happens If A Major Supplier Disappears?',
+    subtitle: 'Interactive Supply Shock Simulator & Crisis War Game',
+    summary: 'Simulate the disappearance of top crude suppliers (Russia, UAE, Saudi Arabia, Hormuz blockage, Atlantic arb) and see who replaces the missing barrel.'
+  },
+  {
+    id: 10,
+    route: '/chapter/10',
+    title: 'Future Pipeline Routes & Maritime Alternatives',
+    subtitle: 'Can Steel Pipelines, Arctic Shortcuts & Strategic Bypasses Defeat Naval Blockades?',
+    summary: 'Explore all 11 strategic bypass corridors, the Northern Sea Route Arctic corridor, and Kra Isthmus bypasses with live map routing and feasibility analytics.'
   }
 ];
 

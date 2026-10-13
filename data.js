@@ -1081,9 +1081,21 @@ const OIL_DATA = {
     {
       id: 9,
       number: "09",
+      title: "What Happens If A Major Supplier Disappears?",
+      subtitle: "Interactive Supply Shock Simulator & Crisis War Game",
+      sectionTag: "STRATEGY WAR GAME // CHAPTER 09",
+      summary: "Interactive crisis scenarios (Russia, UAE, Saudi Arabia, Hormuz, Atlantic Arbitrage) and who replaces the missing barrel.",
+      whatIsThis: "A real-time strategic war game simulating the disappearance of top crude suppliers (Russia, UAE, Saudi Arabia) and maritime chokepoint closures.",
+      whyItMatters: "Asia imports 22.4 million barrels every single day with near-zero domestic backup. A single outage forces billions of dollars in emergency crude rerouting.",
+      tradingImpact: "Shows immediate price shocks on Brent, WTI, and Dubai OSPs, identifying who wins the cash and which refiners face mandatory run cuts.",
+      mapId: "corridor_wargame"
+    },
+    {
+      id: 10,
+      number: "10",
       title: "Future Pipeline Routes & Maritime Alternatives",
       subtitle: "Can Steel Pipelines, Arctic Shortcuts & Strategic Bypasses Defeat Naval Blockades?",
-      sectionTag: "CHAPTER 09 // FUTURE BYPASS CORRIDORS",
+      sectionTag: "CHAPTER 10 // FUTURE BYPASS CORRIDORS",
       summary: "A beginner-friendly strategic guide analyzing 11 global pipeline and seaborne bypass routes, likelihood of success, strategist rankings, and Asia's energy security.",
       whatIsThis: "Strategic pipeline bypasses (ADCOP, East-West, Basra-Aqaba, Goreh-Jask), Arctic shortcuts (NSR), and overland corridors designed to avoid maritime choke points.",
       whyItMatters: "Over 80% of Asia's crude currently crosses Hormuz or Malacca. Steel pipelines and Arctic routes offer structural escape valves during wartime.",

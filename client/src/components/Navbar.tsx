@@ -89,6 +89,17 @@ export const Navbar: React.FC = () => {
                 : 'text-ink hover:bg-paper'
             }`}
           >
+            <span>🎮</span> Crisis Scenarios
+          </Link>
+
+          <Link
+            to="/chapter/10"
+            className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1 ${
+              location.pathname === '/chapter/10'
+                ? 'bg-paper-subtle text-ft-claret font-bold border border-paper-border'
+                : 'text-ink hover:bg-paper'
+            }`}
+          >
             <span>🌐</span> Future Pipeline Routes
           </Link>
         </nav>
