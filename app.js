@@ -4691,32 +4691,8 @@ function filterChapter10Routes(category, evt) {
 
 function voteChapter10(optionKey) {
   STATE.ch10UserVote = optionKey;
-  const d = OIL_DATA.chapter11Data;
-  if (!d || !d.audienceQuestion) return;
-
-  const opt = d.audienceQuestion.options.find(o => o.key === optionKey);
-  if (!opt) return;
-
-  d.audienceQuestion.options.forEach(o => {
-    const el = document.getElementById(`ch10_opt_${o.key}`);
-    if (el) {
-      if (o.key === optionKey) el.classList.add("selected");
-      else el.classList.remove("selected");
-    }
-  });
-
-  const fb = document.getElementById("ch10VoteFeedback");
-  if (fb) {
-    fb.innerHTML = `
-      <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:12px; margin-top:8px;">
-        <span style="color:#1e40af; font-size:13px; font-weight:800;">✓ VOTE REGISTERED: ${opt.label}</span>
-        <div style="font-size:12px; color:#334155; font-family:var(--font-sans); margin-top:4px;">
-          ${opt.verdict}
-        </div>
-      </div>
-    `;
-  }
 }
+
 
 function renderFutureRoutesGrid() {
   const container = document.getElementById("futureRoutesCardList");

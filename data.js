@@ -2446,73 +2446,7 @@ const OIL_DATA = {
       { route: "Saudi-Oman", likelihood: "Medium", impact: "High", badgeL: "🟡 Medium", badgeI: "🔥 High", note: "Strategic holy grail: reaches open Indian Ocean avoiding Hormuz AND Red Sea." },
       { route: "INSTC", likelihood: "Low", impact: "Medium", badgeL: "🔴 Low", badgeI: "⚡ Medium", note: "Multimodal logistics bottlenecks, customs delays, and Iranian infrastructure limits." },
       { route: "Russia-India Rail", likelihood: "Low", impact: "Low", badgeL: "🔴 Low", badgeI: "📊 Low", note: "High capital cost per barrel compared to VLCCs; complex transit geopolitics." }
-    ],
-
-    strategistView: {
-      question: "Which routes are most likely to become important in the next 10–20 years?",
-      rankings: [
-        {
-          rank: 1,
-          route: "ADCOP + UAE parallel Fujairah line",
-          verdict: "Highest credibility Asia-facing Hormuz hedge.",
-          detail: "Domestic politics, clear commercial logic, already proven in crisis utilisation. If the second line lands by late decade, UAE becomes the structural 'safe AG' loader for Asia light and medium grades."
-        },
-        {
-          rank: 2,
-          route: "Saudi East-West / Yanbu debottleneck",
-          verdict: "Not glamorous pipe steel; port capacity is the constraint.",
-          detail: "Any sustained Hormuz risk premium makes Yanbu expansion NPV-positive. Asia importance is indirect but large as it frees up global balance."
-        },
-        {
-          rank: 3,
-          route: "Atlantic seaborne highways (USGC / Brazil / Guyana / WAF → Asia via Cape)",
-          verdict: "The volume route that will matter most in barrel terms.",
-          detail: "Not a single 'project,' but a massive structural shift. Guyana and Brazil growth plus US export capacity structurally raise Asia's non-Middle East optionality."
-        },
-        {
-          rank: 4,
-          route: "ESPO system (pipeline + Kozmino)",
-          verdict: "Remains China's strategic baseload.",
-          detail: "Operates 24/7 regardless of Western sanctions theatre, providing safe non-chokepoint overland feed directly into China."
-        },
-        {
-          rank: 5,
-          route: "Basra–Haditha–Aqaba phased",
-          verdict: "Best of the Iraqi bypass family on political alignment.",
-          detail: "Provides critical redundancy for Baghdad; still only medium Asia importance due to Red Sea transit and multi-year execution hurdles."
-        }
-      ]
-    },
-
-    audienceQuestion: {
-      prompt: "If Asia wanted to reduce dependence on Hormuz by 2040, which route would matter the most?",
-      options: [
-        {
-          key: "adcop_fujairah",
-          label: "🇦🇪 ADCOP + Fujairah Expansion (UAE Indian Ocean Gateway)",
-          share: "41% of Strategists",
-          verdict: "The Pragmatic Frontrunner: UAE has the highest project execution credibility, zero transit countries, and Fujairah is already Asia's premier offshore bunkering and storage hub."
-        },
-        {
-          key: "atlantic_basin",
-          label: "🌊 Atlantic Basin Seaborne Arbitrage (US / Brazil / Guyana via Cape)",
-          share: "35% of Strategists",
-          verdict: "The Market Giant: Scale beats steel. Over 5.0 Mb/d of sweet crude rounding Africa provides more physical volume than every Middle East bypass pipeline combined."
-        },
-        {
-          key: "saudi_oman",
-          label: "🇸🇦🇴🇲 Saudi-Oman Direct Link to Duqm (Empty Quarter Pipeline)",
-          share: "16% of Strategists",
-          verdict: "The Ultimate Strategic Vision: Solves both Hormuz AND Bab el-Mandeb in a single stroke, placing Saudi crude directly onto open Indian Ocean waters."
-        },
-        {
-          key: "espo_arctic",
-          label: "❄️ Siberian ESPO Pipeline + Arctic Northern Sea Route (NSR)",
-          share: "8% of Strategists",
-          verdict: "The Sino-Russian Fortress: Renders northern China completely immune to Western naval blockades, though geographically irrelevant for Tokyo, Seoul, or New Delhi."
-        }
-      ]
-    }
+    ]
   }
 };
 
