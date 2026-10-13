@@ -445,18 +445,18 @@ function handleRoute() {
 
   if (hash.startsWith("#/chapter/")) {
     let chapterId = parseInt(hash.replace("#/chapter/", ""), 10);
-    if (!isNaN(chapterId) && chapterId >= 1 && chapterId <= 10) {
+    if (!isNaN(chapterId) && chapterId >= 1 && chapterId <= 9) {
       showChapterView(chapterId);
+      return;
+    } else if (chapterId >= 10) {
+      showChapterView(9); // Gracefully redirect any legacy Chapter 10+ links to Chapter 9
       return;
     }
   } else if (hash === "#/simulator") {
     showChapterView(8); // Chapter 8: 7-Crude Delivered Cost Calculator
     return;
-  } else if (hash === "#/wargame" || hash === "#/shock" || hash === "#/crisis") {
-    showChapterView(9); // Chapter 9: Crisis War Game (Supply Shocks)
-    return;
-  } else if (hash === "#/future" || hash === "#/futureroutes" || hash === "#/routes") {
-    showChapterView(10); // Chapter 10: Future Oil Routes & Bottleneck Bypasses
+  } else if (hash === "#/future" || hash === "#/futureroutes" || hash === "#/routes" || hash === "#/bypass" || hash === "#/wargame" || hash === "#/shock" || hash === "#/crisis") {
+    showChapterView(9); // Chapter 9: Future Pipeline Routes & Maritime Alternatives
     return;
   } else if (hash === "#/journey") {
     showChapterView(1); // Redirect legacy journey hash to Chapter 1
@@ -508,20 +508,17 @@ function showChapterView(chapterId) {
 function updateNavActiveState(activeKey) {
   const navHome = document.getElementById("navLinkHome");
   const navSim = document.getElementById("navLinkSimulator");
-  const navWarGame = document.getElementById("navLinkWarGame");
   const navFuture = document.getElementById("navLinkFutureRoutes");
   const navChapters = document.getElementById("navBtnChapters");
 
-  [navHome, navSim, navWarGame, navFuture, navChapters].forEach(el => {
+  [navHome, navSim, navFuture, navChapters].forEach(el => {
     if (el) el.classList.remove("active");
   });
 
   if (activeKey === "home" && navHome) {
     navHome.classList.add("active");
-  } else if (activeKey === "chapter-10" && navFuture) {
+  } else if (activeKey === "chapter-9" && navFuture) {
     navFuture.classList.add("active");
-  } else if (activeKey === "chapter-9" && navWarGame) {
-    navWarGame.classList.add("active");
   } else if (activeKey === "chapter-8" && navSim) {
     navSim.classList.add("active");
   } else if (navChapters) {
@@ -669,9 +666,7 @@ function renderChapterContent(chapterId) {
   } else if (chapterId === 8) {
     html += renderChapter8Visual(); // Chapter 08: 7-Crude Delivered Cost Calculator
   } else if (chapterId === 9) {
-    html += renderChapter10Visual(); // Chapter 09: What Happens If A Major Supplier Disappears? (Crisis War Game)
-  } else if (chapterId === 10) {
-    html += renderChapter11Visual(); // Chapter 10: Future Oil Routes & Bottleneck Bypasses
+    html += renderChapter9Visual(); // Chapter 09: Future Pipeline Routes & Maritime Alternatives
   }
 
   // Bottom Chapter Navigation Bar (← Previous Chapter | Selector | Next Chapter →)
@@ -740,9 +735,7 @@ function renderChapterContent(chapterId) {
     } else if (chapterId === 8) {
       initArbitrageCalculator(); // Chapter 08: 7-Crude Delivered Cost Calculator
     } else if (chapterId === 9) {
-      initChapter10Simulator();  // Chapter 09: What Happens If A Major Supplier Disappears? (Crisis War Game)
-    } else if (chapterId === 10) {
-      initChapter11Visual();     // Chapter 10: Future Oil Routes & Bottleneck Bypasses
+      initChapter9Visual();      // Chapter 09: Future Pipeline Routes & Maritime Alternatives
     }
   }, 60);
 }
@@ -3623,931 +3616,117 @@ function setMocStep(idx) {
   if (status) status.textContent = descriptions[idx];
 }
 
+
 // ============================================================================
-// CHAPTER 10: WHAT HAPPENS IF A MAJOR SUPPLIER DISAPPEARS? (WAR GAME)
+// CHAPTER 09: FUTURE PIPELINE ROUTES & MARITIME ALTERNATIVES
 // ============================================================================
-STATE.activeShockScenario = "russia";
-STATE.shockMode = "after"; // "before" or "after"
-STATE.activeFutureRouteId = "east_west";
+STATE.activeFutureRouteId = "arctic_nsr";
 STATE.futureRouteCategory = "all";
-
-let ch10ShockMap = null;
-let ch10ShockLayers = null;
-let ch10ShockShip = null;
-let ch10ShockAnim = null;
-
-let ch10FutureMap = null;
-let ch10FutureLayers = null;
-
-function renderChapter10Visual() {
-  const scenarios = OIL_DATA.shockScenarios;
-  if (!scenarios) return `<div class="p-8 text-center text-red-600 font-mono">Shock scenario data not loaded.</div>`;
-
-  return `
-    <div style="background:var(--bg-surface); border:1.5px solid var(--border-subtle); border-radius:var(--radius-lg); padding:24px; margin-bottom:32px;">
-      
-      <!-- WAR GAME TOP BANNER -->
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-bottom:2px solid #e2e8f0; padding-bottom:16px; margin-bottom:20px;">
-        <div>
-          <div style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#dc2626; text-transform:uppercase; letter-spacing:0.08em; display:flex; align-items:center; gap:6px;">
-            <span style="font-size:16px;">🎮</span> STRATEGIC WAR GAME SIMULATOR // AUDIENCE INTERACTIVE
-          </div>
-          <h2 style="font-family:var(--font-serif); font-size:26px; font-weight:800; color:#0f172a; margin-top:4px;">
-            Who Replaces the Missing Barrel?
-          </h2>
-          <p style="font-size:13.5px; color:#475569; margin-top:2px;">
-            Test real-world supply cutoffs. Explore who replaces the crude, how tanker flows migrate, and which countries profit.
-          </p>
-        </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; color:#64748b;">SHOCK MODE:</span>
-          <div style="display:inline-flex; background:#e2e8f0; padding:3px; border-radius:8px;">
-            <button id="btnShockBefore" class="wargame-pill-filter ${STATE.shockMode === 'before' ? 'active' : ''}" onclick="toggleShockBeforeAfter('before')">
-              🔘 Before Crisis
-            </button>
-            <button id="btnShockAfter" class="wargame-pill-filter ${STATE.shockMode === 'after' ? 'active' : ''}" onclick="toggleShockBeforeAfter('after')">
-              🚨 After Shock
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 5 SCENARIO SELECTOR TABS -->
-      <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:22px;" id="ch10ScenarioTabs">
-        ${Object.values(scenarios).map(sc => `
-          <button class="wargame-tab-btn ${sc.id === STATE.activeShockScenario ? 'active' : ''}" id="tab_scenario_${sc.id}" onclick="selectShockScenario('${sc.id}')">
-            <span style="font-size:17px;">${sc.icon}</span>
-            <span>${sc.shortTitle}</span>
-          </button>
-        `).join("")}
-      </div>
-
-      <!-- DYNAMIC SCENARIO CONTENT INJECTED HERE -->
-      <div id="ch10ScenarioContainer">
-        <!-- Rendered via renderShockScenarioContent() -->
-      </div>
-
-      <!-- INTERACTIVE CRISIS MAP -->
-      <div style="margin-top:28px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
-          <div>
-            <div style="font-family:var(--font-mono); font-size:12px; font-weight:800; color:#0f172a;" id="ch10MapTitle">
-              🗺️ REAL-TIME FLOW MIGRATION &amp; TANKER RE-ROUTING RADAR
-            </div>
-            <div style="font-size:12px; color:#475569;" id="ch10MapSubtitle">
-              Severed routes fade out (red dashed) while emergency replacement corridors launch toward Asia.
-            </div>
-          </div>
-          <span id="ch10MapModeBadge" style="font-family:var(--font-mono); font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px; background:#fee2e2; color:#991b1b; border:1px solid #fecaca;">
-            🚨 EMERGENCY FLOW DIVERTER ACTIVE
-          </span>
-        </div>
-        <div id="chapter10ShockMap" style="width:100%; height:440px; border-radius:10px; border:1.5px solid #cbd5e1; background:#0f172a;"></div>
-      </div>
-
-      <!-- =====================================================================
-           SECTION 2: 11 FUTURE BYPASS PIPELINES & ARCTIC CORRIDORS
-           ===================================================================== -->
-      <div style="margin-top:44px; border-top:2px solid #e2e8f0; padding-top:28px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
-          <div>
-            <div style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#0284c7; text-transform:uppercase; letter-spacing:0.06em;">
-              🗺️ BYPASSING WAR ZONES &amp; CHOKEPOINTS
-            </div>
-            <h3 style="font-family:var(--font-serif); font-size:24px; font-weight:800; color:#0f172a; margin-top:2px;">
-              Future Pipeline Routes &amp; Maritime Alternatives
-            </h3>
-            <p style="font-size:13.5px; color:#475569;">
-              Can steel pipelines and Arctic icebreakers defeat naval blockades? Click any route to inspect its geography and strategic impact.
-            </p>
-          </div>
-          
-          <!-- Category Filter Pills -->
-          <div style="display:flex; flex-wrap:wrap; gap:6px;">
-            <button class="wargame-pill-filter ${STATE.futureRouteCategory === 'all' ? 'active' : ''}" onclick="filterFutureRoutes('all', this)">All (11)</button>
-            <button class="wargame-pill-filter ${STATE.futureRouteCategory === 'existing' ? 'active' : ''}" onclick="filterFutureRoutes('existing', this)">Existing Bypasses (4)</button>
-            <button class="wargame-pill-filter ${STATE.futureRouteCategory === 'planned' ? 'active' : ''}" onclick="filterFutureRoutes('planned', this)">Planned (3)</button>
-            <button class="wargame-pill-filter ${STATE.futureRouteCategory === 'asia_bypass' ? 'active' : ''}" onclick="filterFutureRoutes('asia_bypass', this)">Malacca Bypasses (2)</button>
-            <button class="wargame-pill-filter ${STATE.futureRouteCategory === 'arctic_wildcard' ? 'active' : ''}" onclick="filterFutureRoutes('arctic_wildcard', this)">Arctic &amp; Wildcards (2)</button>
-          </div>
-        </div>
-
-        <!-- 2-COLUMN LAYOUT: ROUTE CARDS + INTERACTIVE PIPELINE MAP -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start;">
-          
-          <!-- Left: Route Cards Grid -->
-          <div id="futureRoutesCardList" style="display:flex; flex-direction:column; gap:12px; max-height:460px; overflow-y:auto; padding-right:6px;">
-            <!-- Injected via renderFutureRoutesGrid() -->
-          </div>
-
-          <!-- Right: Interactive Pipeline Map + Selected Route Inspector -->
-          <div>
-            <div id="chapter10FutureMap" style="width:100%; height:420px; border-radius:10px; border:1.5px solid #cbd5e1; margin-bottom:12px; position:relative; overflow:hidden; cursor:grab;"></div>
-            <div id="futureRouteDetailBox" style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; padding:14px;">
-              <!-- Injected on card click -->
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- =====================================================================
-           SECTION 3: SUPPLIER OF LAST RESORT COMPARISON MATRIX
-           ===================================================================== -->
-      <div style="margin-top:44px; border-top:2px solid #e2e8f0; padding-top:28px;">
-        <div style="margin-bottom:18px;">
-          <div style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#059669; text-transform:uppercase; letter-spacing:0.06em;">
-            🏆 GRAND STRATEGIC CONCLUSION
-          </div>
-          <h3 style="font-family:var(--font-serif); font-size:24px; font-weight:800; color:#0f172a; margin-top:2px;">
-            Who Becomes Asia's Supplier of Last Resort?
-          </h3>
-          <p style="font-size:13.5px; color:#475569;">
-            Summary matrix comparing every supply shock scenario and the ultimate destination of Asian capital.
-          </p>
-        </div>
-
-        <div style="overflow-x:auto; border-radius:10px; border:1.5px solid #cbd5e1; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-          <table class="wargame-matrix-table">
-            <thead>
-              <tr>
-                <th style="width:25%;">Crisis Scenario</th>
-                <th style="width:24%;">Primary Winner</th>
-                <th style="width:23%;">Secondary Backstop</th>
-                <th style="width:28%;">Strategic Verdict for Asia</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <strong>🇷🇺 Russia Disappears</strong><br>
-                  <span style="font-size:11.5px; color:#64748b;">Urals &amp; ESPO (~4.1 Mb/d)</span><br>
-                  <span style="display:inline-block; margin-top:3px; font-size:10px; font-family:var(--font-mono); font-weight:700; color:#b91c1c; background:#fee2e2; padding:1px 5px; border-radius:3px;">Brent: +$5–$15 (+6% to +19%) | WTI: +$4–$10 (+80% to +160% spread)</span>
-                </td>
-                <td><span style="font-weight:700; color:#059669;">🇸🇦 Saudi Arabia</span><br><span style="font-size:11.5px; color:#475569;">Arab Light/Medium volumes + OSP surge</span></td>
-                <td><span style="color:#0284c7; font-weight:600;">🇺🇸 USA + 🇧🇷 Brazil</span><br><span style="font-size:11.5px; color:#475569;">WTI Midland &amp; Pre-Salt</span></td>
-                <td><span style="font-size:12px;"><strong>Manageable Shock:</strong> India loses cheap feed; Saudi Aramco and Texas shale take the market share.</span></td>
-              </tr>
-              <tr>
-                <td>
-                  <strong>🇦🇪 UAE Disappears</strong><br>
-                  <span style="font-size:11.5px; color:#64748b;">Murban &amp; Upper Zakum (~2.3 Mb/d)</span><br>
-                  <span style="display:inline-block; margin-top:3px; font-size:10px; font-family:var(--font-mono); font-weight:700; color:#b91c1c; background:#fee2e2; padding:1px 5px; border-radius:3px;">Brent: +$3–$10 (+4% to +13%) | WTI: +$6–$12 (+120% to +200% spread)</span>
-                </td>
-                <td><span style="font-weight:700; color:#0284c7;">🇺🇸 USA (WTI Midland)</span><br><span style="font-size:11.5px; color:#475569;">Becomes Asia's primary light sweet marker</span></td>
-                <td><span style="color:#d97706; font-weight:600;">🇸🇦 Saudi AXL + 🇴🇲 Oman</span><br><span style="font-size:11.5px; color:#475569;">DME Oman physical anchor</span></td>
-                <td><span style="font-size:12px;"><strong>Benchmark Collapse:</strong> Japan faces energy crisis; IFAD Murban futures suspend; WTI steps in.</span></td>
-              </tr>
-              <tr>
-                <td>
-                  <strong>🇸🇦 Saudi Arabia Disappears</strong><br>
-                  <span style="font-size:11.5px; color:#64748b;">Stress Case (~4.5 Mb/d + Spare Cushion)</span><br>
-                  <span style="display:inline-block; margin-top:3px; font-size:10px; font-family:var(--font-mono); font-weight:700; color:#991b1b; background:#fee2e2; padding:1px 5px; border-radius:3px;">Brent: +$15–$40+ (+20% to +55%+) | WTI: +$15–$35 (+250% to +500% spread)</span>
-                </td>
-                <td><span style="font-weight:800; color:#dc2626;">❌ NOBODY ON EARTH</span><br><span style="font-size:11.5px; color:#475569;">Global spare capacity is 100% wiped out</span></td>
-                <td><span style="color:#475569; font-weight:600;">🛑 Demand Destruction</span><br><span style="font-size:11.5px; color:#475569;">Emergency SPR releases across G7/China</span></td>
-                <td><span style="font-size:12px;"><strong>System Failure:</strong> Market economics fail. Forced refinery shutdowns, fuel rationing, and severe global recession.</span></td>
-              </tr>
-              <tr>
-                <td>
-                  <strong>🌊 Strait of Hormuz Closes</strong><br>
-                  <span style="font-size:11.5px; color:#64748b;">Naval Blockade (20.8 Mb/d chokepoint)</span><br>
-                  <span style="display:inline-block; margin-top:3px; font-size:10px; font-family:var(--font-mono); font-weight:700; color:#991b1b; background:#fee2e2; padding:1px 5px; border-radius:3px;">Brent: +$30–$60 (+38% to +77%) | WTI: +$25–$50 (+300% to +600% spread)</span>
-                </td>
-                <td><span style="font-weight:700; color:#059669;">🇦🇪 Fujairah Port (ADCOP)</span><br><span style="font-size:11.5px; color:#475569;">1.8 Mb/d pipeline bypass outside Hormuz</span></td>
-                <td><span style="color:#0284c7; font-weight:600;">🇸🇦 Yanbu (Red Sea) + 🇺🇸 USGC</span><br><span style="font-size:11.5px; color:#475569;">Atlantic Basin becomes lifeline</span></td>
-                <td><span style="font-size:12px;"><strong>Geographic Warfare:</strong> Only oil loaded outside Hormuz can sail. Fujairah and Yanbu become pure gold dust.</span></td>
-              </tr>
-              <tr>
-                <td>
-                  <strong>📉 Atlantic Crude Turns Cheap</strong><br>
-                  <span style="font-size:11.5px; color:#64748b;">Brent-Dubai EFS collapses &lt; $0.80/bbl</span><br>
-                  <span style="display:inline-block; margin-top:3px; font-size:10px; font-family:var(--font-mono); font-weight:700; color:#065f46; background:#d1fae5; padding:1px 5px; border-radius:3px;">Brent: -$2–$5 (-2.5% to -6.5%) | EFS Arb: &lt;$0.80 (-70% to -85%)</span>
-                </td>
-                <td><span style="font-weight:700; color:#0284c7;">🇺🇸 USA (WTI Midland)</span><br><span style="font-size:11.5px; color:#475569;">VLCC arbitrage floodgates open</span></td>
-                <td><span style="color:#10b981; font-weight:600;">🇧🇷 Brazil (Tupi / Búzios)</span><br><span style="font-size:11.5px; color:#475569;">West African sweet grades</span></td>
-                <td><span style="font-size:12px;"><strong>Commercial Win for Asia:</strong> Asian refiners cut Middle East term intake, forcing Aramco to slash monthly OSPs.</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- THE GOLDEN TRADING RULE CALLOUT -->
-        <div style="background:#0f172a; border-radius:10px; padding:18px 22px; margin-top:20px; display:flex; align-items:center; gap:16px; color:#ffffff;">
-          <div style="font-size:36px;">🎯</div>
-          <div>
-            <div style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#f59e0b; text-transform:uppercase; letter-spacing:0.06em;">
-              THE GOLDEN RULE OF CRUDE STRATEGY
-            </div>
-            <div style="font-family:var(--font-serif); font-size:18px; font-weight:700; font-style:italic; color:#f8fafc; margin-top:2px;">
-              &ldquo;When small suppliers fail, Asian traders check their spreadsheets.<br>
-              When Saudi Arabia fails, Asian governments call their militaries.&rdquo;
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-  `;
-}
-
-// ----------------------------------------------------------------------------
-// INTERACTIVE CONTROLLER: SWITCH SHOCK SCENARIO
-// ----------------------------------------------------------------------------
-function selectShockScenario(scenarioKey) {
-  STATE.activeShockScenario = scenarioKey;
-
-  // Update tabs
-  document.querySelectorAll("#ch10ScenarioTabs .wargame-tab-btn").forEach(btn => {
-    btn.classList.remove("active");
-  });
-  const activeTab = document.getElementById(`tab_scenario_${scenarioKey}`);
-  if (activeTab) activeTab.classList.add("active");
-
-  renderShockScenarioContent();
-  updateShockMap();
-}
-
-function toggleShockBeforeAfter(mode) {
-  STATE.shockMode = mode;
-
-  const btnB = document.getElementById("btnShockBefore");
-  const btnA = document.getElementById("btnShockAfter");
-  const badge = document.getElementById("ch10MapModeBadge");
-
-  if (btnB && btnA) {
-    if (mode === "before") {
-      btnB.classList.add("active");
-      btnA.classList.remove("active");
-      if (badge) {
-        badge.textContent = "🔘 STANDARD BASELOAD FLOWS (NORMAL)";
-        badge.style.background = "#e2e8f0";
-        badge.style.color = "#334155";
-        badge.style.borderColor = "#cbd5e1";
-      }
-    } else {
-      btnA.classList.add("active");
-      btnB.classList.remove("active");
-      if (badge) {
-        badge.textContent = "🚨 EMERGENCY FLOW DIVERTER ACTIVE";
-        badge.style.background = "#fee2e2";
-        badge.style.color = "#991b1b";
-        badge.style.borderColor = "#fecaca";
-      }
-    }
-  }
-
-  updateShockMap();
-}
-
-function renderShockScenarioContent() {
-  const container = document.getElementById("ch10ScenarioContainer");
-  const scenarios = OIL_DATA.shockScenarios;
-  if (!container || !scenarios) return;
-
-  const sc = scenarios[STATE.activeShockScenario] || scenarios.russia;
-
-  container.innerHTML = `
-    <!-- AUDIENCE STRATEGY QUESTION -->
-    <div style="background:#eff6ff; border:1.5px solid #bfdbfe; border-left:6px solid #2563eb; border-radius:8px; padding:14px 18px; margin-bottom:18px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-        <span style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#1d4ed8; text-transform:uppercase;">
-          💡 AUDIENCE STRATEGY QUESTION:
-        </span>
-        <span style="font-family:var(--font-mono); font-size:11.5px; font-weight:800; color:#ffffff; background:#dc2626; padding:2px 8px; border-radius:4px;">
-          ${sc.headlineMetric}
-        </span>
-      </div>
-      <div style="font-family:var(--font-serif); font-size:17px; font-weight:800; color:#0f172a; line-height:1.4;">
-        ${sc.question}
-      </div>
-    </div>
-
-    <!-- 3 LIVE PRICE REACTION GAUGES -->
-    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:20px;">
-      
-      <!-- Gauge 1: Brent -->
-      <div class="wargame-gauge-card" style="border-left:4px solid #dc2626;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; font-family:var(--font-mono); font-size:11px; font-weight:800; color:#64748b;">
-          <span>📈 BRENT CRUDE REACTION</span>
-          <div style="text-align:right;">
-            <div style="color:#dc2626; font-size:12px; font-weight:800;">${sc.brentShift}</div>
-            ${sc.brentPct ? `<span style="display:inline-block; font-size:10px; font-weight:800; color:#b91c1c; background:#fee2e2; border:1px solid #fca5a5; padding:1px 6px; border-radius:4px; margin-top:3px;">${sc.brentPct}</span>` : ''}
-          </div>
-        </div>
-        <div style="margin-top:8px; height:8px; background:#f1f5f9; border-radius:999px; overflow:hidden;">
-          <div style="height:100%; width:${sc.brentGaugePct}%; background:#dc2626; border-radius:999px; transition:width 0.4s ease;"></div>
-        </div>
-        <div style="font-size:11.5px; color:#334155; margin-top:6px; line-height:1.45;">
-          ${sc.brentImpact}
-        </div>
-      </div>
-
-      <!-- Gauge 2: WTI -->
-      <div class="wargame-gauge-card" style="border-left:4px solid #0284c7;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; font-family:var(--font-mono); font-size:11px; font-weight:800; color:#64748b;">
-          <span>📉 WTI MIDLAND SPREAD</span>
-          <div style="text-align:right;">
-            <div style="color:#0284c7; font-size:12px; font-weight:800;">${sc.wtiShift}</div>
-            ${sc.wtiPct ? `<span style="display:inline-block; font-size:10px; font-weight:800; color:#0369a1; background:#e0f2fe; border:1px solid #bae6fd; padding:1px 6px; border-radius:4px; margin-top:3px;">${sc.wtiPct}</span>` : ''}
-          </div>
-        </div>
-        <div style="margin-top:8px; height:8px; background:#f1f5f9; border-radius:999px; overflow:hidden;">
-          <div style="height:100%; width:${sc.wtiGaugePct}%; background:#0284c7; border-radius:999px; transition:width 0.4s ease;"></div>
-        </div>
-        <div style="font-size:11.5px; color:#334155; margin-top:6px; line-height:1.45;">
-          ${sc.wtiImpact}
-        </div>
-      </div>
-
-      <!-- Gauge 3: Dubai / OSP -->
-      <div class="wargame-gauge-card" style="border-left:4px solid #d97706;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; font-family:var(--font-mono); font-size:11px; font-weight:800; color:#64748b;">
-          <span>⚖️ DUBAI BENCHMARK / OSP</span>
-          <div style="text-align:right;">
-            <div style="color:#d97706; font-size:12px; font-weight:800;">${sc.dubaiShift}</div>
-            ${sc.dubaiPct ? `<span style="display:inline-block; font-size:10px; font-weight:800; color:#92400e; background:#fef3c7; border:1px solid #fde68a; padding:1px 6px; border-radius:4px; margin-top:3px;">${sc.dubaiPct}</span>` : ''}
-          </div>
-        </div>
-        <div style="margin-top:8px; height:8px; background:#f1f5f9; border-radius:999px; overflow:hidden;">
-          <div style="height:100%; width:${sc.dubaiGaugePct}%; background:#d97706; border-radius:999px; transition:width 0.4s ease;"></div>
-        </div>
-        <div style="font-size:11.5px; color:#334155; margin-top:6px; line-height:1.45;">
-          ${sc.dubaiImpact}
-        </div>
-      </div>
-
-    </div>
-
-    <!-- 10-STEP FLOW BREAKDOWN GRID (HIGH CONTRAST) -->
-    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; margin-bottom:20px;">
-      
-      <div class="wargame-flow-step" style="border-left:4px solid #dc2626;">
-        <div style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#991b1b;">1. ❌ WHAT DISAPPEARS?</div>
-        <div style="font-size:13.5px; font-weight:700; color:#0f172a; margin-top:2px;">${sc.lostBarrels}</div>
-      </div>
-
-      <div class="wargame-flow-step" style="border-left:4px solid #ea580c;">
-        <div style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#9a3412;">2. 🚨 WHO SUFFERS FIRST?</div>
-        <div style="font-size:13.5px; font-weight:700; color:#0f172a; margin-top:2px;">${sc.affectedBuyers}</div>
-      </div>
-
-      <div class="wargame-flow-step" style="border-left:4px solid #059669;">
-        <div style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#065f46;">3. 🔄 WHO REPLACES THE BARRELS?</div>
-        <div style="font-size:13.5px; font-weight:700; color:#0f172a; margin-top:2px;">${sc.replacementBarrels}</div>
-      </div>
-
-      <div class="wargame-flow-step" style="border-left:4px solid #0284c7;">
-        <div style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#0369a1;">4. 🌍 REPLACEMENT COUNTRIES</div>
-        <div style="font-size:13.5px; font-weight:700; color:#0f172a; margin-top:2px;">${sc.replacementCountries}</div>
-      </div>
-
-      <div class="wargame-flow-step" style="border-left:4px solid #64748b;">
-        <div style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#334155;">5. ⚓ CURRENT SEVERED ROUTES</div>
-        <div style="font-size:13px; color:#1e293b; margin-top:2px;">${sc.currentRoutes}</div>
-      </div>
-
-      <div class="wargame-flow-step" style="border-left:4px solid #3b82f6;">
-        <div style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#1d4ed8;">6. 🚢 ALTERNATIVE EMERGENCY ROUTES</div>
-        <div style="font-size:13px; color:#1e293b; margin-top:2px;">${sc.alternativeRoutes}</div>
-      </div>
-
-      <div class="wargame-flow-step" style="background:#f0fdf4; border-color:#86efac; border-left:4px solid #10b981;">
-        <div style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#166534;">7. 🟢 WINNER COUNTRIES</div>
-        <div style="font-size:13.5px; font-weight:700; color:#14532d; margin-top:2px;">${sc.winner}</div>
-      </div>
-
-      <div class="wargame-flow-step" style="background:#fef2f2; border-color:#fecaca; border-left:4px solid #ef4444;">
-        <div style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#991b1b;">8. 🔴 LOSER COUNTRIES</div>
-        <div style="font-size:13.5px; font-weight:700; color:#7f1d1d; margin-top:2px;">${sc.loser}</div>
-      </div>
-
-    </div>
-
-    <!-- ONE-SLIDE VERDICT -->
-    <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; padding:12px 16px; font-size:13px; color:#0f172a; line-height:1.5;">
-      <strong>📌 Strategic Conclusion:</strong> ${sc.verdict}
-    </div>
-  `;
-}
-
-// ----------------------------------------------------------------------------
-// INTERACTIVE MAP CONTROLLER: SHOCK MAP (LEAFLET + MOVING TANKER)
-// ----------------------------------------------------------------------------
-function initChapter10Simulator() {
-  initChapter10ShockMap();
-  initChapter10FutureMap();
-  renderShockScenarioContent();
-  renderFutureRoutesGrid();
-  selectFutureRoute(STATE.activeFutureRouteId);
-}
-
-let ch10ShockTileLayers = null;
-let ch10ShockCurrentBasemap = "satellite";
-let ch10ShockVesselAnimator = null;
-
-function initChapter10ShockMap() {
-  const el = document.getElementById("chapter10ShockMap");
-  if (!el || typeof L === "undefined") return;
-
-  if (ch10ShockMap) {
-    ch10ShockMap.remove();
-    ch10ShockMap = null;
-  }
-  if (ch10ShockVesselAnimator) {
-    ch10ShockVesselAnimator.destroy();
-    ch10ShockVesselAnimator = null;
-  }
-  el.innerHTML = "";
-  delete el.dataset.maritimeUpgraded;
-
-  ch10ShockMap = L.map("chapter10ShockMap", {
-    center: [20.0, 75.0],
-    zoom: 3,
-    dragging: true,
-    scrollWheelZoom: true,
-    touchZoom: true,
-    doubleClickZoom: true,
-    boxZoom: true,
-    keyboard: true,
-    tap: false,
-    noMaritime: true
-  });
-
-  ch10ShockMap.dragging.enable();
-
-  ch10ShockTileLayers = {
-    voyager: L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      attribution: "&copy; OpenStreetMap &copy; CARTO",
-      maxZoom: 18
-    }),
-    satellite: createSatelliteHybridLayerGroup()
-  };
-
-  ch10ShockCurrentBasemap = "satellite";
-  ch10ShockTileLayers.satellite.addTo(ch10ShockMap);
-
-  const toggleEl = document.createElement("div");
-  toggleEl.className = "ch10-map-basemap-toggle";
-  toggleEl.innerHTML = `
-    <button type="button" class="ch10-map-btn active" id="btnCh10SMapSatellite">🛰️ Satellite</button>
-    <button type="button" class="ch10-map-btn" id="btnCh10SMapVoyager">🗺️ Map</button>
-  `;
-  L.DomEvent.disableClickPropagation(toggleEl);
-  L.DomEvent.disableScrollPropagation(toggleEl);
-  el.appendChild(toggleEl);
-
-  toggleEl.querySelector("#btnCh10SMapVoyager").addEventListener("click", () => {
-    if (ch10ShockCurrentBasemap === "voyager") return;
-    ch10ShockMap.removeLayer(ch10ShockTileLayers.satellite);
-    ch10ShockTileLayers.voyager.addTo(ch10ShockMap);
-    if (ch10ShockTileLayers.voyager && typeof ch10ShockTileLayers.voyager.bringToBack === "function") {
-      ch10ShockTileLayers.voyager.bringToBack();
-    }
-    ch10ShockCurrentBasemap = "voyager";
-    toggleEl.querySelector("#btnCh10SMapVoyager").classList.add("active");
-    toggleEl.querySelector("#btnCh10SMapSatellite").classList.remove("active");
-  });
-
-  toggleEl.querySelector("#btnCh10SMapSatellite").addEventListener("click", () => {
-    if (ch10ShockCurrentBasemap === "satellite") return;
-    ch10ShockMap.removeLayer(ch10ShockTileLayers.voyager);
-    ch10ShockTileLayers.satellite.addTo(ch10ShockMap);
-    if (ch10ShockTileLayers.satellite && typeof ch10ShockTileLayers.satellite.bringToBack === "function") {
-      ch10ShockTileLayers.satellite.bringToBack();
-    }
-    ch10ShockCurrentBasemap = "satellite";
-    toggleEl.querySelector("#btnCh10SMapSatellite").classList.add("active");
-    toggleEl.querySelector("#btnCh10SMapVoyager").classList.remove("active");
-  });
-
-  const dragHint = document.createElement("div");
-  dragHint.className = "ch10-map-drag-hint";
-  dragHint.innerHTML = "🖐️ Click &amp; drag to pan • Scroll to zoom";
-  el.appendChild(dragHint);
-
-  ch10ShockMap.on("dragstart", () => { el.style.cursor = "grabbing"; });
-  ch10ShockMap.on("dragend", () => { el.style.cursor = "grab"; });
-
-  ch10ShockLayers = L.layerGroup().addTo(ch10ShockMap);
-  updateShockMap();
-}
-
-function updateShockMap() {
-  if (!ch10ShockMap || !ch10ShockLayers) return;
-
-  if (ch10ShockAnim) {
-    cancelAnimationFrame(ch10ShockAnim);
-    ch10ShockAnim = null;
-  }
-  if (ch10ShockVesselAnimator) {
-    ch10ShockVesselAnimator.destroy();
-    ch10ShockVesselAnimator = null;
-  }
-  ch10ShockLayers.clearLayers();
-
-  const scenarios = OIL_DATA.shockScenarios;
-  const sc = scenarios ? scenarios[STATE.activeShockScenario] : null;
-  if (!sc) return;
-
-  const isAfter = STATE.shockMode === "after";
-
-  // If "Before", show standard routes as healthy green lines
-  if (!isAfter) {
-    const normalRoutes = (sc.mapSevered && sc.mapSevered.length > 0) ? sc.mapSevered : [
-      {
-        name: "Persian Gulf → East Asia Baseload Flow",
-        coords: [[26.64, 50.16], [26.2, 53.0], [26.56, 56.45], [24.5, 58.5], [15.0, 66.0], [5.8, 80.5], [5.9, 95.0], [1.25, 103.85], [15.0, 114.5], [29.87, 121.54]]
-      }
-    ];
-    normalRoutes.forEach(r => {
-      const curvedCoords = generateSmoothMaritimeSpline(r.coords, 20);
-      L.polyline(curvedCoords, { color: "#10b981", weight: 4.0, opacity: 0.9, interactive: false, className: "maritime-smooth-line" }).addTo(ch10ShockLayers)
-        .bindTooltip(`Normal Flow: ${r.name}`, { permanent: false });
-    });
-    // Add default tanker
-    if (normalRoutes.length > 0) {
-      ch10ShockVesselAnimator = new SmoothMaritimeVesselAnimator(ch10ShockMap, ch10ShockLayers, { color: "#10b981", speedScale: 0.000035, tooltip: `🚢 Baseline Crude Flow: ${normalRoutes[0].name}` });
-      ch10ShockVesselAnimator.setRoute(normalRoutes[0].coords, "#10b981");
-    }
-    return;
-  }
-
-  // If "After Shock", show severed routes as RED DASHED
-  (sc.mapSevered || []).forEach(r => {
-    const curvedCoords = generateSmoothMaritimeSpline(r.coords, 20);
-    L.polyline(curvedCoords, { color: "#ef4444", weight: 3.8, dashArray: "6, 6", opacity: 0.85, interactive: false, className: "maritime-smooth-line" }).addTo(ch10ShockLayers)
-      .bindTooltip(`❌ SEVERED: ${r.name}`, { permanent: true });
-    
-    // X marker at origin
-    L.circleMarker(r.coords[0], { radius: 7, fillColor: "#ef4444", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
-      .addTo(ch10ShockLayers).bindTooltip(`Supply Cut: ${r.name}`, { permanent: false });
-  });
-
-  // Show replacement routes as vibrant lines
-  (sc.mapReplacement || []).forEach(r => {
-    const curvedCoords = generateSmoothMaritimeSpline(r.coords, 20);
-    L.polyline(curvedCoords, { color: r.color || "#0284c7", weight: 4.5, className: "leaflet-ant-flow maritime-smooth-line", interactive: false }).addTo(ch10ShockLayers)
-      .bindTooltip(`🟢 EMERGENCY ROUTE: ${r.name}`, { permanent: false });
-
-    // Green origin and blue destination
-    L.circleMarker(r.coords[0], { radius: 8, fillColor: "#10b981", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
-      .addTo(ch10ShockLayers).bindTooltip(`Replacement Hub: ${r.name}`, { permanent: false });
-
-    L.circleMarker(r.coords[r.coords.length - 1], { radius: 8, fillColor: "#0284c7", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
-      .addTo(ch10ShockLayers).bindTooltip(`Receiving Port`, { permanent: false });
-  });
-
-  // Animate replacement tanker on the primary replacement route
-  if (sc.mapReplacement && sc.mapReplacement.length > 0) {
-    ch10ShockVesselAnimator = new SmoothMaritimeVesselAnimator(ch10ShockMap, ch10ShockLayers, { color: sc.mapReplacement[0].color || "#38bdf8", speedScale: 0.000035 });
-    ch10ShockVesselAnimator.setRoute(sc.mapReplacement[0].coords, sc.mapReplacement[0].color || "#38bdf8");
-  }
-}
-
-// ----------------------------------------------------------------------------
-// INTERACTIVE FUTURE ROUTES MAP & CARDS CONTROLLER
-// ----------------------------------------------------------------------------
-let ch10FutureTileLayers = null;
-let ch10FutureCurrentBasemap = "satellite";
-let ch10FutureVesselAnimator = null;
-
-function initChapter10FutureMap() {
-  const el = document.getElementById("chapter10FutureMap");
-  if (!el || typeof L === "undefined") return;
-
-  if (ch10FutureMap) {
-    ch10FutureMap.remove();
-    ch10FutureMap = null;
-  }
-  if (ch10FutureVesselAnimator) {
-    ch10FutureVesselAnimator.destroy();
-    ch10FutureVesselAnimator = null;
-  }
-  el.innerHTML = "";
-  delete el.dataset.maritimeUpgraded;
-
-  ch10FutureMap = L.map("chapter10FutureMap", {
-    center: [24.0, 54.0],
-    zoom: 4,
-    dragging: true,
-    scrollWheelZoom: true,
-    touchZoom: true,
-    doubleClickZoom: true,
-    boxZoom: true,
-    keyboard: true,
-    tap: false,
-    noMaritime: true
-  });
-
-  ch10FutureMap.dragging.enable();
-
-  ch10FutureTileLayers = {
-    voyager: L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      attribution: "&copy; OpenStreetMap &copy; CARTO",
-      maxZoom: 18
-    }),
-    satellite: createSatelliteHybridLayerGroup()
-  };
-
-  ch10FutureCurrentBasemap = "satellite";
-  ch10FutureTileLayers.satellite.addTo(ch10FutureMap);
-
-  // Basemap switch controls (compact, top-right, non-blocking)
-  const toggleEl = document.createElement("div");
-  toggleEl.className = "ch10-map-basemap-toggle";
-  toggleEl.innerHTML = `
-    <button type="button" class="ch10-map-btn active" id="btnCh10FMapSatellite">🛰️ Satellite</button>
-    <button type="button" class="ch10-map-btn" id="btnCh10FMapVoyager">🗺️ Map</button>
-  `;
-  L.DomEvent.disableClickPropagation(toggleEl);
-  L.DomEvent.disableScrollPropagation(toggleEl);
-  el.appendChild(toggleEl);
-
-  toggleEl.querySelector("#btnCh10FMapVoyager").addEventListener("click", () => {
-    if (ch10FutureCurrentBasemap === "voyager") return;
-    ch10FutureMap.removeLayer(ch10FutureTileLayers.satellite);
-    ch10FutureTileLayers.voyager.addTo(ch10FutureMap);
-    if (ch10FutureTileLayers.voyager && typeof ch10FutureTileLayers.voyager.bringToBack === "function") {
-      ch10FutureTileLayers.voyager.bringToBack();
-    }
-    ch10FutureCurrentBasemap = "voyager";
-    toggleEl.querySelector("#btnCh10FMapVoyager").classList.add("active");
-    toggleEl.querySelector("#btnCh10FMapSatellite").classList.remove("active");
-  });
-
-  toggleEl.querySelector("#btnCh10FMapSatellite").addEventListener("click", () => {
-    if (ch10FutureCurrentBasemap === "satellite") return;
-    ch10FutureMap.removeLayer(ch10FutureTileLayers.voyager);
-    ch10FutureTileLayers.satellite.addTo(ch10FutureMap);
-    if (ch10FutureTileLayers.satellite && typeof ch10FutureTileLayers.satellite.bringToBack === "function") {
-      ch10FutureTileLayers.satellite.bringToBack();
-    }
-    ch10FutureCurrentBasemap = "satellite";
-    toggleEl.querySelector("#btnCh10FMapSatellite").classList.add("active");
-    toggleEl.querySelector("#btnCh10FMapVoyager").classList.remove("active");
-  });
-
-  const dragHint = document.createElement("div");
-  dragHint.className = "ch10-map-drag-hint";
-  dragHint.innerHTML = "🖐️ Click &amp; drag to pan • Scroll to zoom";
-  el.appendChild(dragHint);
-
-  ch10FutureMap.on("dragstart", () => { el.style.cursor = "grabbing"; });
-  ch10FutureMap.on("dragend", () => { el.style.cursor = "grab"; });
-
-  ch10FutureLayers = L.layerGroup().addTo(ch10FutureMap);
-}
-
-function filterFutureRoutes(category, btnEl) {
-  STATE.futureRouteCategory = category;
-
-  document.querySelectorAll(".wargame-pill-filter").forEach(b => {
-    if (b.onclick && b.onclick.toString().includes("filterFutureRoutes")) {
-      b.classList.remove("active");
-    }
-  });
-  if (btnEl) btnEl.classList.add("active");
-
-  renderFutureRoutesGrid();
-
+STATE.activeChapter9RouteId = "arctic_nsr";
+STATE.activeShockScenario = "russia";
+STATE.shockMode = "after";
+STATE.ch9Filter = "all";
+STATE.ch9UserVote = null;
+
+let ch9FutureMap = null;
+let ch9FutureLayers = null;
+let ch9FutureTileLayers = null;
+let ch9FutureCurrentBasemap = "satellite";
+let ch9FutureVesselAnimator = null;
+let ch9AnimTimer = null;
+
+let ch9ShockMap = null;
+let ch9ShockLayers = null;
+let ch9ShockVesselAnimator = null;
+let ch9ShockAnim = null;
+
+function renderChapter9Visual() {
   const routes = OIL_DATA.futureRoutesData;
-  const filtered = category === "all" ? routes : routes.filter(r => r.category === category);
-  if (filtered && filtered.length > 0) {
-    const isCurrentInFiltered = filtered.some(r => r.id === STATE.activeFutureRouteId);
-    if (!isCurrentInFiltered) {
-      selectFutureRoute(filtered[0].id);
-    }
-  }
-}
-
-function renderFutureRoutesGrid() {
-  const listEl = document.getElementById("futureRoutesCardList");
-  const routes = OIL_DATA.futureRoutesData;
-  if (!listEl || !routes) return;
-
-  const cat = STATE.futureRouteCategory || "all";
-  const filtered = cat === "all" ? routes : routes.filter(r => r.category === cat);
-
-  listEl.innerHTML = filtered.map(r => `
-    <div class="wargame-route-card ${r.id === STATE.activeFutureRouteId ? 'active' : ''}" id="route_card_${r.id}" onclick="selectFutureRoute('${r.id}')">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
-        <span style="font-family:var(--font-mono); font-size:10px; font-weight:800; padding:2px 8px; border-radius:4px; background:#f1f5f9; color:#334155;">
-          ${r.status}
-        </span>
-        <div style="display:flex; gap:4px;">
-          <span style="font-family:var(--font-mono); font-size:10px; font-weight:700;">Prob: ${r.probBadge}</span>
-          <span style="font-family:var(--font-mono); font-size:10px; font-weight:700;">Impact: ${r.impactBadge}</span>
-        </div>
-      </div>
-      <div style="font-family:var(--font-serif); font-size:15px; font-weight:800; color:#0f172a; margin-top:2px;">
-        ${r.name}
-      </div>
-
-      <!-- Countries Origin & Destination Row -->
-      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:7px 0 6px 0; padding:6px 10px; background:#eff6ff; border:1px solid #bfdbfe; border-left:3.5px solid #2563eb; border-radius:6px; font-size:12px;">
-        <span style="display:inline-flex; align-items:center; gap:4px;">
-          <span style="font-size:9.5px; font-weight:800; color:#1e40af; background:#dbeafe; padding:1px 5px; border-radius:3px; font-family:var(--font-mono); text-transform:uppercase;">ORIGIN</span>
-          <strong style="color:#0f172a;">${r.originCountry || 'N/A'}</strong>
-        </span>
-        <span style="color:#2563eb; font-weight:900; font-size:12px;">➔</span>
-        <span style="display:inline-flex; align-items:center; gap:4px;">
-          <span style="font-size:9.5px; font-weight:800; color:#047857; background:#d1fae5; padding:1px 5px; border-radius:3px; font-family:var(--font-mono); text-transform:uppercase;">DESTINATION</span>
-          <strong style="color:#0f172a;">${r.destinationCountry || 'N/A'}</strong>
-        </span>
-        ${r.transitCountries ? `
-          <span style="font-size:11px; color:#64748b; margin-left:auto; font-style:italic;">
-            (Via ${r.transitCountries})
-          </span>
-        ` : ''}
-      </div>
-
-      <div style="font-size:12px; color:#475569; margin-top:3px;">
-        ${r.geography}
-      </div>
-      <div style="font-size:11.5px; color:#0284c7; font-weight:700; margin-top:4px;">
-        💡 Solves: ${r.problemSolved}
-      </div>
-    </div>
-  `).join("");
-}
-
-function selectFutureRoute(routeId) {
-  STATE.activeFutureRouteId = routeId;
-
-  // Highlight card
-  document.querySelectorAll(".wargame-route-card").forEach(c => c.classList.remove("active"));
-  const activeCard = document.getElementById(`route_card_${routeId}`);
-  if (activeCard) activeCard.classList.add("active");
-
-  const routes = OIL_DATA.futureRoutesData;
-  const route = routes ? routes.find(r => r.id === routeId) : null;
-  if (!route) return;
-
-  // Render Detail Box
-  const detailBox = document.getElementById("futureRouteDetailBox");
-  if (detailBox) {
-    detailBox.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <span style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:${route.color || '#0284c7'};">
-          PIPELINE RADAR: ${route.name.toUpperCase()}
-        </span>
-        <span style="font-family:var(--font-mono); font-size:10.5px; font-weight:700; background:#e2e8f0; padding:2px 8px; border-radius:4px;">
-          ${route.status}
-        </span>
-      </div>
-
-      <!-- Countries Breakdown Panel -->
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; padding:10px 12px; margin-bottom:10px;">
-        <div>
-          <div style="font-family:var(--font-mono); font-size:9.5px; font-weight:800; color:#1e40af; text-transform:uppercase; letter-spacing:0.04em;">Originating Country</div>
-          <div style="font-size:13.5px; font-weight:700; color:#0f172a; margin-top:2px;">${route.originCountry || 'N/A'}</div>
-        </div>
-        <div>
-          <div style="font-family:var(--font-mono); font-size:9.5px; font-weight:800; color:#047857; text-transform:uppercase; letter-spacing:0.04em;">Destination Country</div>
-          <div style="font-size:13.5px; font-weight:700; color:#0f172a; margin-top:2px;">${route.destinationCountry || 'N/A'}</div>
-        </div>
-        ${route.transitCountries ? `
-        <div>
-          <div style="font-family:var(--font-mono); font-size:9.5px; font-weight:800; color:#b45309; text-transform:uppercase; letter-spacing:0.04em;">Transit / Corridor</div>
-          <div style="font-size:12px; font-weight:600; color:#334155; margin-top:2px;">${route.transitCountries}</div>
-        </div>
-        ` : ''}
-      </div>
-
-      <div style="font-size:12.5px; color:#1e293b; margin-bottom:6px;">
-        <strong>Route Geography:</strong> ${route.geography}
-      </div>
-      <div style="font-size:12.5px; color:#1e293b; margin-bottom:6px;">
-        <strong>Who Benefits:</strong> ${route.whoBenefits}
-      </div>
-      <div style="font-size:12.5px; color:#047857; font-weight:600;">
-        <strong>Strategic Mission:</strong> ${route.problemSolved}
-      </div>
-    `;
+  const ch11 = OIL_DATA.chapter11Data || {};
+  if (!routes || routes.length === 0) {
+    return `<div class="p-8 text-center text-red-600 font-mono">Future pipeline routes data not loaded.</div>`;
   }
 
-  // Draw on Future Map
-  if (ch10FutureMap && ch10FutureLayers) {
-    ch10FutureLayers.clearLayers();
-    if (ch10FutureVesselAnimator) {
-      ch10FutureVesselAnimator.destroy();
-      ch10FutureVesselAnimator = null;
-    }
-
-    const smoothWaypoints = generateSmoothMaritimeSpline(route.waypoints, 18);
-    const line = L.polyline(smoothWaypoints, {
-      color: route.color || "#0284c7",
-      weight: 5,
-      className: "pulse-pipeline maritime-smooth-line",
-      interactive: false,
-      isPipeline: true
-    }).addTo(ch10FutureLayers);
-
-    // Markers for start and end
-    L.circleMarker(route.waypoints[0], { radius: 7, fillColor: route.color || "#0284c7", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
-      .addTo(ch10FutureLayers).bindTooltip(`<strong>Origin: ${route.originCountry}</strong><br><span style="font-size:11px;">${route.geography.split("→")[0] || ""}</span>`, { permanent: false, direction: "top" });
-
-    L.circleMarker(route.waypoints[route.waypoints.length - 1], { radius: 7, fillColor: "#0f172a", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
-      .addTo(ch10FutureLayers).bindTooltip(`<strong>Destination: ${route.destinationCountry}</strong><br><span style="font-size:11px;">${route.geography.split("→")[1] || "Terminus"}</span>`, { permanent: false, direction: "top" });
-
-    // Animate tanker on maritime & arctic corridors
-    if (route.category === "arctic" || route.category === "malacca_bypass" || route.id.includes("maritime") || route.id.includes("sea") || route.id.includes("nsr")) {
-      ch10FutureVesselAnimator = new SmoothMaritimeVesselAnimator(ch10FutureMap, ch10FutureLayers, {
-        color: route.color || "#0284c7",
-        speedScale: 0.000035
-      });
-      ch10FutureVesselAnimator.setRoute(route.waypoints, route.color || "#0284c7");
-    }
-
-    ch10FutureMap.fitBounds(line.getBounds(), { padding: [45, 45], maxZoom: 6 });
-  }
-}
-
-/* ==========================================================================
-   CHAPTER 11: FUTURE OIL ROUTES & BOTTLENECK BYPASSES
-   ========================================================================== */
-let ch11Map = null;
-let ch11Layers = null;
-let ch11AnimTimer = null;
-let ch11VesselAnimator = null;
-
-function renderChapter11Visual() {
-  const d = OIL_DATA.chapter11Data;
-  if (!d) return `<div class="p-8 text-center text-red-600 font-mono">Chapter 11 data not loaded.</div>`;
-
-  const activeRouteId = STATE.activeChapter11RouteId || "adcop_fujairah";
-  const activeRoute = d.routes.find(r => r.id === activeRouteId) || d.routes[0];
+  const activeId = STATE.activeChapter9RouteId || "arctic_nsr";
+  const activeRoute = routes.find(r => r.id === activeId) || routes[0];
 
   return `
     <div style="background:var(--bg-surface); border:1.5px solid var(--border-subtle); border-radius:var(--radius-lg); padding:28px; margin-bottom:36px;">
       
-      <!-- CHAPTER HEADER BANNER -->
+      <!-- CHAPTER HEADER & CATEGORY FILTER BAR -->
       <div class="ch11-section-header">
         <div>
           <div style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.08em; display:flex; align-items:center; gap:6px;">
             <span>🌐</span> GEOPOLITICAL BYPASS RADAR // INTERACTIVE ROUTE INTELLIGENCE
           </div>
           <h2 style="font-family:var(--font-serif); font-size:28px; font-weight:800; color:#0f172a; margin-top:4px; margin-bottom:6px;">
-            Future Oil Routes: How Asia Could Bypass Tomorrow's Bottlenecks
+            Future Pipeline Routes &amp; Maritime Alternatives
           </h2>
           <p style="font-size:14px; color:#475569; max-width:850px; line-height:1.5;">
-            ${d.overview}
+            Can steel pipelines, Arctic shortcuts &amp; strategic bypasses defeat naval blockades? Explore all 11 critical corridors below to inspect how crude flows evade Persian Gulf and Malacca choke points.
           </p>
         </div>
 
         <!-- Filter Pill Tabs -->
         <div class="ch11-filter-bar">
-          <button class="ch11-filter-btn ${STATE.ch11Filter === 'all' || !STATE.ch11Filter ? 'active' : ''}" onclick="filterChapter11Routes('all', event)">
-            All 9 Routes
+          <button class="ch11-filter-btn ${STATE.ch9Filter === 'all' || !STATE.ch9Filter ? 'active' : ''}" onclick="filterChapter9Routes('all', event)">
+            All (11)
           </button>
-          <button class="ch11-filter-btn ${STATE.ch11Filter === 'operational' ? 'active' : ''}" onclick="filterChapter11Routes('operational', event)">
+          <button class="ch11-filter-btn ${STATE.ch9Filter === 'existing' ? 'active' : ''}" onclick="filterChapter9Routes('existing', event)">
             Operational (4)
           </button>
-          <button class="ch11-filter-btn ${STATE.ch11Filter === 'planned' ? 'active' : ''}" onclick="filterChapter11Routes('planned', event)">
+          <button class="ch11-filter-btn ${STATE.ch9Filter === 'planned' ? 'active' : ''}" onclick="filterChapter9Routes('planned', event)">
             Planned (3)
           </button>
-          <button class="ch11-filter-btn ${STATE.ch11Filter === 'concept' ? 'active' : ''}" onclick="filterChapter11Routes('concept', event)">
-            Concept (2)
+          <button class="ch11-filter-btn ${STATE.ch9Filter === 'asia_bypass' ? 'active' : ''}" onclick="filterChapter9Routes('asia_bypass', event)">
+            Malacca Bypasses (2)
+          </button>
+          <button class="ch11-filter-btn ${STATE.ch9Filter === 'arctic_wildcard' ? 'active' : ''}" onclick="filterChapter9Routes('arctic_wildcard', event)">
+            Arctic &amp; Wildcards (2)
           </button>
         </div>
       </div>
 
-      <!-- ROUTE QUICK SELECTOR TABS -->
-      <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:12px; margin-bottom:24px; border-bottom:1px solid #e2e8f0;">
-        ${d.routes.map(r => `
-          <button id="ch11_btn_${r.id}" 
+      <!-- ROUTE QUICK SELECTOR PILL TABS -->
+      <div class="ch9-pill-nav" id="ch9QuickPillNav">
+        ${routes.map(r => `
+          <button id="ch9_pill_${r.id}" 
                   class="action-btn ${r.id === activeRoute.id ? 'active' : ''}" 
-                  style="padding:7px 14px; font-size:12px; white-space:nowrap; border-radius:6px;"
-                  onclick="selectChapter11Route('${r.id}')">
-            ${r.status.startsWith('Operational') ? '🟢' : r.status.startsWith('Planned') ? '🟡' : '🔵'} ${r.name.split('(')[0].trim()}
+                  style="padding:7px 14px; font-size:12px; white-space:nowrap; border-radius:6px; display:inline-flex; align-items:center; gap:6px;"
+                  onclick="selectChapter9Route('${r.id}')">
+            <span>${r.category === 'arctic_wildcard' ? '❄️' : r.status.startsWith('Active') || r.status.startsWith('Operational') ? '🟢' : r.status.startsWith('Partially') || r.status.startsWith('Seasonal') ? '🟡' : '🔵'}</span>
+            <span>${r.name.split('(')[0].trim()}</span>
           </button>
         `).join('')}
       </div>
 
-      <!-- MAIN SPLIT WORKSPACE: ROUTE CARD (EXACT FORMAT) + INTERACTIVE MAP -->
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:24px; margin-bottom:36px;">
+      <!-- MAIN 2-COLUMN SPLIT WORKSPACE: DOSSIER CARD (LEFT) + STICKY MAP PANEL (RIGHT) -->
+      <div class="ch9-workspace-grid">
         
-        <!-- LEFT: SELECTED ROUTE CARD IN THE EXACT REQUESTED FORMAT -->
-        <div id="ch11SelectedRouteContainer" class="ch11-route-card active" style="min-height:540px;">
-          ${renderChapter11RouteCardHtml(activeRoute)}
+        <!-- LEFT COLUMN: FULL UNCLIPPED ROUTE DOSSIER -->
+        <div id="futureRouteDetailBox" class="ch9-route-dossier">
+          ${renderChapter9RouteDossier(activeRoute)}
         </div>
 
-        <!-- RIGHT: LIVE INTERACTIVE BYPASS MAP & ANIMATION SIMULATOR -->
-        <div style="display:flex; flex-direction:column; gap:12px;">
-          
-          <!-- Leaflet Map Container -->
-          <div style="position:relative; height:470px; border-radius:10px; overflow:hidden; border:1.5px solid #0f172a; box-shadow:0 8px 24px rgba(15,23,42,0.12);">
-            <div id="chapter11BypassMap" style="width:100%; height:100%;"></div>
+        <!-- RIGHT COLUMN: STICKY MAP PANEL & DIVERSION SIMULATOR -->
+        <div class="ch9-sticky-map-col">
+          <div class="ch9-map-container">
+            <div id="chapter9FutureMap" style="width:100%; height:100%;"></div>
 
-            <!-- Map Top Overlay -->
-            <div style="position:absolute; top:12px; left:12px; z-index:1000; background:rgba(15,23,42,0.88); backdrop-filter:blur(6px); color:#ffffff; padding:6px 12px; border-radius:6px; font-family:var(--font-mono); font-size:11px; border:1px solid rgba(255,255,255,0.15);">
-              <span style="color:#38bdf8; font-weight:800;">ACTIVE CORRIDOR:</span> <span id="ch11MapRouteTitle">${activeRoute.name}</span>
+            <!-- Top-Left Floating Corridor Title Badge -->
+            <div class="ch9-map-overlay-title">
+              <span style="color:#38bdf8; font-weight:800;">ACTIVE CORRIDOR:</span> <span id="ch9MapRouteTitle">${activeRoute.name}</span>
             </div>
 
-            <!-- Chokepoint Status Badge -->
-            <div id="ch11MapChokepointBadge" style="position:absolute; bottom:12px; left:12px; z-index:1000; background:rgba(220,38,38,0.92); color:#ffffff; padding:6px 12px; border-radius:6px; font-family:var(--font-mono); font-size:11px; font-weight:800; border:1px solid #f87171; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-              ⚠️ HORMUZ BYPASS: CRUDE EVADES CHOKEPOINT
+            <!-- Top-Right Floating Basemap Switcher -->
+            <div class="ch9-map-basemap-toggle">
+              <button type="button" class="ch9-map-basemap-btn active" id="btnCh9MapSatellite">🛰️ Satellite</button>
+              <button type="button" class="ch9-map-basemap-btn" id="btnCh9MapVoyager">🗺️ Map</button>
+            </div>
+
+            <!-- Bottom-Left Floating Chokepoint Status Badge -->
+            <div id="ch9MapChokepointBadge" class="ch9-map-overlay-badge" style="background:${getBadgeBg(activeRoute)}; color:#ffffff;">
+              ${getBadgeText(activeRoute)}
             </div>
           </div>
 
@@ -4557,84 +3736,58 @@ function renderChapter11Visual() {
               <div style="font-family:var(--font-mono); font-size:10px; font-weight:800; color:#93c5fd; text-transform:uppercase; letter-spacing:0.05em;">
                 LIVE BYPASS SIMULATOR
               </div>
-              <div id="ch11SimTicker" style="font-size:12.5px; color:#e2e8f0; margin-top:2px;">
+              <div id="ch9SimTicker" style="font-size:12.5px; color:#e2e8f0; margin-top:2px;">
                 Ready: Click to simulate diversion around maritime bottlenecks.
               </div>
             </div>
-            <button class="ch11-sim-btn" onclick="runChapter11Simulation(STATE.activeChapter11RouteId || 'adcop_fujairah')">
+            <button class="ch11-sim-btn" onclick="runChapter9Simulation(STATE.activeChapter9RouteId || 'arctic_nsr')">
               <span>▶</span> Run Simulation
             </button>
           </div>
-
         </div>
 
       </div>
 
-      <!-- 9 ALL ROUTES OVERVIEW GRID (FILTERABLE) -->
-      <div style="margin-bottom:48px;">
+      <!-- COMPLETE INVENTORY OF ALL 11 CORRIDORS (FULL NATURAL HEIGHT, ZERO CLIPPING) -->
+      <div style="margin-top:36px; margin-bottom:48px;">
         <div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #e2e8f0; padding-bottom:10px; margin-bottom:20px;">
           <div>
             <span class="chapter-meta-tag" style="margin-bottom:2px;">COMPLETE INVENTORY</span>
             <h3 style="font-family:var(--font-serif); font-size:22px; font-weight:800; color:#0f172a;">
-              All 9 Strategic Corridors at a Glance
+              All 11 Strategic Corridors at a Glance
             </h3>
           </div>
           <span style="font-family:var(--font-mono); font-size:11px; color:#64748b; font-weight:700;">
-            Click any card to inspect &amp; map
+            Click any card to inspect on sticky map
           </span>
         </div>
 
-        <div id="ch11AllRoutesGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:18px;">
-          ${d.routes.map(r => `
-            <div class="ch11-route-card ${r.id === activeRoute.id ? 'active' : ''}" 
-                 id="ch11_grid_card_${r.id}"
-                 style="cursor:pointer;"
-                 onclick="selectChapter11Route('${r.id}')">
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-                <span style="font-family:var(--font-mono); font-size:10px; font-weight:800; color:${r.color}; background:#f1f5f9; padding:2px 8px; border-radius:4px;">
-                  ${r.routeTag}
-                </span>
-                <span class="ch11-impact-badge ${r.potentialImpact === 'HIGH' ? 'ch11-impact-high' : r.potentialImpact === 'MEDIUM' ? 'ch11-impact-med' : 'ch11-impact-low'}">
-                  ${r.impactBadge}
-                </span>
-              </div>
-              <h4 style="font-family:var(--font-serif); font-size:18px; font-weight:800; color:#0f172a; margin-bottom:4px;">
-                ${r.name}
-              </h4>
-              <div style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:10px;">
-                ${r.statusBadge}
-              </div>
-              <p style="font-size:13px; color:#334155; line-height:1.45; margin-bottom:12px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;">
-                ${r.whatIsIt}
-              </p>
-              <div class="ch11-takeaway" style="font-size:12.5px; padding:8px 10px;">
-                ${r.strategicTakeaway}
-              </div>
-            </div>
-          `).join('')}
+        <div id="futureRoutesCardList" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:18px;">
+          <!-- Populated via renderFutureRoutesGrid() -->
         </div>
       </div>
 
       <!-- ===================================================================
-           FINAL SLIDE: RANKING TABLE + STRATEGIST VIEW + AUDIENCE POLL
+           EXECUTIVE SYNTHESIS: RANKING TABLE + STRATEGIST VIEW + AUDIENCE POLL
            =================================================================== -->
       <div style="background:#f8fafc; border:2px solid #cbd5e1; border-radius:12px; padding:28px; margin-top:24px;">
         
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-bottom:2px solid #e2e8f0; padding-bottom:14px; margin-bottom:24px;">
           <div>
             <div style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#dc2626; text-transform:uppercase; letter-spacing:0.08em; display:flex; align-items:center; gap:6px;">
-              <span>📊</span> FINAL SLIDE // EXECUTIVE SYNTHESIS
+              <span>📊</span> EXECUTIVE SYNTHESIS // STRATEGIC FEASIBILITY
             </div>
-            <h2 style="font-family:var(--font-serif); font-size:26px; font-weight:800; color:#0f172a; margin-top:4px;">
+            <h2 style="font-family:var(--font-serif); font-size:24px; font-weight:800; color:#0f172a; margin-top:4px;">
               Strategic Feasibility &amp; Potential Impact Matrix
             </h2>
           </div>
           <div style="font-family:var(--font-mono); font-size:11.5px; font-weight:700; color:#475569; background:#ffffff; border:1px solid #cbd5e1; padding:6px 14px; border-radius:6px;">
-            9 Routes Ranked &bull; 2026–2040 Horizon
+            11 Strategic Routes Ranked &bull; 2026–2040 Horizon
           </div>
         </div>
 
-        <!-- 1. RANKING TABLE (EXACT COLUMNS REQUESTED) -->
+        <!-- 1. RANKING TABLE -->
+        ${ch11.rankingTable ? `
         <div style="overflow-x:auto; margin-bottom:32px; border:1.5px solid #0f172a; border-radius:8px;">
           <table class="ch11-rank-table">
             <thead>
@@ -4646,7 +3799,7 @@ function renderChapter11Visual() {
               </tr>
             </thead>
             <tbody>
-              ${d.rankingTable.map(row => `
+              ${ch11.rankingTable.map(row => `
                 <tr>
                   <td>
                     <strong style="color:#0f172a; font-size:14px;">${row.route}</strong>
@@ -4669,15 +3822,17 @@ function renderChapter11Visual() {
             </tbody>
           </table>
         </div>
+        ` : ''}
 
         <!-- 2. STRATEGIST PERSPECTIVE (10-20 YEAR OUTLOOK) -->
+        ${ch11.strategistView ? `
         <div style="margin-bottom:36px;">
           <div style="margin-bottom:16px;">
             <div style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.06em;">
               SENIOR STRATEGIST VIEWPOINT
             </div>
             <h3 style="font-family:var(--font-serif); font-size:22px; font-weight:800; color:#0f172a; margin-top:2px;">
-              ${d.strategistView.question}
+              ${ch11.strategistView.question}
             </h3>
             <p style="font-size:13.5px; color:#475569; margin-top:4px;">
               "I rank near-to-medium-term importance across commercial credibility, execution ease, and actual barrel volume:"
@@ -4685,7 +3840,7 @@ function renderChapter11Visual() {
           </div>
 
           <div style="display:flex; flex-direction:column; gap:12px;">
-            ${d.strategistView.rankings.map(s => `
+            ${ch11.strategistView.rankings.map(s => `
               <div class="ch11-strat-card">
                 <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
                   <span style="font-family:var(--font-mono); font-size:13px; font-weight:900; background:#0f172a; color:#ffffff; width:26px; height:26px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;">
@@ -4703,15 +3858,17 @@ function renderChapter11Visual() {
             `).join('')}
           </div>
         </div>
+        ` : ''}
 
         <!-- 3. AUDIENCE DISCUSSION INTERACTIVE QUESTION -->
-        <div id="ch11AudienceSection" style="background:#ffffff; border:2px dashed #2563eb; border-radius:10px; padding:24px;">
+        ${ch11.audienceQuestion ? `
+        <div id="ch9AudienceSection" style="background:#ffffff; border:2px dashed #2563eb; border-radius:10px; padding:24px;">
           <div style="text-align:center; max-width:720px; margin:0 auto 20px auto;">
             <span style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.08em; background:#eff6ff; padding:3px 10px; border-radius:4px;">
               💬 AUDIENCE DISCUSSION FORUM
             </span>
             <h3 style="font-family:var(--font-serif); font-size:24px; font-weight:800; color:#0f172a; margin-top:8px; line-height:1.3;">
-              "${d.audienceQuestion.prompt}"
+              "${ch11.audienceQuestion.prompt}"
             </h3>
             <p style="font-size:13px; color:#64748b; margin-top:4px;">
               Vote below to cast your choice and reveal the market strategists' consensus breakdown.
@@ -4719,10 +3876,10 @@ function renderChapter11Visual() {
           </div>
 
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:16px;">
-            ${d.audienceQuestion.options.map(opt => `
-              <div id="ch11_opt_${opt.key}" 
-                   class="ch11-poll-card ${STATE.ch11UserVote === opt.key ? 'selected' : ''}" 
-                   onclick="voteChapter11('${opt.key}')">
+            ${ch11.audienceQuestion.options.map(opt => `
+              <div id="ch9_opt_${opt.key}" 
+                   class="ch11-poll-card ${STATE.ch9UserVote === opt.key ? 'selected' : ''}" 
+                   onclick="voteChapter9('${opt.key}')">
                 <div style="font-weight:700; font-size:14px; color:#0f172a; margin-bottom:6px;">
                   ${opt.label}
                 </div>
@@ -4740,347 +3897,449 @@ function renderChapter11Visual() {
             `).join('')}
           </div>
 
-          <div id="ch11VoteFeedback" style="text-align:center; font-family:var(--font-mono); font-size:12px; font-weight:700; color:#047857;">
-            ${STATE.ch11UserVote ? `✓ Your vote is recorded for: ${STATE.ch11UserVote.replace('_', ' ').toUpperCase()}` : 'Click any option above to participate in the strategic debate.'}
+          <div id="ch9VoteFeedback" style="text-align:center; font-family:var(--font-mono); font-size:12px; font-weight:700; color:#047857;">
+            ${STATE.ch9UserVote ? `✓ Your vote is recorded for: ${STATE.ch9UserVote.replace('_', ' ').toUpperCase()}` : 'Click any option above to participate in the strategic debate.'}
           </div>
-
         </div>
+        ` : ''}
 
       </div>
+
+      <!-- OPTIONAL BONUS ACCORDION: CRISIS WAR GAME SIMULATOR -->
+      <details style="background:#ffffff; border:1.5px solid #cbd5e1; border-radius:10px; margin-top:32px; padding:18px 22px;">
+        <summary style="font-family:var(--font-mono); font-size:13px; font-weight:800; color:#dc2626; cursor:pointer; user-select:none; display:flex; align-items:center; gap:8px;">
+          <span>⚡ BONUS CRISIS SIMULATOR:</span>
+          <span>What Happens If A Major Supplier Disappears? (5 Shock Scenarios)</span>
+        </summary>
+        <div style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+            <div>
+              <div style="font-size:13px; color:#475569;">
+                Test real-world supply cutoffs across Russia, Saudi Arabia, UAE, and Hormuz.
+              </div>
+            </div>
+            <div style="display:inline-flex; background:#e2e8f0; padding:3px; border-radius:8px;">
+              <button id="btnShockBefore" class="wargame-pill-filter ${STATE.shockMode === 'before' ? 'active' : ''}" onclick="toggleShockBeforeAfter('before')">
+                🔘 Before Crisis
+              </button>
+              <button id="btnShockAfter" class="wargame-pill-filter ${STATE.shockMode === 'after' ? 'active' : ''}" onclick="toggleShockBeforeAfter('after')">
+                🚨 After Shock
+              </button>
+            </div>
+          </div>
+
+          <!-- 5 Scenario Selector Tabs -->
+          <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;" id="ch9ScenarioTabs">
+            ${Object.values(OIL_DATA.shockScenarios || {}).map(sc => `
+              <button class="wargame-tab-btn ${sc.id === STATE.activeShockScenario ? 'active' : ''}" id="tab_scenario_${sc.id}" onclick="selectShockScenario('${sc.id}')">
+                <span style="font-size:15px;">${sc.icon}</span>
+                <span>${sc.shortTitle}</span>
+              </button>
+            `).join("")}
+          </div>
+
+          <!-- Shock Content -->
+          <div id="ch9ScenarioContainer">
+            <!-- Injected via renderShockScenarioContent() -->
+          </div>
+
+          <!-- Shock Map -->
+          <div style="margin-top:20px;">
+            <div style="font-family:var(--font-mono); font-size:12px; font-weight:800; color:#0f172a; margin-bottom:6px;">
+              🗺️ CRISIS FLOW DIVERSION MAP
+            </div>
+            <div id="chapter9ShockMap" style="width:100%; height:380px; border-radius:10px; border:1.5px solid #cbd5e1; background:#0f172a;"></div>
+          </div>
+        </div>
+      </details>
 
     </div>
   `;
 }
 
-function renderChapter11RouteCardHtml(route) {
-  if (!route) return '';
-
-  const benefitsList = Array.isArray(route.whoBenefits) 
-    ? route.whoBenefits.map(b => `<li>${b}</li>`).join('') 
-    : `<li>${route.whoBenefits}</li>`;
+function renderChapter9RouteDossier(route) {
+  if (!route) return '<div style="padding:20px; color:#64748b;">Select a corridor to view details.</div>';
 
   return `
-    <div style="border-bottom:2px solid #0f172a; padding-bottom:12px; margin-bottom:16px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-        <span style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:${route.color}; text-transform:uppercase;">
-          CORRIDOR PROFILE
-        </span>
-        <span class="ch11-impact-badge ${route.potentialImpact === 'HIGH' ? 'ch11-impact-high' : route.potentialImpact === 'MEDIUM' ? 'ch11-impact-med' : 'ch11-impact-low'}">
-          ${route.impactBadge}
-        </span>
+    <!-- Top Metadata Row -->
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+      <span style="font-family:var(--font-mono); font-size:10px; font-weight:800; color:${route.color || '#2563eb'}; background:#eff6ff; padding:3px 9px; border-radius:4px; text-transform:uppercase; border:1px solid #bfdbfe;">
+        ${(route.category || 'ROUTE').replace('_', ' ').toUpperCase()} // ${(route.id || '').toUpperCase()}
+      </span>
+      <div style="display:flex; gap:6px;">
+        <span style="font-family:var(--font-mono); font-size:10px; font-weight:700; background:#f1f5f9; padding:2px 7px; border-radius:4px;">Prob: ${route.probBadge || '🟢 High'}</span>
+        <span style="font-family:var(--font-mono); font-size:10px; font-weight:700; background:#f1f5f9; padding:2px 7px; border-radius:4px;">Impact: ${route.impactBadge || '🔥 High'}</span>
       </div>
-      <h3 style="font-family:var(--font-serif); font-size:24px; font-weight:800; color:#0f172a; margin:0;">
-        ${route.name}
-      </h3>
     </div>
 
-    <!-- Current Status -->
-    <div class="ch11-field-group">
-      <div class="ch11-field-label">Current Status:</div>
-      <div class="ch11-field-body" style="font-weight:700; color:#0f172a;">
+    <!-- Title and Status -->
+    <div>
+      <h3 style="font-family:var(--font-serif); font-size:22px; font-weight:800; color:#0f172a; margin-top:4px; margin-bottom:4px; line-height:1.25;">
+        ${route.name}
+      </h3>
+      <div style="font-size:12px; font-weight:700; color:#2563eb;">
         ${route.status}
       </div>
     </div>
 
-    <!-- What Is It? -->
+    <!-- High-Contrast Origin to Destination Banner -->
+    <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 14px; background:#eff6ff; border:1px solid #bfdbfe; border-left:4px solid #2563eb; border-radius:8px; font-size:12.5px;">
+      <div style="display:inline-flex; align-items:center; gap:6px;">
+        <span style="font-size:9.5px; font-weight:800; color:#1e40af; background:#dbeafe; padding:2px 6px; border-radius:4px; font-family:var(--font-mono); text-transform:uppercase;">ORIGIN</span>
+        <strong style="color:#0f172a;">${route.originCountry || 'N/A'}</strong>
+      </div>
+      <span style="color:#2563eb; font-weight:900; font-size:14px;">➔</span>
+      <div style="display:inline-flex; align-items:center; gap:6px;">
+        <span style="font-size:9.5px; font-weight:800; color:#047857; background:#d1fae5; padding:2px 6px; border-radius:4px; font-family:var(--font-mono); text-transform:uppercase;">DESTINATION</span>
+        <strong style="color:#0f172a;">${route.destinationCountry || 'N/A'}</strong>
+      </div>
+      ${route.transitCountries ? `
+        <div style="font-size:11.5px; color:#64748b; margin-left:auto; font-style:italic;">
+          Corridor: ${route.transitCountries}
+        </div>
+      ` : ''}
+    </div>
+
+    <!-- Route Geography & Distance -->
     <div class="ch11-field-group">
-      <div class="ch11-field-label">What Is It?</div>
-      <div class="ch11-field-body">
-        ${route.whatIsIt.replace(/\\n/g, '<br>')}
+      <div class="ch11-field-label">Corridor Geography &amp; Distance:</div>
+      <div class="ch11-field-body" style="font-size:13px; color:#1e293b; font-weight:600;">
+        ${route.geography}
       </div>
     </div>
 
-    <!-- Why Is It Important? -->
+    <!-- Strategic Mission & Problem Solved -->
     <div class="ch11-field-group">
-      <div class="ch11-field-label">Why Is It Important?</div>
-      <div class="ch11-field-body" style="color:#0f172a;">
-        ${route.whyImportant.replace(/\\n/g, '<br>')}
+      <div class="ch11-field-label">Strategic Mission (Problem Solved):</div>
+      <div class="ch11-field-body" style="color:#0369a1; font-weight:600; line-height:1.45;">
+        ${route.problemSolved}
       </div>
     </div>
 
-    <!-- Who Benefits? -->
+    <!-- Commercial Reality & Beneficiaries -->
     <div class="ch11-field-group">
-      <div class="ch11-field-label">Who Benefits?</div>
-      <ul style="margin:4px 0 0 18px; padding:0; font-size:13.5px; color:#1e293b; line-height:1.5;">
-        ${benefitsList}
-      </ul>
-    </div>
-
-    <!-- Potential Impact On Asia -->
-    <div class="ch11-field-group">
-      <div class="ch11-field-label">Potential Impact On Asia:</div>
-      <div class="ch11-field-body">
-        <strong style="color:${route.potentialImpact === 'HIGH' ? '#dc2626' : route.potentialImpact === 'MEDIUM' ? '#d97706' : '#475569'}; font-size:15px; font-family:var(--font-mono);">
-          ${route.potentialImpact}
-        </strong>
+      <div class="ch11-field-label">Primary Commercial Beneficiaries:</div>
+      <div class="ch11-field-body" style="color:#334155;">
+        ${route.whoBenefits}
       </div>
     </div>
 
-    <!-- Animation Idea -->
-    <div class="ch11-field-group">
-      <div class="ch11-field-label">Animation Idea:</div>
-      <div class="ch11-field-body" style="font-style:italic; color:#334155; background:#f1f5f9; padding:8px 12px; border-radius:6px;">
-        ${route.animationIdea}
-      </div>
-    </div>
-
-    <!-- Map Idea -->
-    <div class="ch11-field-group">
-      <div class="ch11-field-label">Map Idea:</div>
-      <div class="ch11-field-body" style="color:#475569;">
-        ${route.mapIdea}
-      </div>
-    </div>
-
-    <!-- Strategic Takeaway -->
+    <!-- Strategic Takeaway Callout -->
     <div class="ch11-field-group" style="margin-top:auto;">
       <div class="ch11-field-label">Strategic Takeaway:</div>
-      <div class="ch11-takeaway">
-        ${route.strategicTakeaway}
+      <div class="ch11-takeaway" style="font-size:13px; line-height:1.45;">
+        ${route.strategicTakeaway || `“${route.problemSolved}”`}
       </div>
     </div>
 
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:12px; border-top:1px solid #e2e8f0;">
-      <button class="action-btn" style="padding:6px 12px; font-size:11px;" onclick="cycleChapter11Route(-1)">
-        &larr; Prev Route
+    <!-- Prev / Next Corridor Buttons -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding-top:12px; border-top:1px solid #e2e8f0;">
+      <button class="action-btn" style="padding:6px 14px; font-size:12px;" onclick="cycleChapter9Route(-1)">
+        &larr; Prev Corridor
       </button>
-      <button class="action-btn" style="padding:6px 12px; font-size:11px;" onclick="cycleChapter11Route(1)">
-        Next Route &rarr;
+      <span style="font-family:var(--font-mono); font-size:11px; color:#64748b;">
+        Corridor ${getRouteIndex(route.id) + 1} of ${OIL_DATA.futureRoutesData.length}
+      </span>
+      <button class="action-btn" style="padding:6px 14px; font-size:12px;" onclick="cycleChapter9Route(1)">
+        Next Corridor &rarr;
       </button>
     </div>
   `;
 }
 
-function initChapter11Visual() {
-  const mapEl = document.getElementById("chapter11BypassMap");
-  if (!mapEl || typeof L === "undefined") return;
-
-  if (ch11Map) {
-    try { ch11Map.remove(); } catch (e) {}
-    ch11Map = null;
-  }
-  if (ch11VesselAnimator) {
-    ch11VesselAnimator.destroy();
-    ch11VesselAnimator = null;
-  }
-
-  const mapObj = createStandardChapterMap("chapter11BypassMap", {
-    center: [24.0, 56.0],
-    zoom: 5
-  });
-  if (!mapObj) return;
-  ch11Map = mapObj.map;
-
-  ch11Layers = L.layerGroup().addTo(ch11Map);
-
-  const activeId = STATE.activeChapter11RouteId || "adcop_fujairah";
-  selectChapter11Route(activeId);
+function getBadgeBg(route) {
+  if (!route) return "rgba(15,23,42,0.92)";
+  if (route.id === "arctic_nsr") return "rgba(6,182,212,0.95)";
+  if (route.id === "myanmar_china" || route.id === "thai_landbridge") return "rgba(5,150,105,0.95)";
+  if (route.id === "espo_pipe" || route.id === "instc") return "rgba(71,85,105,0.95)";
+  return "rgba(220,38,38,0.95)";
 }
 
-function selectChapter11Route(routeId) {
-  STATE.activeChapter11RouteId = routeId;
-  const d = OIL_DATA.chapter11Data;
-  if (!d) return;
+function getBadgeText(route) {
+  if (!route) return "ROUTE STATUS";
+  if (route.id === "arctic_nsr") return "❄️ ARCTIC HIGHWAY: AVOIDS SUEZ & MALACCA";
+  if (route.id === "myanmar_china" || route.id === "thai_landbridge") return "🛡️ MALACCA BYPASS: OVERLAND INTO CHINA";
+  if (route.id === "espo_pipe" || route.id === "instc") return "🛤️ OVERLAND TRANSIT: ZERO MARITIME CHOKEPOINTS";
+  return "⚠️ HORMUZ BYPASS: CRUDE EVADES CHOKEPOINT";
+}
 
-  const route = d.routes.find(r => r.id === routeId);
-  if (!route) return;
+function getRouteIndex(routeId) {
+  const routes = OIL_DATA.futureRoutesData || [];
+  const idx = routes.findIndex(r => r.id === routeId);
+  return idx >= 0 ? idx : 0;
+}
 
-  // Update left card
-  const cardContainer = document.getElementById("ch11SelectedRouteContainer");
-  if (cardContainer) {
-    cardContainer.innerHTML = renderChapter11RouteCardHtml(route);
+function initChapter9Visual() {
+  const mapEl = document.getElementById("chapter9FutureMap");
+  if (!mapEl || typeof L === "undefined") return;
+
+  if (ch9FutureMap) {
+    try { ch9FutureMap.remove(); } catch (e) {}
+    ch9FutureMap = null;
+  }
+  if (ch9FutureVesselAnimator) {
+    ch9FutureVesselAnimator.destroy();
+    ch9FutureVesselAnimator = null;
+  }
+  mapEl.innerHTML = "";
+  delete mapEl.dataset.maritimeUpgraded;
+
+  ch9FutureMap = L.map("chapter9FutureMap", {
+    center: [30.0, 60.0],
+    zoom: 3,
+    dragging: true,
+    scrollWheelZoom: true,
+    touchZoom: true,
+    doubleClickZoom: true,
+    boxZoom: true,
+    keyboard: true,
+    tap: false,
+    noMaritime: true
+  });
+
+  ch9FutureMap.dragging.enable();
+
+  ch9FutureTileLayers = {
+    voyager: L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      attribution: "&copy; OpenStreetMap &copy; CARTO",
+      maxZoom: 18
+    }),
+    satellite: createSatelliteHybridLayerGroup()
+  };
+
+  ch9FutureCurrentBasemap = "satellite";
+  ch9FutureTileLayers.satellite.addTo(ch9FutureMap);
+
+  // Wire up basemap switcher buttons
+  const btnSat = document.getElementById("btnCh9MapSatellite");
+  const btnVoy = document.getElementById("btnCh9MapVoyager");
+
+  if (btnVoy) {
+    btnVoy.onclick = () => {
+      if (ch9FutureCurrentBasemap === "voyager") return;
+      ch9FutureMap.removeLayer(ch9FutureTileLayers.satellite);
+      ch9FutureTileLayers.voyager.addTo(ch9FutureMap);
+      if (ch9FutureTileLayers.voyager && typeof ch9FutureTileLayers.voyager.bringToBack === "function") {
+        ch9FutureTileLayers.voyager.bringToBack();
+      }
+      ch9FutureCurrentBasemap = "voyager";
+      btnVoy.classList.add("active");
+      if (btnSat) btnSat.classList.remove("active");
+    };
   }
 
-  // Update top selector buttons & grid cards
-  d.routes.forEach(r => {
-    const btn = document.getElementById(`ch11_btn_${r.id}`);
-    if (btn) {
-      if (r.id === routeId) btn.classList.add("active");
-      else btn.classList.remove("active");
+  if (btnSat) {
+    btnSat.onclick = () => {
+      if (ch9FutureCurrentBasemap === "satellite") return;
+      ch9FutureMap.removeLayer(ch9FutureTileLayers.voyager);
+      ch9FutureTileLayers.satellite.addTo(ch9FutureMap);
+      if (ch9FutureTileLayers.satellite && typeof ch9FutureTileLayers.satellite.bringToBack === "function") {
+        ch9FutureTileLayers.satellite.bringToBack();
+      }
+      ch9FutureCurrentBasemap = "satellite";
+      btnSat.classList.add("active");
+      if (btnVoy) btnVoy.classList.remove("active");
+    };
+  }
+
+  ch9FutureLayers = L.layerGroup().addTo(ch9FutureMap);
+
+  renderFutureRoutesGrid();
+
+  const activeId = STATE.activeChapter9RouteId || "arctic_nsr";
+  selectChapter9Route(activeId);
+
+  // Initialize shock map if details open
+  initChapter9ShockMap();
+  renderShockScenarioContent();
+}
+
+function selectChapter9Route(routeId) {
+  STATE.activeChapter9RouteId = routeId;
+  STATE.activeFutureRouteId = routeId;
+  const routes = OIL_DATA.futureRoutesData;
+  if (!routes) return;
+
+  const route = routes.find(r => r.id === routeId) || routes[0];
+  if (!route) return;
+
+  // Update Left Dossier
+  const dossierEl = document.getElementById("futureRouteDetailBox");
+  if (dossierEl) {
+    dossierEl.innerHTML = renderChapter9RouteDossier(route);
+  }
+
+  // Update Top Pills & Grid Cards
+  routes.forEach(r => {
+    const pill = document.getElementById(`ch9_pill_${r.id}`);
+    if (pill) {
+      if (r.id === route.id) pill.classList.add("active");
+      else pill.classList.remove("active");
     }
-    const gridCard = document.getElementById(`ch11_grid_card_${r.id}`);
-    if (gridCard) {
-      if (r.id === routeId) gridCard.classList.add("active");
-      else gridCard.classList.remove("active");
+    const card = document.getElementById(`ch9_card_${r.id}`);
+    if (card) {
+      if (r.id === route.id) card.classList.add("active");
+      else card.classList.remove("active");
     }
   });
 
-  // Update Map Title & Chokepoint badge
-  const mapTitle = document.getElementById("ch11MapRouteTitle");
-  if (mapTitle) mapTitle.textContent = route.name;
+  // Update Map Overlays
+  const titleEl = document.getElementById("ch9MapRouteTitle");
+  if (titleEl) titleEl.textContent = route.name;
 
-  const chkBadge = document.getElementById("ch11MapChokepointBadge");
-  if (chkBadge) {
-    if (route.id === "adcop_fujairah" || route.id === "saudi_east_west" || route.id === "saudi_oman" || route.id === "basra_aqaba") {
-      chkBadge.style.display = "block";
-      chkBadge.style.background = "rgba(220,38,38,0.92)";
-      chkBadge.innerHTML = "⚠️ HORMUZ BYPASS: CRUDE EVADES CHOKEPOINT";
-    } else if (route.id === "northern_sea_route") {
-      chkBadge.style.display = "block";
-      chkBadge.style.background = "rgba(6,182,212,0.92)";
-      chkBadge.innerHTML = "❄️ ARCTIC HIGHWAY: AVOIDS SUEZ & MALACCA";
-    } else if (route.id === "atlantic_basin") {
-      chkBadge.style.display = "block";
-      chkBadge.style.background = "rgba(2,132,199,0.92)";
-      chkBadge.innerHTML = "🌊 SEABORNE DIVERSIFICATION: NON-OPEC BASIN";
-    } else if (route.id === "espo_kozmino") {
-      chkBadge.style.display = "block";
-      chkBadge.style.background = "rgba(5,150,105,0.92)";
-      chkBadge.innerHTML = "🛡️ PACIFIC FORTRESS: ZERO MARITIME CHOKEPOINTS";
-    } else {
-      chkBadge.style.display = "block";
-      chkBadge.style.background = "rgba(71,85,105,0.92)";
-      chkBadge.innerHTML = "🛤️ MULTIMODAL OVERLAND TRANSIT";
-    }
+  const badgeEl = document.getElementById("ch9MapChokepointBadge");
+  if (badgeEl) {
+    badgeEl.style.background = getBadgeBg(route);
+    badgeEl.innerHTML = getBadgeText(route);
   }
 
-  // Draw on Leaflet Map
-  if (ch11Map && ch11Layers) {
-    ch11Layers.clearLayers();
-    if (ch11VesselAnimator) {
-      ch11VesselAnimator.destroy();
-      ch11VesselAnimator = null;
+  // Draw on Map
+  if (ch9FutureMap && ch9FutureLayers) {
+    ch9FutureLayers.clearLayers();
+    if (ch9FutureVesselAnimator) {
+      ch9FutureVesselAnimator.destroy();
+      ch9FutureVesselAnimator = null;
     }
 
-    // If it's a Hormuz bypass, draw Hormuz chokepoint marker
-    if (route.id === "adcop_fujairah" || route.id === "saudi_east_west" || route.id === "saudi_oman" || route.id === "basra_aqaba") {
+    // Draw Chokepoint warnings if relevant
+    if (route.id === "east_west" || route.id === "adcop" || route.id === "goreh_jask" || route.id === "basra_aqaba" || route.id === "saudi_oman" || route.id === "iraq_oman") {
       L.circleMarker([26.56, 56.25], {
         radius: 12,
         color: "#dc2626",
         fillColor: "#ef4444",
         fillOpacity: 0.8,
         weight: 3
-      }).addTo(ch11Layers).bindTooltip("<strong>Strait of Hormuz (Chokepoint)</strong><br><span style='color:#dc2626; font-weight:700;'>20.8 Mb/d Vulnerability Zone</span>", { permanent: false, direction: "top" });
+      }).addTo(ch9FutureLayers).bindTooltip("<strong>Strait of Hormuz (Chokepoint)</strong><br><span style='color:#dc2626; font-weight:700;'>20.8 Mb/d Vulnerability Zone</span>", { permanent: false, direction: "top" });
+    } else if (route.id === "myanmar_china" || route.id === "thai_landbridge") {
+      L.circleMarker([1.25, 103.5], {
+        radius: 12,
+        color: "#f59e0b",
+        fillColor: "#fbbf24",
+        fillOpacity: 0.8,
+        weight: 3
+      }).addTo(ch9FutureLayers).bindTooltip("<strong>Strait of Malacca (Chokepoint)</strong><br><span style='color:#b45309; font-weight:700;'>16 Mb/d Congested Maritime Funnel</span>", { permanent: false, direction: "top" });
     }
 
-    // Draw Smooth Route Polyline
+    // Smooth Spline Line
     const smoothCoords = generateSmoothMaritimeSpline(route.waypoints, 20);
     const line = L.polyline(smoothCoords, {
-      color: route.color || "#2563eb",
+      color: route.color || "#06b6d4",
       weight: 5,
       opacity: 0.95,
-      dashArray: route.category === "concept" ? "6, 8" : null,
+      dashArray: (route.category === "planned" || (route.status && (route.status.includes("Proposed") || route.status.includes("Study")))) ? "6, 8" : null,
       className: "leaflet-ant-flow maritime-smooth-line"
-    }).addTo(ch11Layers);
+    }).addTo(ch9FutureLayers);
 
-    // Draw origin and destination markers
+    // Origin Marker
     L.circleMarker(route.waypoints[0], {
       radius: 8,
       fillColor: "#10b981",
       color: "#ffffff",
       weight: 2,
       fillOpacity: 1
-    }).addTo(ch11Layers).bindTooltip(`<strong>Origin:</strong> ${route.name.split('(')[0]}<br><span style='font-size:11px;'>Crude Feed Head</span>`, { permanent: false, direction: "top" });
+    }).addTo(ch9FutureLayers).bindTooltip(`<strong>Origin:</strong> ${route.originCountry}<br><span style='font-size:11px;'>Crude Feed / Loading Port</span>`, { permanent: false, direction: "top" });
 
+    // Destination Marker
     L.circleMarker(route.waypoints[route.waypoints.length - 1], {
       radius: 8,
       fillColor: "#0f172a",
       color: "#ffffff",
       weight: 2,
       fillOpacity: 1
-    }).addTo(ch11Layers).bindTooltip(`<strong>Terminus / Asia Gate:</strong> ${route.name.split('(')[0]}<br><span style='font-size:11px;'>Deep-water Offloading Port</span>`, { permanent: false, direction: "top" });
+    }).addTo(ch9FutureLayers).bindTooltip(`<strong>Terminus / Destination:</strong> ${route.destinationCountry}<br><span style='font-size:11px;'>Refinery Terminal / Asia Gateway</span>`, { permanent: false, direction: "top" });
 
-    // Ultra-smooth vessel animation on the route
-    ch11VesselAnimator = new SmoothMaritimeVesselAnimator(ch11Map, ch11Layers, {
-      color: route.color || "#38bdf8",
-      speedScale: 0.000035,
-      tooltip: `🚢 ${route.name} (${route.status})`
-    });
-    ch11VesselAnimator.setRoute(route.waypoints, route.color || "#38bdf8");
+    // Tanker animator on maritime / arctic corridors
+    const isMaritime = route.category === "arctic_wildcard" || route.id === "arctic_nsr" || route.id === "thai_landbridge" || route.id === "adcop" || route.id === "myanmar_china" || route.id === "goreh_jask" || route.id === "east_west";
+    if (isMaritime) {
+      ch9FutureVesselAnimator = new SmoothMaritimeVesselAnimator(ch9FutureMap, ch9FutureLayers, {
+        color: route.color || "#38bdf8",
+        speedScale: 0.000035,
+        tooltip: `🚢 ${route.name} (${route.status})`
+      });
+      ch9FutureVesselAnimator.setRoute(route.waypoints, route.color || "#38bdf8");
+    }
 
-    ch11Map.fitBounds(line.getBounds(), { padding: [50, 50], maxZoom: 6 });
+    ch9FutureMap.fitBounds(line.getBounds(), { padding: [50, 50], maxZoom: 6 });
   }
 
   // Update simulator ticker
-  const ticker = document.getElementById("ch11SimTicker");
+  const ticker = document.getElementById("ch9SimTicker");
   if (ticker) {
     ticker.textContent = `Loaded ${route.name}: Click 'Run Simulation' to test dynamic flow.`;
   }
 }
 
-function runChapter11Simulation(routeId) {
-  const d = OIL_DATA.chapter11Data;
-  if (!d) return;
-  const route = d.routes.find(r => r.id === routeId) || d.routes[0];
-  const ticker = document.getElementById("ch11SimTicker");
+function runChapter9Simulation(routeId) {
+  const routes = OIL_DATA.futureRoutesData;
+  if (!routes) return;
+  const route = routes.find(r => r.id === routeId) || routes[0];
+  const ticker = document.getElementById("ch9SimTicker");
 
-  if (ch11AnimTimer) clearInterval(ch11AnimTimer);
+  if (ch9AnimTimer) clearInterval(ch9AnimTimer);
 
   if (ticker) {
-    ticker.innerHTML = `<span style="color:#fbbf24;">⚡ Simulating:</span> ${route.animationIdea}`;
+    ticker.innerHTML = `<span style="color:#fbbf24;">⚡ Simulating:</span> Analyzing flow shift via ${route.name}...`;
   }
 
   let step = 0;
-  ch11AnimTimer = setInterval(() => {
+  ch9AnimTimer = setInterval(() => {
     step++;
     if (step === 1) {
-      if (ticker) ticker.innerHTML = `<span style="color:#ef4444;">🚨 STEP 1:</span> Chokepoint danger activated &rarr; traditional maritime route blocked.`;
+      if (ticker) ticker.innerHTML = `<span style="color:#ef4444;">🚨 STEP 1:</span> Primary maritime bottleneck threatened &rarr; traditional shipping routes face risk surcharges.`;
     } else if (step === 2) {
-      if (ticker) ticker.innerHTML = `<span style="color:#10b981;">🔄 STEP 2:</span> Crude diverted via <strong>${route.name}</strong> overland bypass!`;
+      if (ticker) ticker.innerHTML = `<span style="color:#10b981;">🔄 STEP 2:</span> Crude flow diverted via <strong>${route.name}</strong> bypass infrastructure!`;
     } else if (step === 3) {
-      if (ticker) ticker.innerHTML = `<span style="color:#38bdf8;">🚢 STEP 3:</span> Supertankers load securely and proceed eastward to Asian refiners.`;
+      if (ticker) ticker.innerHTML = `<span style="color:#38bdf8;">🚢 STEP 3:</span> Asian refiners secure uninterrupted delivery (${route.geography.split('→')[0] || 'Origin'} &rarr; ${route.destinationCountry}).`;
     } else if (step >= 4) {
-      clearInterval(ch11AnimTimer);
-      ch11AnimTimer = null;
-      if (ticker) ticker.innerHTML = `<span style="color:#4ade80;">✓ SIMULATION COMPLETE:</span> ${route.strategicTakeaway}`;
+      clearInterval(ch9AnimTimer);
+      ch9AnimTimer = null;
+      if (ticker) ticker.innerHTML = `<span style="color:#4ade80;">✓ SIMULATION COMPLETE:</span> ${route.problemSolved}`;
     }
   }, 1400);
 }
 
-function cycleChapter11Route(direction) {
-  const d = OIL_DATA.chapter11Data;
-  if (!d) return;
-  const currentId = STATE.activeChapter11RouteId || "adcop_fujairah";
-  const idx = d.routes.findIndex(r => r.id === currentId);
-  let nextIdx = (idx + direction + d.routes.length) % d.routes.length;
-  selectChapter11Route(d.routes[nextIdx].id);
+function cycleChapter9Route(direction) {
+  const routes = OIL_DATA.futureRoutesData;
+  if (!routes || routes.length === 0) return;
+  const currentId = STATE.activeChapter9RouteId || "arctic_nsr";
+  const idx = routes.findIndex(r => r.id === currentId);
+  const nextIdx = (idx + direction + routes.length) % routes.length;
+  selectChapter9Route(routes[nextIdx].id);
 }
 
-function filterChapter11Routes(category, evt) {
-  STATE.ch11Filter = category;
-  const d = OIL_DATA.chapter11Data;
-  if (!d) return;
-
+function filterChapter9Routes(category, evt) {
+  STATE.ch9Filter = category;
   document.querySelectorAll(".ch11-filter-btn").forEach(btn => btn.classList.remove("active"));
   if (evt && evt.target) evt.target.classList.add("active");
+  renderFutureRoutesGrid();
 
-  const cards = document.querySelectorAll("#ch11AllRoutesGrid .ch11-route-card");
-  cards.forEach(card => {
-    const id = card.id.replace("ch11_grid_card_", "");
-    const r = d.routes.find(route => route.id === id);
-    if (!r) return;
-
-    if (category === "all") {
-      card.style.display = "flex";
-    } else if (category === "operational" && r.category === "operational") {
-      card.style.display = "flex";
-    } else if (category === "planned" && r.category === "planned") {
-      card.style.display = "flex";
-    } else if (category === "concept" && r.category === "concept") {
-      card.style.display = "flex";
-    } else {
-      card.style.display = "none";
+  const routes = OIL_DATA.futureRoutesData;
+  const filtered = category === "all" ? routes : routes.filter(r => r.category === category);
+  if (filtered && filtered.length > 0) {
+    const isCurrentInFiltered = filtered.some(r => r.id === STATE.activeChapter9RouteId);
+    if (!isCurrentInFiltered) {
+      selectChapter9Route(filtered[0].id);
     }
-  });
+  }
 }
 
-function voteChapter11(optionKey) {
-  STATE.ch11UserVote = optionKey;
+function voteChapter9(optionKey) {
+  STATE.ch9UserVote = optionKey;
   const d = OIL_DATA.chapter11Data;
-  if (!d) return;
+  if (!d || !d.audienceQuestion) return;
 
   const opt = d.audienceQuestion.options.find(o => o.key === optionKey);
   if (!opt) return;
 
   d.audienceQuestion.options.forEach(o => {
-    const el = document.getElementById(`ch11_opt_${o.key}`);
+    const el = document.getElementById(`ch9_opt_${o.key}`);
     if (el) {
       if (o.key === optionKey) el.classList.add("selected");
       else el.classList.remove("selected");
     }
   });
 
-  const fb = document.getElementById("ch11VoteFeedback");
+  const fb = document.getElementById("ch9VoteFeedback");
   if (fb) {
     fb.innerHTML = `
       <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:12px; margin-top:8px;">
@@ -5093,13 +4352,252 @@ function voteChapter11(optionKey) {
   }
 }
 
+function renderFutureRoutesGrid() {
+  const container = document.getElementById("futureRoutesCardList");
+  const routes = OIL_DATA.futureRoutesData;
+  if (!container || !routes) return;
+
+  const currentCategory = STATE.ch9Filter || "all";
+  const filtered = currentCategory === "all" ? routes : routes.filter(r => r.category === currentCategory);
+  const activeId = STATE.activeChapter9RouteId || "arctic_nsr";
+
+  container.innerHTML = filtered.map(r => `
+    <div class="ch11-route-card ${r.id === activeId ? 'active' : ''}"
+         id="ch9_card_${r.id}"
+         style="cursor:pointer; display:flex; flex-direction:column;"
+         onclick="selectChapter9Route('${r.id}')">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+        <span style="font-family:var(--font-mono); font-size:10px; font-weight:800; color:${r.color || '#2563eb'}; background:#f1f5f9; padding:2px 8px; border-radius:4px; text-transform:uppercase;">
+          ${(r.category || '').replace('_', ' ')}
+        </span>
+        <span class="ch11-impact-badge ${r.impact && (r.impact.includes('Very') || r.impact.includes('High')) ? 'ch11-impact-high' : 'ch11-impact-med'}">
+          ${r.impactBadge}
+        </span>
+      </div>
+
+      <h4 style="font-family:var(--font-serif); font-size:18px; font-weight:800; color:#0f172a; margin-bottom:4px;">
+        ${r.name}
+      </h4>
+
+      <div style="font-size:11.5px; font-weight:700; color:#2563eb; margin-bottom:8px;">
+        ${r.status}
+      </div>
+
+      <div style="font-size:12px; color:#475569; margin-bottom:8px;">
+        <strong>From:</strong> ${r.originCountry} &rarr; <strong>To:</strong> ${r.destinationCountry}
+      </div>
+
+      <p style="font-size:13px; color:#334155; line-height:1.45; margin-bottom:12px;">
+        ${r.problemSolved}
+      </p>
+
+      <div class="ch11-takeaway" style="font-size:12px; padding:8px 10px; margin-top:auto;">
+        ${r.geography}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ----------------------------------------------------------------------------
+// BONUS WAR GAME CRISIS CONTROLLER
+// ----------------------------------------------------------------------------
+function selectShockScenario(scenarioKey) {
+  STATE.activeShockScenario = scenarioKey;
+  document.querySelectorAll("#ch9ScenarioTabs .wargame-tab-btn").forEach(btn => btn.classList.remove("active"));
+  const tab = document.getElementById(`tab_scenario_${scenarioKey}`);
+  if (tab) tab.classList.add("active");
+
+  renderShockScenarioContent();
+  updateShockMap();
+}
+
+function toggleShockBeforeAfter(mode) {
+  STATE.shockMode = mode;
+  const btnB = document.getElementById("btnShockBefore");
+  const btnA = document.getElementById("btnShockAfter");
+  if (btnB && btnA) {
+    if (mode === "before") {
+      btnB.classList.add("active");
+      btnA.classList.remove("active");
+    } else {
+      btnA.classList.add("active");
+      btnB.classList.remove("active");
+    }
+  }
+  updateShockMap();
+}
+
+function renderShockScenarioContent() {
+  const container = document.getElementById("ch9ScenarioContainer");
+  const scenarios = OIL_DATA.shockScenarios;
+  if (!container || !scenarios) return;
+
+  const sc = scenarios[STATE.activeShockScenario];
+  if (!sc) return;
+
+  container.innerHTML = `
+    <!-- Top Narrative Summary -->
+    <div style="background:#f8fafc; border:1px solid #cbd5e1; border-left:4px solid #dc2626; border-radius:6px; padding:12px 16px; margin-bottom:16px;">
+      <div style="font-weight:700; font-size:14px; color:#0f172a;">${sc.title}</div>
+      <div style="font-size:12.5px; color:#475569; margin-top:3px;">${sc.description}</div>
+    </div>
+
+    <!-- Pricing Impact Gauges -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; margin-bottom:16px;">
+      <div class="wargame-gauge-card" style="border-left:4px solid #dc2626;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; font-family:var(--font-mono); font-size:11px; font-weight:800; color:#64748b;">
+          <span>📈 BRENT CRUDE</span>
+          <div style="color:#dc2626; font-size:12px; font-weight:800;">${sc.brentShift}</div>
+        </div>
+        <div style="font-size:11.5px; color:#334155; margin-top:6px; line-height:1.4;">${sc.brentImpact}</div>
+      </div>
+
+      <div class="wargame-gauge-card" style="border-left:4px solid #0284c7;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; font-family:var(--font-mono); font-size:11px; font-weight:800; color:#64748b;">
+          <span>📉 WTI SPREAD</span>
+          <div style="color:#0284c7; font-size:12px; font-weight:800;">${sc.wtiShift}</div>
+        </div>
+        <div style="font-size:11.5px; color:#334155; margin-top:6px; line-height:1.4;">${sc.wtiImpact}</div>
+      </div>
+
+      <div class="wargame-gauge-card" style="border-left:4px solid #d97706;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; font-family:var(--font-mono); font-size:11px; font-weight:800; color:#64748b;">
+          <span>⚖️ DUBAI OSP</span>
+          <div style="color:#d97706; font-size:12px; font-weight:800;">${sc.dubaiShift}</div>
+        </div>
+        <div style="font-size:11.5px; color:#334155; margin-top:6px; line-height:1.4;">${sc.dubaiImpact}</div>
+      </div>
+    </div>
+
+    <!-- 4 Key Dimensions -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; margin-bottom:12px;">
+      <div class="wargame-flow-step" style="border-left:4px solid #dc2626;">
+        <div style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#991b1b;">1. ❌ WHAT DISAPPEARS?</div>
+        <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:2px;">${sc.lostBarrels}</div>
+      </div>
+      <div class="wargame-flow-step" style="border-left:4px solid #ea580c;">
+        <div style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#9a3412;">2. 🚨 WHO SUFFERS?</div>
+        <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:2px;">${sc.affectedBuyers}</div>
+      </div>
+      <div class="wargame-flow-step" style="border-left:4px solid #059669;">
+        <div style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#065f46;">3. 🔄 WHO REPLACES?</div>
+        <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:2px;">${sc.replacementBarrels}</div>
+      </div>
+      <div class="wargame-flow-step" style="border-left:4px solid #0284c7;">
+        <div style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#0369a1;">4. 🌍 REPLACEMENT NATIONS</div>
+        <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:2px;">${sc.replacementCountries}</div>
+      </div>
+    </div>
+
+    <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; padding:10px 14px; font-size:12.5px; color:#0f172a; line-height:1.45;">
+      <strong>📌 Strategic Conclusion:</strong> ${sc.verdict}
+    </div>
+  `;
+}
+
+function initChapter9ShockMap() {
+  const el = document.getElementById("chapter9ShockMap");
+  if (!el || typeof L === "undefined") return;
+
+  if (ch9ShockMap) {
+    ch9ShockMap.remove();
+    ch9ShockMap = null;
+  }
+  if (ch9ShockVesselAnimator) {
+    ch9ShockVesselAnimator.destroy();
+    ch9ShockVesselAnimator = null;
+  }
+
+  ch9ShockMap = L.map("chapter9ShockMap", {
+    center: [24.0, 54.0],
+    zoom: 3,
+    noMaritime: true
+  });
+
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+    attribution: "&copy; OpenStreetMap &copy; CARTO",
+    maxZoom: 18
+  }).addTo(ch9ShockMap);
+
+  ch9ShockLayers = L.layerGroup().addTo(ch9ShockMap);
+  updateShockMap();
+}
+
+function updateShockMap() {
+  if (!ch9ShockMap || !ch9ShockLayers) return;
+
+  if (ch9ShockVesselAnimator) {
+    ch9ShockVesselAnimator.destroy();
+    ch9ShockVesselAnimator = null;
+  }
+  ch9ShockLayers.clearLayers();
+
+  const scenarios = OIL_DATA.shockScenarios;
+  const sc = scenarios ? scenarios[STATE.activeShockScenario] : null;
+  if (!sc) return;
+
+  const isAfter = STATE.shockMode === "after";
+
+  if (!isAfter) {
+    const normalRoutes = (sc.mapSevered && sc.mapSevered.length > 0) ? sc.mapSevered : [
+      {
+        name: "Persian Gulf → East Asia Baseload Flow",
+        coords: [[26.64, 50.16], [26.2, 53.0], [26.56, 56.45], [24.5, 58.5], [15.0, 66.0], [5.8, 80.5], [5.9, 95.0], [1.25, 103.85], [15.0, 114.5], [29.87, 121.54]]
+      }
+    ];
+    normalRoutes.forEach(r => {
+      const curvedCoords = generateSmoothMaritimeSpline(r.coords, 20);
+      L.polyline(curvedCoords, { color: "#10b981", weight: 4.0, opacity: 0.9, interactive: false, className: "maritime-smooth-line" })
+        .addTo(ch9ShockLayers)
+        .bindTooltip(`Normal Flow: ${r.name}`, { permanent: false });
+    });
+    return;
+  }
+
+  (sc.mapSevered || []).forEach(r => {
+    const curvedCoords = generateSmoothMaritimeSpline(r.coords, 20);
+    L.polyline(curvedCoords, { color: "#ef4444", weight: 3.8, dashArray: "6, 6", opacity: 0.85, interactive: false, className: "maritime-smooth-line" })
+      .addTo(ch9ShockLayers)
+      .bindTooltip(`❌ SEVERED: ${r.name}`, { permanent: true });
+    
+    L.circleMarker(r.coords[0], { radius: 7, fillColor: "#ef4444", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
+      .addTo(ch9ShockLayers).bindTooltip(`Supply Cut: ${r.name}`, { permanent: false });
+  });
+
+  (sc.mapReplacement || []).forEach(r => {
+    const curvedCoords = generateSmoothMaritimeSpline(r.coords, 20);
+    L.polyline(curvedCoords, { color: r.color || "#0284c7", weight: 4.5, className: "leaflet-ant-flow maritime-smooth-line", interactive: false })
+      .addTo(ch9ShockLayers)
+      .bindTooltip(`🟢 EMERGENCY ROUTE: ${r.name}`, { permanent: false });
+
+    L.circleMarker(r.coords[0], { radius: 8, fillColor: "#10b981", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
+      .addTo(ch9ShockLayers).bindTooltip(`Replacement Hub: ${r.name}`, { permanent: false });
+
+    L.circleMarker(r.coords[r.coords.length - 1], { radius: 8, fillColor: "#0284c7", color: "#ffffff", weight: 2, fillOpacity: 1, interactive: true })
+      .addTo(ch9ShockLayers).bindTooltip(`Receiving Port`, { permanent: false });
+  });
+}
+
+// ----------------------------------------------------------------------------
+// EXPORTS & BACKWARD-COMPATIBLE ALIASES
+// ----------------------------------------------------------------------------
 window.renderChapter8Visual = renderChapter8Visual;
 window.renderChapter9Visual = renderChapter9Visual;
-window.renderChapter10Visual = renderChapter10Visual;
-window.renderChapter11Visual = renderChapter11Visual;
-window.initChapter11Visual = initChapter11Visual;
-window.selectChapter11Route = selectChapter11Route;
-window.runChapter11Simulation = runChapter11Simulation;
-window.cycleChapter11Route = cycleChapter11Route;
-window.filterChapter11Routes = filterChapter11Routes;
-window.voteChapter11 = voteChapter11;
+window.initChapter9Visual = initChapter9Visual;
+window.selectChapter9Route = selectChapter9Route;
+window.runChapter9Simulation = runChapter9Simulation;
+window.cycleChapter9Route = cycleChapter9Route;
+window.filterChapter9Routes = filterChapter9Routes;
+window.voteChapter9 = voteChapter9;
+
+// Backward-compatibility aliases so no external/inline handlers fail
+window.renderChapter10Visual = renderChapter9Visual;
+window.renderChapter11Visual = renderChapter9Visual;
+window.initChapter10Simulator = initChapter9Visual;
+window.initChapter11Visual = initChapter9Visual;
+window.selectFutureRoute = selectChapter9Route;
+window.selectChapter11Route = selectChapter9Route;
+window.runChapter11Simulation = runChapter9Simulation;
+window.cycleChapter11Route = cycleChapter9Route;
+window.filterChapter11Routes = filterChapter9Routes;
+window.voteChapter11 = voteChapter9;

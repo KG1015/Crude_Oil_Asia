@@ -89,7 +89,7 @@ export const Navbar: React.FC = () => {
                 : 'text-ink hover:bg-paper'
             }`}
           >
-            <span>🚨</span> Crisis War Game
+            <span>🌐</span> Future Pipeline Routes
           </Link>
         </nav>
       </div>

@@ -2321,3 +2321,137 @@ h1, h2, h3, h4, h5, h6, th {
 .leaflet-tile-pane {
   background: #040d1a !important;
 }
+
+/* ==========================================================================
+   CHAPTER 9: FUTURE PIPELINE ROUTES & MARITIME ALTERNATIVES LAYOUT
+   ========================================================================== */
+.ch9-workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(420px, 1.2fr);
+  gap: 28px;
+  align-items: start;
+  margin-bottom: 36px;
+  position: relative;
+}
+
+@media (max-width: 992px) {
+  .ch9-workspace-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ch9-sticky-map-col {
+  position: sticky;
+  top: 72px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 992px) {
+  .ch9-sticky-map-col {
+    position: static;
+  }
+}
+
+.ch9-map-container {
+  width: 100%;
+  height: 560px;
+  border-radius: 12px;
+  border: 1.5px solid #0f172a;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15);
+  background: #0f172a;
+}
+
+.ch9-route-dossier {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}
+
+.ch9-pill-nav {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  scrollbar-width: thin;
+}
+
+.ch9-map-overlay-title {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.ch9-map-overlay-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 1000;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.ch9-map-basemap-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(8px);
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  gap: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.ch9-map-basemap-btn {
+  background: transparent;
+  color: #94a3b8;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ch9-map-basemap-btn:hover {
+  color: #ffffff;
+}
+
+.ch9-map-basemap-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 800;
+}
+

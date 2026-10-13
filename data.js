@@ -1081,26 +1081,14 @@ const OIL_DATA = {
     {
       id: 9,
       number: "09",
-      title: "What Happens If A Major Supplier Disappears?",
-      subtitle: "Interactive Supply Shock Simulator, Live Flow Diverter & Future Pipeline Corridors",
-      sectionTag: "STRATEGY WAR GAME // CHAPTER 09",
-      summary: "Interactive crisis scenarios (Russia, UAE, Saudi Arabia, Hormuz, Atlantic Arbitrage) and 10 future bypass pipeline routes.",
-      whatIsThis: "A real-time strategic war game simulating the disappearance of top crude suppliers (Russia, UAE, Saudi Arabia) and maritime chokepoint closures.",
-      whyItMatters: "Asia imports 22.4 million barrels every single day with near-zero domestic backup. A single outage forces billions of dollars in emergency crude rerouting.",
-      tradingImpact: "Shows immediate price shocks on Brent, WTI, and Dubai OSPs, identifying who wins the cash windfalls and which refiners face feedstock starvation.",
-      mapId: "corridor_me"
-    },
-    {
-      id: 10,
-      number: "10",
-      title: "Future Oil Routes: How Asia Could Bypass Tomorrow's Bottlenecks",
-      subtitle: "Can Steel Pipelines, Arctic Shortcuts & Atlantic Supertankers Defeat Naval Blockades?",
-      sectionTag: "CHAPTER 10 // FUTURE BYPASS CORRIDORS",
-      summary: "A beginner-friendly strategic guide analyzing 9 global pipeline and seaborne bypass routes, likelihood of success, strategist rankings, and Asia's 2040 energy security.",
-      whatIsThis: "Strategic pipeline bypasses (ADCOP, East-West, Basra-Aqaba), Arctic routes (NSR), and Atlantic supertanker highways designed to avoid maritime choke points.",
-      whyItMatters: "Over 80% of Asia's crude currently crosses Hormuz or Malacca. Steel pipelines and Atlantic routes offer structural escape valves during wartime.",
-      tradingImpact: "Bypasses reallocate market share toward secure loading hubs (Fujairah, Yanbu, US Gulf) and cap Middle East price premiums.",
-      mapId: "corridor_me"
+      title: "Future Pipeline Routes & Maritime Alternatives",
+      subtitle: "Can Steel Pipelines, Arctic Shortcuts & Strategic Bypasses Defeat Naval Blockades?",
+      sectionTag: "CHAPTER 09 // FUTURE BYPASS CORRIDORS",
+      summary: "A beginner-friendly strategic guide analyzing 11 global pipeline and seaborne bypass routes, likelihood of success, strategist rankings, and Asia's energy security.",
+      whatIsThis: "Strategic pipeline bypasses (ADCOP, East-West, Basra-Aqaba, Goreh-Jask), Arctic shortcuts (NSR), and overland corridors designed to avoid maritime choke points.",
+      whyItMatters: "Over 80% of Asia's crude currently crosses Hormuz or Malacca. Steel pipelines and Arctic routes offer structural escape valves during wartime.",
+      tradingImpact: "Bypasses reallocate market share toward secure loading hubs (Fujairah, Yanbu, US Gulf, Arctic) and cap Middle East price premiums.",
+      mapId: "corridor_future"
     }
   ],
 
@@ -2193,9 +2181,27 @@ const OIL_DATA = {
       probBadge: "🟢 High",
       impactBadge: "⚡ Very High",
       geography: "Murmansk / Arctic Russia → Bering Strait → Northern Chinese Ports, China (6,000 nm)",
-      problemSolved: "Cuts voyage time from 40+ days to 18–22 days. Zero Western chokepoint exposure.",
-      whoBenefits: "Russia, China (bypasses Suez, Malacca, and Western sanctions)",
-      waypoints: [[69.0, 33.0], [75.0, 60.0], [77.0, 105.0], [70.0, 175.0], [66.0, -169.0], [40.0, 130.0]],
+      waypoints: [
+        [69.05, 33.10],   // Murmansk Kola Bay
+        [70.00, 44.00],   // Barents Sea North of Kanin Peninsula
+        [70.60, 58.00],   // Kara Gate Strait (South of Novaya Zemlya)
+        [73.50, 75.00],   // Kara Sea Yamal/Sabetta approach
+        [76.00, 95.00],   // Taymyr Coast
+        [77.80, 104.00],  // Vilkitsky Strait (Arctic choke point)
+        [76.00, 125.00],  // Laptev Sea
+        [73.50, 145.00],  // Sannikov Strait (East Siberian Sea)
+        [71.50, 165.00],  // Pevek maritime approach
+        [67.50, 176.50],  // Chukchi Sea approach
+        [66.00, 179.20],  // Bering Strait western passage
+        [63.50, 178.50],  // Bering Sea (Gulf of Anadyr)
+        [56.00, 166.00],  // Commander Islands passage
+        [51.50, 159.00],  // Pacific Ocean off Kamchatka Peninsula
+        [45.00, 150.00],  // Kuril Islands Pacific corridor
+        [39.00, 143.00],  // Off Northern Japan (Honshu approach)
+        [34.50, 131.00],  // Tsushima / Korea Strait into Yellow Sea
+        [36.00, 122.00],  // Yellow Sea off Shandong Peninsula
+        [37.50, 121.40]   // Dalian / Bohai Bay Petrochemical Terminal (Northern China)
+      ],
       color: "#06b6d4"
     },
     {
@@ -2331,8 +2337,27 @@ const OIL_DATA = {
         likelihood: "Medium",
         animationIdea: "Show Arctic ice opening in summer (July–October window) and tankers sailing through the open polar channel.",
         mapIdea: "High-latitude polar route hugging Russia's Arctic rim through the Bering Strait directly into Chinese ports.",
-        strategicTakeaway: "“Not a replacement for Hormuz, but a growing strategic shortcut.”",
-        waypoints: [[69.0, 33.0], [75.0, 60.0], [77.0, 105.0], [70.0, 175.0], [66.0, -169.0], [40.0, 130.0]],
+        waypoints: [
+          [69.05, 33.10],   // Murmansk Kola Bay
+          [70.00, 44.00],   // Barents Sea North of Kanin Peninsula
+          [70.60, 58.00],   // Kara Gate Strait (South of Novaya Zemlya)
+          [73.50, 75.00],   // Kara Sea Yamal/Sabetta approach
+          [76.00, 95.00],   // Taymyr Coast
+          [77.80, 104.00],  // Vilkitsky Strait (Arctic choke point)
+          [76.00, 125.00],  // Laptev Sea
+          [73.50, 145.00],  // Sannikov Strait (East Siberian Sea)
+          [71.50, 165.00],  // Pevek maritime approach
+          [67.50, 176.50],  // Chukchi Sea approach
+          [66.00, 179.20],  // Bering Strait western passage
+          [63.50, 178.50],  // Bering Sea (Gulf of Anadyr)
+          [56.00, 166.00],  // Commander Islands passage
+          [51.50, 159.00],  // Pacific Ocean off Kamchatka Peninsula
+          [45.00, 150.00],  // Kuril Islands Pacific corridor
+          [39.00, 143.00],  // Off Northern Japan (Honshu approach)
+          [34.50, 131.00],  // Tsushima / Korea Strait into Yellow Sea
+          [36.00, 122.00],  // Yellow Sea off Shandong Peninsula
+          [37.50, 121.40]   // Dalian / Bohai Bay Petrochemical Terminal (Northern China)
+        ],
         color: "#06b6d4"
       },
       {

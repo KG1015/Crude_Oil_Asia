@@ -766,7 +766,8 @@
           containerEl.id === "tankerRouteMap" ||
           containerEl.id === "chapter10FutureMap" ||
           containerEl.id === "chapter10ShockMap" ||
-          containerEl.id === "chapter11BypassMap"
+          containerEl.id === "chapter11BypassMap" ||
+          containerEl.id === "chapter9FutureMap"
         ));
 
       if (containerEl && !skipMaritime) {
