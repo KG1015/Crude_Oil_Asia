@@ -57,7 +57,7 @@ if (document.readyState === "loading") {
  * 1. High-resolution Esri World Imagery (satellite photography)
  * 2. Esri World Boundaries and Places (clear country borders, names & cities)
  * 3. Esri World Ocean Reference (oceans, seas, gulfs & straits typography)
- * 4. CartoDB Voyager Labels (crisp regional and port typography)
+ * 3. Esri World Ocean Reference (Marine names & depths)
  */
 function createSatelliteHybridLayerGroup() {
   const imagery = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
@@ -74,16 +74,11 @@ function createSatelliteHybridLayerGroup() {
     maxZoom: 19,
     opacity: 0.95
   });
-  const cartoLabels = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png", {
-    subdomains: "abcd",
-    attribution: "",
-    maxZoom: 19,
-    opacity: 0.95
-  });
-  const group = L.layerGroup([imagery, boundaries, oceanRef, cartoLabels]);
+  const layers = [imagery, boundaries, oceanRef];
+  const group = L.layerGroup(layers);
   group._isSatelliteHybrid = true;
   group.bringToBack = function() {
-    [imagery, boundaries, oceanRef, cartoLabels].forEach(l => {
+    layers.forEach(l => {
       if (l && typeof l.bringToBack === "function") {
         l.bringToBack();
       }
@@ -93,6 +88,17 @@ function createSatelliteHybridLayerGroup() {
   return group;
 }
 window.createSatelliteHybridLayerGroup = createSatelliteHybridLayerGroup;
+
+/**
+ * Standard Vector / Street Basemap (Free, high-speed, key-less)
+ */
+function createStandardMapTileLayer() {
+  return L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
+    attribution: "Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ",
+    maxZoom: 18
+  });
+}
+window.createStandardMapTileLayer = createStandardMapTileLayer;
 
 /**
  * Catmull-Rom Maritime Spline Generator
@@ -365,10 +371,7 @@ function createStandardChapterMap(containerId, options = {}) {
 
   const tileLayers = {
     satellite: createSatelliteHybridLayerGroup(),
-    voyager: L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      attribution: "&copy; OpenStreetMap &copy; CARTO",
-      maxZoom: 18
-    })
+    voyager: createStandardMapTileLayer()
   };
 
   let currentBasemap = options.defaultBasemap || "satellite";
@@ -3636,6 +3639,8 @@ STATE.shockMode = "after"; // "before" or "after"
 
 let ch9ShockMap = null;
 let ch9ShockLayers = null;
+let ch9ShockTileLayers = null;
+let ch9ShockCurrentBasemap = "satellite";
 let ch9ShockVesselAnimator = null;
 
 function renderChapter9Visual() {
@@ -3703,7 +3708,13 @@ function renderChapter9Visual() {
             🚨 EMERGENCY FLOW DIVERTER ACTIVE
           </span>
         </div>
-        <div id="chapter9ShockMap" style="width:100%; height:440px; border-radius:10px; border:1.5px solid #cbd5e1; background:#0f172a;"></div>
+        <div style="position:relative; width:100%; height:460px; border-radius:10px; border:1.5px solid #cbd5e1; overflow:hidden; background:#0f172a; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+          <div id="chapter9ShockMap" style="width:100%; height:100%;"></div>
+          <div class="ch9-map-basemap-toggle">
+            <button type="button" class="ch9-map-basemap-btn active" id="btnCh9ShockSatellite">🛰️ Satellite</button>
+            <button type="button" class="ch9-map-basemap-btn" id="btnCh9ShockVoyager">🗺️ Map</button>
+          </div>
+        </div>
       </div>
 
       <!-- =====================================================================
@@ -3857,7 +3868,7 @@ function renderShockScenarioContent() {
     <!-- Top Narrative Summary -->
     <div style="background:#f8fafc; border:1px solid #cbd5e1; border-left:4px solid #dc2626; border-radius:6px; padding:14px 18px; margin-bottom:18px;">
       <div style="font-weight:700; font-size:15px; color:#0f172a;">${sc.title}</div>
-      <div style="font-size:13px; color:#475569; margin-top:3px; line-height:1.45;">${sc.description}</div>
+      <div style="font-size:13px; color:#475569; margin-top:3px; line-height:1.45;">${sc.description || sc.question || ""}</div>
     </div>
 
     <!-- Pricing Impact Gauges -->
@@ -3982,18 +3993,70 @@ function initChapter9ShockMap() {
   }
 
   ch9ShockMap = L.map("chapter9ShockMap", {
-    center: [24.0, 54.0],
+    center: [22.0, 65.0],
     zoom: 3,
+    minZoom: 2,
+    maxZoom: 18,
+    dragging: true,
+    scrollWheelZoom: true,
+    touchZoom: true,
+    doubleClickZoom: true,
+    boxZoom: true,
+    keyboard: true,
+    tap: false,
     noMaritime: true
   });
 
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    attribution: "&copy; OpenStreetMap &copy; CARTO",
-    maxZoom: 18
-  }).addTo(ch9ShockMap);
+  if (ch9ShockMap.dragging) ch9ShockMap.dragging.enable();
+
+  ch9ShockTileLayers = {
+    satellite: createSatelliteHybridLayerGroup(),
+    voyager: createStandardMapTileLayer()
+  };
+
+  ch9ShockCurrentBasemap = "satellite";
+  ch9ShockTileLayers.satellite.addTo(ch9ShockMap);
+
+  // Basemap switcher buttons
+  const btnSat = document.getElementById("btnCh9ShockSatellite");
+  const btnVoy = document.getElementById("btnCh9ShockVoyager");
+
+  if (btnVoy) {
+    btnVoy.onclick = (e) => {
+      e.stopPropagation();
+      if (ch9ShockCurrentBasemap === "voyager") return;
+      ch9ShockMap.removeLayer(ch9ShockTileLayers.satellite);
+      ch9ShockTileLayers.voyager.addTo(ch9ShockMap);
+      if (ch9ShockTileLayers.voyager && typeof ch9ShockTileLayers.voyager.bringToBack === "function") {
+        ch9ShockTileLayers.voyager.bringToBack();
+      }
+      ch9ShockCurrentBasemap = "voyager";
+      btnVoy.classList.add("active");
+      if (btnSat) btnSat.classList.remove("active");
+    };
+  }
+
+  if (btnSat) {
+    btnSat.onclick = (e) => {
+      e.stopPropagation();
+      if (ch9ShockCurrentBasemap === "satellite") return;
+      ch9ShockMap.removeLayer(ch9ShockTileLayers.voyager);
+      ch9ShockTileLayers.satellite.addTo(ch9ShockMap);
+      if (ch9ShockTileLayers.satellite && typeof ch9ShockTileLayers.satellite.bringToBack === "function") {
+        ch9ShockTileLayers.satellite.bringToBack();
+      }
+      ch9ShockCurrentBasemap = "satellite";
+      btnSat.classList.add("active");
+      if (btnVoy) btnVoy.classList.remove("active");
+    };
+  }
 
   ch9ShockLayers = L.layerGroup().addTo(ch9ShockMap);
   updateShockMap();
+
+  setTimeout(() => {
+    if (ch9ShockMap) ch9ShockMap.invalidateSize();
+  }, 250);
 }
 
 function updateShockMap() {
@@ -4489,10 +4552,7 @@ function initChapter10Visual() {
   ch10FutureMap.dragging.enable();
 
   ch10FutureTileLayers = {
-    voyager: L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      attribution: "&copy; OpenStreetMap &copy; CARTO",
-      maxZoom: 18
-    }),
+    voyager: createStandardMapTileLayer(),
     satellite: createSatelliteHybridLayerGroup()
   };
 

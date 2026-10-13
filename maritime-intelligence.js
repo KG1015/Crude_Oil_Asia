@@ -398,7 +398,7 @@
       subdomains: [],
       overlayUrl: "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
       oceanOverlayUrl: "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}",
-      cartoLabelsUrl: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png",
+      cartoLabelsUrl: null,
       bg: "#040d1a"
     },
     bathymetry: {
@@ -410,15 +410,15 @@
     },
     kpler_dark: {
       name: "🌑 Kpler Dark",
-      url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      subdomains: "abcd",
-      overlayUrl: null,
+      url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+      subdomains: [],
+      overlayUrl: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
       bg: "#06101e"
     },
     ft_editorial: {
       name: "📰 FT Vector",
-      url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-      subdomains: "abcd",
+      url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+      subdomains: [],
       overlayUrl: null,
       bg: "#d4e6f1"
     }

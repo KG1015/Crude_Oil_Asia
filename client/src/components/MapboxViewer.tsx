@@ -38,7 +38,8 @@ export const MAP_CATALOG: MapViewConfig[] = [
 const BASEMAPS: Record<string, { label: string; url: string; refUrl?: string }> = {
   kpler_dark: {
     label: '🌑 Kpler Dark',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    refUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'
   },
   bathymetry: {
     label: '🌊 Bathymetry',
@@ -47,11 +48,12 @@ const BASEMAPS: Record<string, { label: string; url: string; refUrl?: string }> 
   },
   ft_editorial: {
     label: '📰 FT Vector',
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}'
   },
   satellite: {
     label: '🛰️ Satellite',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    refUrl: 'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'
   }
 };
 
