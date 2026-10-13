@@ -4288,7 +4288,7 @@ function renderChapter10Visual() {
 
         <!-- 1. RANKING TABLE -->
         ${ch11.rankingTable ? `
-        <div style="overflow-x:auto; margin-bottom:32px; border:1.5px solid #0f172a; border-radius:8px;">
+        <div style="overflow-x:auto; margin-bottom:0; border:1.5px solid #0f172a; border-radius:8px;">
           <table class="ch11-rank-table">
             <thead>
               <tr>
@@ -4321,85 +4321,6 @@ function renderChapter10Visual() {
               `).join('')}
             </tbody>
           </table>
-        </div>
-        ` : ''}
-
-        <!-- 2. STRATEGIST PERSPECTIVE (10-20 YEAR OUTLOOK) -->
-        ${ch11.strategistView ? `
-        <div style="margin-bottom:36px;">
-          <div style="margin-bottom:16px;">
-            <div style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.06em;">
-              SENIOR STRATEGIST VIEWPOINT
-            </div>
-            <h3 style="font-family:var(--font-serif); font-size:22px; font-weight:800; color:#0f172a; margin-top:2px;">
-              ${ch11.strategistView.question}
-            </h3>
-            <p style="font-size:13.5px; color:#475569; margin-top:4px;">
-              "I rank near-to-medium-term importance across commercial credibility, execution ease, and actual barrel volume:"
-            </p>
-          </div>
-
-          <div style="display:flex; flex-direction:column; gap:12px;">
-            ${ch11.strategistView.rankings.map(s => `
-              <div class="ch11-strat-card">
-                <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
-                  <span style="font-family:var(--font-mono); font-size:13px; font-weight:900; background:#0f172a; color:#ffffff; width:26px; height:26px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;">
-                    ${s.rank}
-                  </span>
-                  <strong style="font-size:15px; color:#0f172a;">${s.route}</strong>
-                  <span style="font-size:12.5px; font-weight:700; color:#d97706; margin-left:auto;">
-                    ${s.verdict}
-                  </span>
-                </div>
-                <div style="font-size:13px; color:#334155; line-height:1.45; padding-left:38px;">
-                  ${s.detail}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-        ` : ''}
-
-        <!-- 3. AUDIENCE DISCUSSION INTERACTIVE QUESTION -->
-        ${ch11.audienceQuestion ? `
-        <div id="ch10AudienceSection" style="background:#ffffff; border:2px dashed #2563eb; border-radius:10px; padding:24px;">
-          <div style="text-align:center; max-width:720px; margin:0 auto 20px auto;">
-            <span style="font-family:var(--font-mono); font-size:11px; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.08em; background:#eff6ff; padding:3px 10px; border-radius:4px;">
-              💬 AUDIENCE DISCUSSION FORUM
-            </span>
-            <h3 style="font-family:var(--font-serif); font-size:24px; font-weight:800; color:#0f172a; margin-top:8px; line-height:1.3;">
-              "${ch11.audienceQuestion.prompt}"
-            </h3>
-            <p style="font-size:13px; color:#64748b; margin-top:4px;">
-              Vote below to cast your choice and reveal the market strategists' consensus breakdown.
-            </p>
-          </div>
-
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:16px;">
-            ${ch11.audienceQuestion.options.map(opt => `
-              <div id="ch10_opt_${opt.key}" 
-                   class="ch11-poll-card ${STATE.ch10UserVote === opt.key ? 'selected' : ''}" 
-                   onclick="voteChapter10('${opt.key}')">
-                <div style="font-weight:700; font-size:14px; color:#0f172a; margin-bottom:6px;">
-                  ${opt.label}
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:11.5px; font-weight:700; color:#2563eb;">
-                  <span>Strategist Consensus:</span>
-                  <span>${opt.share}</span>
-                </div>
-                <div class="ch11-progress-bar">
-                  <div class="ch11-progress-fill" style="width:${parseInt(opt.share, 10)}%;"></div>
-                </div>
-                <div style="font-size:12px; color:#475569; line-height:1.35; margin-top:8px;">
-                  ${opt.verdict}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-
-          <div id="ch10VoteFeedback" style="text-align:center; font-family:var(--font-mono); font-size:12px; font-weight:700; color:#047857;">
-            ${STATE.ch10UserVote ? `✓ Your vote is recorded for: ${STATE.ch10UserVote.replace('_', ' ').toUpperCase()}` : 'Click any option above to participate in the strategic debate.'}
-          </div>
         </div>
         ` : ''}
 
